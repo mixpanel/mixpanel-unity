@@ -1,0 +1,7 @@
+digraph "mixpanel.Value"
+{
+ // INTERACTIVE_SVG=YES
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="{mixpanel.Value\n|+ this[int idx]\l+ this[string idx]\l|+ Value()\l+ Value()\l+ Value()\l+ Value()\l+ Value()\l+ Value()\l+ operator string()\l+ operator Value()\l+ operator int()\l+ operator Value()\l+ operator double()\l+ operator Value()\l+ operator float()\l+ operator Value()\l+ operator bool()\l+ operator Value()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+}

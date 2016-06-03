@@ -1,0 +1,9 @@
+digraph "mixpanel.Mixpanel"
+{
+ // INTERACTIVE_SVG=YES
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="{mixpanel.Mixpanel\n|+ people\l+ instance\l|+ Alias()\l+ ClearSuperProperties()\l+ ClearTimedEvent()\l+ ClearTimedEvents()\l+ FlushQueue()\l+ Identify()\l+ Register()\l+ RegisterOnce()\l+ Reset()\l+ StartTimedEvent()\l+ StartTimedEventOnce()\l+ Track()\l+ Track()\l+ Unregister()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node2 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
+  Node2 [label="{MonoBehaviour\n||}",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+}

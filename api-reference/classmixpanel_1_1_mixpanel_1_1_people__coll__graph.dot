@@ -1,0 +1,7 @@
+digraph "mixpanel.Mixpanel.People"
+{
+ // INTERACTIVE_SVG=YES
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="{mixpanel.Mixpanel.People\n|+ Email\l+ FirstName\l+ LastName\l+ Name\l+ Phone\l+ PushDeviceToken\l|+ Append()\l+ ClearCharges()\l+ Increment()\l+ Set()\l+ SetOnce()\l+ TrackCharge()\l+ TrackCharge()\l+ Union()\l+ Unset()\l+ People()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+}
