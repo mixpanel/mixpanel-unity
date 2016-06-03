@@ -1,0 +1,86 @@
+# =============== #
+# Unity generated #
+# =============== #
+[Tt]emp/
+[Oo]bj/
+#[Bb]uild
+sysinfo.txt
+ 
+# ===================================== #
+# Visual Studio / MonoDevelop generated #
+# ===================================== #
+[Ee]xported[Oo]bj/
+/*.userprefs
+/*.csproj
+/*.pidb
+/*.suo
+/*.sln*
+/*.user
+/*.unityproj
+/*.booproj
+ 
+# ============ #
+# OS generated #
+# ============ #
+.DS_Store*
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+[Tt]humbs.db
+MixpanelSDK.bundle.meta
+*.json
+*.sln
+*.csproj
+*.userprefs
+*.a
+*.apk
+*.dll
+*.ipa
+*.lib
+*.pyc
+*.so
+*.unitypackage
+Android.meta
+armeabi-v7a.meta
+Assets.meta
+deployments/combined
+deployments/UnityMixpanel/Assets/Mixpanel/detail/Mixpanel.cs.meta
+deployments/UnityMixpanel/Assets/Mixpanel/detail/MixpanelSDKPINVOKE.cs.meta
+deployments/UnityMixpanel/Assets/Mixpanel/detail/Value.cs.meta
+deployments/UnityMixpanel/Assets/Mixpanel/MixpanelUnityPlatform.cs.meta
+deployments/UnityMixpanel/Assets/Mixpanel/Value.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/iOS.meta
+deployments/UnityMixpanel/Assets/Plugins/iOS/MixpanelSDK.a.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/detail.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/detail/Mixpanel.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/detail/MixpanelSDK.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/detail/MixpanelSDKPINVOKE.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/detail/People.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/detail/Platform.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/detail/Value.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/detail/ValueType.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/MixpanelUnityPlatform.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/Mixpanel/Value.cs.meta
+deployments/UnityMixpanel/Assets/Plugins/MixpanelSDK.bundle/Contents/MacOS/MixpanelSDK
+deployments/UnityMixpanel/Assets/Plugins/x86.meta
+deployments/UnityMixpanel/Assets/Plugins/x86_64.meta
+deployments/UnityMixpanel/IOSTestExport
+docs/html
+Editor.meta
+libMixpanelSDK.so.meta
+libs.meta
+Mixpanel.meta
+MixpanelPostprocessor.cs.meta
+MixpanelSDK.so.meta
+mod_pbxproj.py.meta
+mod_pbxproj.pyc.meta
+native/build/.idea
+native/build/build-*
+native/build/JUnit-*
+native/build/UnityPackageExport.log
+native/tests/.idea
+post_process.py.meta
+Sample.unity.meta
+x86.meta
