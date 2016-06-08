@@ -19,7 +19,7 @@
 
 namespace mixpanel
 {
-    static const std::string sdk_version = "1.0.0";
+    static const std::string sdk_version = "v1.0.0";
 
     // helper function to get the time since epoch as double / float etc.
     template <typename T>
@@ -32,8 +32,6 @@ namespace mixpanel
     using namespace detail;
 
     static std::chrono::steady_clock::time_point app_start = std::chrono::steady_clock::now();
-
-    std::shared_ptr<detail::Worker> worker;
 
     Mixpanel::Mixpanel(
         const std::string& token,
@@ -53,11 +51,6 @@ namespace mixpanel
         ,min_log_level(LogEntry::LL_WARNING)
 #endif
     {
-        if (worker)
-        {
-            throw std::logic_error("Only one Mixpanel instance is allowed at any time");
-        }
-
         if (token.size() < 8)
         {
             throw std::invalid_argument("You must provide a valid mixpanel token");
@@ -110,7 +103,11 @@ namespace mixpanel
 
     void Mixpanel::log(LogEntry::Level level, const std::string& message)
     {
-        assert(level == LogEntry::LL_TRACE || level == LogEntry::LL_DEBUG || level == LogEntry::LL_INFO || level == LogEntry::LL_WARNING || level == LogEntry::LL_ERROR);
+        assert(level == LogEntry::LL_TRACE      ||
+               level == LogEntry::LL_DEBUG      ||
+               level == LogEntry::LL_INFO       ||
+               level == LogEntry::LL_WARNING    ||
+               level == LogEntry::LL_ERROR);
 
         if (level < min_log_level) return;
 

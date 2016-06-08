@@ -1,6 +1,6 @@
 /*
     *** do not modify the line below, it is updated by the build scripts ***
-    Mixpanel C++ SDK version 1.0.0
+    Mixpanel C++ SDK version v1.0.0
 */
 
 #ifndef _MIXPANEL_HPP_
@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <memory>
 #include "./value.hpp"
+#include "../../tests/gtest/include/gtest/gtest_prod.h"
 
 #if defined(_MSC_VER)
 #    pragma warning( disable : 4290 )
@@ -228,6 +229,9 @@ namespace mixpanel
         private:
             friend class People;
             friend class mixpanel::detail::Worker;
+            FRIEND_TEST(MixpanelNetwork, RetryAfter);
+            FRIEND_TEST(MixpanelNetwork, BackOffTime);
+            FRIEND_TEST(MixpanelNetwork, FailureRecovery);
 
             enum Op
             {
@@ -248,10 +252,11 @@ namespace mixpanel
 
             /// iso-format a time in UTC
             static std::string utc_iso_format(time_t time);
-
             static std::time_t utc_now_timestamp();
 
             std::string get_distinct_id() const;
+
+            std::shared_ptr<detail::Worker> worker;
 
             std::string token;
             Value state;

@@ -1,5 +1,4 @@
 #include "./worker.hpp"
-#include "../../dependencies/nano/include/nanowww/nanowww.h"
 #include <mixpanel/value.hpp>
 #include "./base64.hpp"
 #include "./persistence.hpp"
@@ -53,6 +52,7 @@ namespace mixpanel
         #endif
         {
             delivery_failure_flag = false;
+            network_requests_allowed_time = time(0);
 
             assert(mixpanel);
             mixpanel->log(Mixpanel::LogEntry::LL_INFO, "starting mixpanel worker");
@@ -135,7 +135,13 @@ namespace mixpanel
             nanowww::Response response;
             if (client.send_request(request, &response))
             {
-                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "response: " + response.content());
+                // Lock on updating the network requests allowed time
+                {
+                    std::lock_guard<std::mutex> lock(mutex);
+                    // Prevent requests until the back off time has passed
+                    network_requests_allowed_time = parse_www_retry_after(response);
+                }
+                condition.notify_one();
 
                 Json::Reader reader;
                 Value parsed_response;
@@ -188,6 +194,50 @@ namespace mixpanel
             {
                 notify();
             }
+        }
+
+        int Worker::parse_www_retry_after(nanowww::Response& response)
+        {
+            auto success = false;
+            static auto failure_count = 0;
+
+            mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Headers: \n" + response.headers()->as_string());
+            mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Body: \n" + response.content());
+
+            // Check for an HTTP Retry-After header
+            auto retry_after_header = response.get_header("Retry-After");
+            auto retry_after = 0;
+            if (!retry_after_header.empty()) {
+                retry_after = atoi(retry_after_header.c_str());
+                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Retry After Header: " + retry_after_header);
+            }
+
+            // Check for a 5XX response code
+            auto failed = (500 <= response.status() && response.status() <= 599);
+            if (failed) {
+                failure_count++;
+                mixpanel->log(Mixpanel::LogEntry::LL_ERROR, "/track HTTP Call Failed - Status Code (" + std::to_string(response.status()) + "): " + response.content());
+            } else {
+                failure_count = 0;
+                success = true;
+            }
+
+            // Calculate exponential back off
+            if (failure_count > 1) {
+                retry_after = fmax(retry_after, calculate_back_off_time(failure_count));
+                mixpanel->log(Mixpanel::LogEntry::LL_INFO, "Adding exponential back off time of " + std::to_string(retry_after) + " seconds.");
+            }
+
+            auto allowed_after_time = time(0) + retry_after;
+            mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Network requests allowed after time " + std::to_string(allowed_after_time) +
+                          ". Current time " + std::to_string(time(0)) + ". Delta: " + std::to_string(time(0) - allowed_after_time));
+            return allowed_after_time;
+        }
+
+        int Worker::calculate_back_off_time(int failure_count)
+        {
+            auto back_off_time = powf(2.0, failure_count - 1) * 60.0 + rand() % 30;
+            return fmin(fmax(60.0, back_off_time), 600.0);
         }
 
         void Worker::notify()
@@ -245,7 +295,9 @@ namespace mixpanel
                     should_flush_queue = false;
                 }
 
-                if (mixpanel->network_reachability != Mixpanel::NetworkReachability::NotReachable && flush_interval > 0)
+                auto block_time_left = network_requests_allowed_time.load() - time(0);
+                auto network_blocked = (mixpanel->network_reachability == Mixpanel::NetworkReachability::NotReachable || block_time_left > 0);
+                if (flush_interval > 0 && !network_blocked)
                 {
                     // here thread_should_exit might be true, but we try to send anyways
                     auto results = send_batches();

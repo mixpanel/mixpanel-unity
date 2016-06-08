@@ -5,7 +5,7 @@
 
 namespace
 {
-    static const std::string mp_token      = "f0b8be9951601e68d936b1ce40dfdf39";
+    static const std::string mp_token      = "c530a1e90cfe01783793dab2bf1580b5";
 }
 
 #endif //MIXPANEL_TEST_CONFIG_HPP
