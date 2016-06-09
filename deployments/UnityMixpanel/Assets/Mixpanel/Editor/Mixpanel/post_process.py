@@ -18,7 +18,7 @@ if __name__ == '__main__':
 	# Unity 5 wrongly includes the bundle for iOS
 	project.remove_file_by_path('Frameworks/Plugins/MixpanelSDK.bundle')
 
-	print('Disabling bitcode')
-	project.add_flags({'ENABLE_BITCODE':'NO'})
+	print('Enabling Bitcode')
+	project.add_flags({'ENABLE_BITCODE':'YES'})
 
 	project.save()
