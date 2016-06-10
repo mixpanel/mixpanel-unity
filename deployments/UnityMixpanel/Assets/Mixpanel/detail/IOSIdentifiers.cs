@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace mixpanel.detail {
+namespace mixpanel.detail 
+{
     public class IOSIdentifiers
     {
         #if UNITY_IOS && !UNITY_EDITOR && MIXPANEL_USE_IOS_IFA

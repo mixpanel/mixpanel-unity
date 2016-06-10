@@ -114,23 +114,6 @@ namespace mixpanel
 		bool PlatformHelpers::is_desktop() { return false; }
 		bool PlatformHelpers::is_mobile()  { return true; }
 
-		static std::string ios_ifa()
-		{
-		    NSString *ifa = nil;
-            #if !defined(MIXPANEL_NO_IFA)
-            Class ASIdentifierManagerClass = NSClassFromString(@"ASIdentifierManager");
-            if (ASIdentifierManagerClass) {
-                SEL sharedManagerSelector = NSSelectorFromString(@"sharedManager");
-                id sharedManager = ((id (*)(id, SEL))[ASIdentifierManagerClass methodForSelector:sharedManagerSelector])(ASIdentifierManagerClass, sharedManagerSelector);
-                SEL advertisingIdentifierSelector = NSSelectorFromString(@"advertisingIdentifier");
-                NSUUID *uuid = ((NSUUID* (*)(id, SEL))[sharedManager methodForSelector:advertisingIdentifierSelector])(sharedManager, advertisingIdentifierSelector);
-                ifa = [uuid UUIDString];
-            }
-            #endif
-            return ifa ? [ifa UTF8String] : "";
-		}
-
-
         Value PlatformHelpers::collect_automatic_properties()
         {
             Value ret;
@@ -160,10 +143,6 @@ namespace mixpanel
             ret["$screen_width"] = size.width;
             ret["$screen_height"] = size.height;
 
-            #if !defined(MIXPANEL_NO_IFA)
-            ret["$ios_ifa"] = ios_ifa();
-            #endif
-
             return ret;
         }
 
@@ -183,10 +162,6 @@ namespace mixpanel
 
             ret["$ios_version"] = [[[UIDevice currentDevice] systemVersion] UTF8String];
             ret["$ios_device_model"] = get_device_model();
-
-            #if !defined(MIXPANEL_NO_IFA)
-            ret["$ios_ifa"] = ios_ifa();
-            #endif
 
             return ret;
         }
