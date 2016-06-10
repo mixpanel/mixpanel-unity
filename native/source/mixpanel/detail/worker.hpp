@@ -11,6 +11,10 @@
 #include "../../../tests/gtest/include/gtest/gtest_prod.h"
 #include "../../dependencies/nano/include/nanowww/nanowww.h"
 
+class MixpanelNetwork_RetryAfter_Test;
+class MixpanelNetwork_BackOffTime_Test;
+class MixpanelNetwork_FailureRecovery_Test;
+
 namespace mixpanel
 {
     class Mixpanel;
@@ -30,9 +34,9 @@ namespace mixpanel
                 void flush_queue();
                 void clear_send_queues();
             private:
-                FRIEND_TEST(MixpanelNetwork, RetryAfter);
-                FRIEND_TEST(MixpanelNetwork, BackOffTime);
-                FRIEND_TEST(MixpanelNetwork, FailureRecovery);
+                FRIEND_TEST(::MixpanelNetwork, RetryAfter);
+                FRIEND_TEST(::MixpanelNetwork, BackOffTime);
+                FRIEND_TEST(::MixpanelNetwork, FailureRecovery);
 
                 void main();
 

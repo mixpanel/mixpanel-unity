@@ -229,9 +229,6 @@ namespace mixpanel
         private:
             friend class People;
             friend class mixpanel::detail::Worker;
-            FRIEND_TEST(MixpanelNetwork, RetryAfter);
-            FRIEND_TEST(MixpanelNetwork, BackOffTime);
-            FRIEND_TEST(MixpanelNetwork, FailureRecovery);
 
             enum Op
             {
