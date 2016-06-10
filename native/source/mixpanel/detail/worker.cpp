@@ -230,7 +230,7 @@ namespace mixpanel
 
             auto allowed_after_time = time(0) + retry_after;
             mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Network requests allowed after time " + std::to_string(allowed_after_time) +
-                          ". Current time " + std::to_string(time(0)) + ". Delta: " + std::to_string(time(0) - allowed_after_time));
+                          ". Current time " + std::to_string(time(0)) + ". Delta: " + std::to_string(allowed_after_time - time(0)));
             return allowed_after_time;
         }
 
