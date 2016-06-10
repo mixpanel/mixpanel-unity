@@ -5,7 +5,7 @@
 #import <UIKit/UIKit.h>
 #include <cstring>
 
-extern "C" char* mixpanel_ios_get_idfa()
+extern "C" const char* mixpanel_ios_get_idfa()
 {
     Class ASIdentifierManagerClass = NSClassFromString(@"ASIdentifierManager");
     if (ASIdentifierManagerClass) {
@@ -18,7 +18,7 @@ extern "C" char* mixpanel_ios_get_idfa()
         if (isAdvertisingTrackingEnabled) {
             SEL advertisingIdentifierSelector = NSSelectorFromString(@"advertisingIdentifier");
             NSUUID *uuid = ((NSUUID* (*)(id, SEL))[sharedManager methodForSelector:advertisingIdentifierSelector])(sharedManager, advertisingIdentifierSelector);
-            return [[uuid UUIDString] cString];
+            return [[uuid UUIDString] UTF8String];
         }
     }
     return "";

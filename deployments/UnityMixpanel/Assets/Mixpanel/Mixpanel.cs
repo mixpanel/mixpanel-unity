@@ -1,6 +1,6 @@
 ﻿/*
     *** do not modify the line below, it is updated by the build scripts ***
-    Mixpanel SDK for Unity version 1.0.0
+    Mixpanel SDK for Unity version v1.0.0
 */
 
 #if !UNITY_PRO_LICENSE && (UNITY_2_6||UNITY_2_6_1||UNITY_3_0||UNITY_3_0_0||UNITY_3_1||UNITY_3_2||UNITY_3_3||UNITY_3_4||UNITY_3_5||UNITY_4_0||UNITY_4_0_1||UNITY_4_1||UNITY_4_2||UNITY_4_3||UNITY_4_5||UNITY_4_6)
@@ -55,10 +55,10 @@ namespace mixpanel
         [Tooltip("How frequently (in seconds) to send data to Mixpanel.")]
         [Range(1, 600)]
         public int flushInterval = 60;
-        // [Tooltip("Data will be discarded if the outgoing queue grows above this size (in megabytes).")]
-        private int maxQueueSizeInMB = 5;
-        // [Tooltip("Set the automatic $ios_ifa property. For this to work, you also have to define the MIXPANEL_USE_IOS_IFA script symbol in the player settings. Make sure to only enable this if your app actually shows ads, otherwise your app will be rejected by Apple. If you don't enable it, you may delete Plugins/iOS/iOSIdentifiers.mm (to be on the safe side).")]
-        private bool useIosIfa = false;
+        [Tooltip("Set the automatic $ios_ifa property. For this to work, you also have to define the MIXPANEL_USE_IOS_IFA script symbol in the player settings. Make sure to only enable this if your app actually shows ads, otherwise your app will be rejected by Apple. If you don't enable it, you may delete Plugins/iOS/iOSIdentifiers.mm (to be on the safe side).")]
+        public bool useAppleAdvertisingIdentifier = false;
+
+		private int maxQueueSizeInMB = 5;
         #endregion
         /*! \endcond */
 
@@ -593,19 +593,19 @@ namespace mixpanel
                 #endif
 
                 #if UNITY_IOS
-                if (useIosIfa && !detail.IOSIdentifiers.MIXPANEL_USE_IOS_IFA_ENABLED)
+                if (useAppleAdvertisingIdentifier && !detail.IOSIdentifiers.MIXPANEL_USE_IOS_IFA_ENABLED)
                 {
                     Debug.LogError("Mixpanel: If you want to use the automatic $ios_ifa property, you have to define the MIXPANEL_USE_IOS_IFA script symbol in the player settings."+
                                    "Only enable this, if your app shows advertising, otherwise your app might get rejected or pulled from the store by apple. If your app is "+
-                                   "not showing ads disable useIosIfa, remove MIXPANEL_USE_IOS_IFA and delete Plugins/iOS/iOSIdentifiers.mm.");
+                                   "not showing ads disable useAppleAdvertisingIdentifier, remove MIXPANEL_USE_IOS_IFA and delete Plugins/iOS/iOSIdentifiers.mm.");
                 }
-                if (!useIosIfa && detail.IOSIdentifiers.MIXPANEL_USE_IOS_IFA_ENABLED)
+                if (!useAppleAdvertisingIdentifier && detail.IOSIdentifiers.MIXPANEL_USE_IOS_IFA_ENABLED)
                 {
                     Debug.LogError("Mixpanel: You have requested to not use $ios_ifa, but still have the MIXPANEL_USE_IOS_IFA scripting symbol defined. If your app is not showing ads remove MIXPANEL_USE_IOS_IFA and delete Plugins/iOS/iOSIdentifiers.mm");
                 }
 
                 #if MIXPANEL_USE_IOS_IFA && !UNITY_EDITOR
-                if (useIosIfa) // running on device, enabled via settings and scripting symbol is defined - we can use it.
+                if (useAppleAdvertisingIdentifier) // running on device, enabled via settings and scripting symbol is defined - we can use it.
                 {
                     var idfa = detail.IOSIdentifiers.mixpanel_ios_get_idfa();
                     Register("$ios_ifa", idfa);

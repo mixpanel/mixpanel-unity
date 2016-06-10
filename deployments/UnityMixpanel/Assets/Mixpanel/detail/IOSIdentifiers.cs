@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace mixpanel.detail 
+namespace mixpanel.detail
 {
     public class IOSIdentifiers
     {
