@@ -5,7 +5,7 @@
 #include "test_config.hpp"
 
 //
-// Note: We've placed these tests in to the mixpanel namespace so we can access
+// Note: We've placed these tests into the mixpanel namespace so we can access
 //       private members and functions as a friend class. This makes use of
 //       the FRIEND_TEST macro in worker.hpp
 //
