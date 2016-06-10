@@ -3,7 +3,7 @@ using mixpanel;
 using System;
 using System.Collections.Generic;
 
-#if UNITY_IOS
+#if UNITY_IOS && UNITY_5_0_0
 using NotificationServices = UnityEngine.iOS.NotificationServices;
 using NotificationType = UnityEngine.iOS.NotificationType;
 #endif
@@ -15,7 +15,7 @@ public class MixpanelExample : MonoBehaviour
 
     void Update () {
         if (!tokenSent) {
-            #if UNITY_IOS
+			#if UNITY_IOS && UNITY_5_0_0
             Mixpanel.people.PushDeviceToken = UnityEngine.iOS.NotificationServices.deviceToken;
             #else
             // Mixpanel.people.PushDeviceToken =
@@ -40,7 +40,7 @@ public class MixpanelExample : MonoBehaviour
 
     void Start () {
         tokenSent = false;
-        #if UNITY_IOS
+		#if UNITY_IOS && UNITY_5_0_0
         UnityEngine.iOS.NotificationServices.RegisterForNotifications(
             NotificationType.Alert |
             NotificationType.Badge |
