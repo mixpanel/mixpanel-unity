@@ -92,11 +92,7 @@ deployments/UnityMixpanel/Assets/Mixpanel/Editor/Mixpanel/jectData.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/Editor/Mixpanel/PlistParser.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/detail/SWIGTYPE_p_Value.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/detail/PE_p_std__wstring.cs.meta
-deployments/UnityMixpanel/ProjectSettings/ClusterInputManager.asset
-deployments/UnityMixpanel/ProjectSettings/NavMeshAreas.asset
-deployments/UnityMixpanel/ProjectSettings/ProjectVersion.txt
-deployments/UnityMixpanel/ProjectSettings/UnityAdsSettings.asset
-deployments/UnityMixpanel/ProjectSettings/UnityConnectSettings.asset
+deployments/UnityMixpanel/ProjectSettings/*.asset
 deployments/UnityMixpanel/Assets/Mixpanel/detail/SWIGTYPE_p_std__wstring.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/Editor/Mixpanel/PBX/Elements.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/Editor/Mixpanel/PBX/Lexer.cs.meta
