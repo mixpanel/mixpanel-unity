@@ -9,13 +9,13 @@
 //
 TEST(MixpanelNetwork, RetryAfter)
 {
-    auto mp = new mixpanel::Mixpanel(mp_token);
-    auto worker = new mixpanel::detail::Worker(mp);
+    mixpanel::Mixpanel mp(mp_token);
+    mixpanel::detail::Worker worker(&mp);
 
     nanowww::Response retry_after_response;
     retry_after_response.push_header("Retry-After", "51");
 
-    auto retry_after_time = worker->parse_www_retry_after(retry_after_response);
+    auto retry_after_time = worker.parse_www_retry_after(retry_after_response);
     auto back_off_duration = retry_after_time - time(0);
     ASSERT_EQ(back_off_duration, 51);
 }
@@ -26,15 +26,15 @@ TEST(MixpanelNetwork, RetryAfter)
 //
 TEST(MixpanelNetwork, BackOffTime)
 {
-    auto mp = new mixpanel::Mixpanel(mp_token);
-    auto worker = new mixpanel::detail::Worker(mp);
+    mixpanel::Mixpanel mp(mp_token);
+    mixpanel::detail::Worker worker(&mp);
 
     nanowww::Response failure_response;
     failure_response.set_status(503);
 
     // We need 2 consecutive failures to enable exponential back off
-    worker->parse_www_retry_after(failure_response);
-    auto retry_after_time = worker->parse_www_retry_after(failure_response);
+    worker.parse_www_retry_after(failure_response);
+    auto retry_after_time = worker.parse_www_retry_after(failure_response);
 
     auto back_off_duration = retry_after_time - time(0);
     // Should back off randomly between 120 - 150s
@@ -42,7 +42,7 @@ TEST(MixpanelNetwork, BackOffTime)
     ASSERT_LE(back_off_duration, 150);
 
     // Test a third failure
-    retry_after_time = worker->parse_www_retry_after(failure_response);
+    retry_after_time = worker.parse_www_retry_after(failure_response);
     back_off_duration = retry_after_time - time(0);
 
     // Should back off randomly between 240 - 270s
@@ -55,21 +55,21 @@ TEST(MixpanelNetwork, BackOffTime)
 //
 TEST(MixpanelNetwork, FailureRecovery)
 {
-    auto mp = new mixpanel::Mixpanel(mp_token);
-    auto worker = new mixpanel::detail::Worker(mp);
+    mixpanel::Mixpanel mp(mp_token);
+    mixpanel::detail::Worker worker(&mp);
 
     nanowww::Response failure_response;
     failure_response.set_status(503);
 
     // We need 2 consecutive failures to enable exponential back off
-    worker->parse_www_retry_after(failure_response);
-    worker->parse_www_retry_after(failure_response);
+    worker.parse_www_retry_after(failure_response);
+    worker.parse_www_retry_after(failure_response);
 
     // Followed by 1 success to reset the back off
     nanowww::Response success_response;
     success_response.set_status(200);
 
-    auto retry_after_time = worker->parse_www_retry_after(success_response);
+    auto retry_after_time = worker.parse_www_retry_after(success_response);
     auto back_off_duration = retry_after_time - time(0);
     // Back off time should be reset
     ASSERT_EQ(back_off_duration, 0);
