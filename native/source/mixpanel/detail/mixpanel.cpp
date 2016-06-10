@@ -32,6 +32,8 @@ namespace mixpanel
     using namespace detail;
 
     static std::chrono::steady_clock::time_point app_start = std::chrono::steady_clock::now();
+    
+    std::shared_ptr<detail::Worker> worker;
 
     Mixpanel::Mixpanel(
         const std::string& token,
@@ -51,9 +53,14 @@ namespace mixpanel
         ,min_log_level(LogEntry::LL_WARNING)
 #endif
     {
+        if (worker)
+        {
+            throw std::logic_error("Only one Mixpanel instance at a time is supported.");
+        }
+        
         if (token.size() < 8)
         {
-            throw std::invalid_argument("You must provide a valid mixpanel token");
+            throw std::invalid_argument("You must provide a valid Mixpanel token");
         }
 
         Persistence::set_storage_directory(storage_directory);

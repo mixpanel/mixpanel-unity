@@ -29,7 +29,6 @@ namespace mixpanel
         } _wsinit_;
         #endif
 
-
         #ifdef HAVE_MBEDTLS
         const static std::string api_host = "https://api.mixpanel.com/";
         #else

@@ -253,8 +253,6 @@ namespace mixpanel
 
             std::string get_distinct_id() const;
 
-            std::shared_ptr<detail::Worker> worker;
-
             std::string token;
             Value state;
             Value super_properties;
