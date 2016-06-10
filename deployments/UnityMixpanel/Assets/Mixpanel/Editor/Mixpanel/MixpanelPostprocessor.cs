@@ -28,7 +28,6 @@ public class MixpanelPostprocessScript : MonoBehaviour
         // Perform our customizations to their xcodeproj
         AddLinkerFlags(project, targetGuid);
         AddFrameworks(project, targetGuid);
-        EnableBitcode(project, targetGuid);
         // Remove OSX bundle to work around Unity 4.X bug that incorrectly imports the
         // OSX bundle in iOS projects
         RemoveMacBundle(project);
@@ -41,11 +40,6 @@ public class MixpanelPostprocessScript : MonoBehaviour
     private static void AddLinkerFlags(PBXProject project, string targetGuid)
     {
         project.SetBuildProperty(targetGuid, "OTHER_LD_FLAGS", "$(inherited) -lc++");
-    }
-
-    private static void EnableBitcode(PBXProject project, string targetGuid)
-    {
-        project.SetBuildProperty(targetGuid, "ENABLE_BITCODE", "YES");
     }
 
     private static void AddFrameworks(PBXProject project, string targetGuid)
