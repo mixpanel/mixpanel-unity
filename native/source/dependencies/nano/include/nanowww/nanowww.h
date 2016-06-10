@@ -148,17 +148,17 @@ namespace nanowww {
         inline void set_header(const char *key, const char *val) {
             this->set_header(key, std::string(val));
         }
-        inline const std::string get_header(const char *key) const {
+        inline std::string get_header(const char *key) const {
             const_iterator iter = headers_.find(key);
             if (iter != headers_.end()) {
                 return iter->second[0];
             }
             return std::string();
         }
-        inline const std::string as_string() const {
+        inline std::string as_string() const {
             std::string res;
-            for ( const_iterator iter = headers_.cbegin(); iter != headers_.cend(); ++iter ) {
-                std::vector<std::string>::const_iterator ci = iter->second.cbegin();
+            for ( const_iterator iter = headers_.begin(); iter != headers_.end(); ++iter ) {
+                std::vector<std::string>::const_iterator ci = iter->second.begin();
                 for (;ci!=iter->second.end(); ++ci) {
                     assert(
                            ci->find('\n') == std::string::npos
@@ -210,7 +210,7 @@ namespace nanowww {
         inline void set_status(int _status) {
             status_ = _status;
         }
-        inline const std::string message() const { return msg_; }
+        inline std::string message() const { return msg_; }
         inline void set_message(const char *str, size_t len) {
             msg_.assign(str, len);
         }
@@ -218,7 +218,7 @@ namespace nanowww {
         inline void push_header(const std::string &key, const std::string &val) {
             hdr_.push_header(key.c_str(), val.c_str());
         }
-        inline const std::string get_header(const char *key) const {
+        inline std::string get_header(const char *key) const {
             return hdr_.get_header(key);
         }
         inline void add_content(const std::string &src) {
@@ -227,7 +227,7 @@ namespace nanowww {
         inline void add_content(const char *src, size_t len) {
             content_.append(src, len);
         }
-        const std::string content() const { return content_; }
+        std::string content() const { return content_; }
     };
 
     class Request {
