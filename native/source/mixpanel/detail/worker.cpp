@@ -198,15 +198,11 @@ namespace mixpanel
 
         int Worker::parse_www_retry_after(const nanowww::Response& response)
         {
-            mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Headers: \n" + response.headers()->as_string());
-            mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Body: \n" + response.content());
-
             // Check for an HTTP Retry-After header
             auto retry_after_header = response.get_header("Retry-After");
             auto retry_after = 0;
             if (!retry_after_header.empty()) {
                 retry_after = atoi(retry_after_header.c_str());
-                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Retry After Header: " + retry_after_header);
             }
 
             // Check for a 5XX response code
@@ -221,13 +217,18 @@ namespace mixpanel
             // Calculate exponential back off
             if (failure_count > 1) {
                 retry_after = std::max(retry_after, calculate_back_off_time(failure_count));
-                mixpanel->log(Mixpanel::LogEntry::LL_INFO, "Adding exponential back off time of " + std::to_string(retry_after) + " seconds.");
             }
 
             auto now = time(0);
             auto allowed_after_time = now + retry_after;
-            mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Network requests allowed after time " + std::to_string(allowed_after_time) +
-                          ". Current time " + std::to_string(now) + ". Delta: " + std::to_string(allowed_after_time - now));
+            
+            if (mixpanel->min_log_level >= Mixpanel::LogEntry::LL_TRACE) {
+                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Headers: \n" + response.headers()->as_string());
+                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Body: \n" + response.content());
+                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Network requests allowed after time " + std::to_string(allowed_after_time) +
+                              ". Current time " + std::to_string(now) + ". Delta: " + std::to_string(allowed_after_time - now));
+            }
+            
             return allowed_after_time;
         }
 
