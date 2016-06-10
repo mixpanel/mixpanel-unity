@@ -18,15 +18,8 @@ extern "C" char* mixpanel_ios_get_idfa()
         if (isAdvertisingTrackingEnabled) {
             SEL advertisingIdentifierSelector = NSSelectorFromString(@"advertisingIdentifier");
             NSUUID *uuid = ((NSUUID* (*)(id, SEL))[sharedManager methodForSelector:advertisingIdentifierSelector])(sharedManager, advertisingIdentifierSelector);
-
-            char* ret = new char[100];
-            ret[0] = 0;
-            strncpy(ret, [[uuid UUIDString] UTF8String], 100);
-            ret[99] = 0;
-
-            return ret;
+            return [[uuid UUIDString] cString];
         }
     }
-
     return "";
 }
