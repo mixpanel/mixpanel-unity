@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <math.h>
 #include "./worker.hpp"
 #include <mixpanel/value.hpp>
 #include "./base64.hpp"
@@ -210,7 +212,7 @@ namespace mixpanel
             }
 
             // Check for a 5XX response code
-            auto failed = (500 <= response.status() && response.status() <= 599);
+            bool failed = (500 <= response.status() && response.status() <= 599);
             if (failed) {
                 failure_count++;
                 mixpanel->log(Mixpanel::LogEntry::LL_ERROR, "/track HTTP Call Failed - Status Code (" + std::to_string(response.status()) + "): " + response.content());
@@ -220,7 +222,7 @@ namespace mixpanel
 
             // Calculate exponential back off
             if (failure_count > 1) {
-                retry_after = fmax(retry_after, calculate_back_off_time(failure_count));
+                retry_after = std::max(retry_after, calculate_back_off_time(failure_count));
                 mixpanel->log(Mixpanel::LogEntry::LL_INFO, "Adding exponential back off time of " + std::to_string(retry_after) + " seconds.");
             }
 
@@ -232,8 +234,8 @@ namespace mixpanel
 
         int Worker::calculate_back_off_time(int failure_count)
         {
-            auto back_off_time = powf(2.0, failure_count - 1) * 60.0 + rand() % 30;
-            return fmin(fmax(60.0, back_off_time), 600.0);
+            int back_off_time = pow(2.0, failure_count - 1) * 60.0 + rand() % 30;
+            return std::min(std::max(60, back_off_time), 600);
         }
 
         void Worker::notify()

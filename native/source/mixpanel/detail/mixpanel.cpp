@@ -33,14 +33,14 @@ namespace mixpanel
 
     static std::chrono::steady_clock::time_point app_start = std::chrono::steady_clock::now();
     
-    std::shared_ptr<detail::Worker> worker;
+    std::shared_ptr<detail::Worker> Mixpanel::worker;
 
     Mixpanel::Mixpanel(
         const std::string& token,
         const std::string& distinct_id,
         const std::string& storage_directory,
         const bool enable_log_queue
-    ) throw(std::logic_error)
+    )
         :people(this)
         ,token(token)
         ,automatic_properties(collect_automatic_properties())
@@ -93,7 +93,7 @@ namespace mixpanel
     Mixpanel::Mixpanel(
         const std::string& token,
         const bool enable_log_queue
-    ) throw(std::logic_error)
+    )
         :Mixpanel(
             token,
             "", // the other constructor will take care of that
