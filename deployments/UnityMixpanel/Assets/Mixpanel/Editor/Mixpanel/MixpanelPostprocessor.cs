@@ -15,29 +15,25 @@ public class MixpanelPostprocessScript : MonoBehaviour
     {
         UnityEngine.Debug.Log("******** START Mixpanel iOS Postprocess Script ********");
 
-        // Native Xcode project support
-        if (target == BuildTarget.iOS)
-        {
-            // Find the xcodeproj based on the build path
-            string projectPath = PBXProject.GetPBXProjectPath(buildPath);
+        // Find the xcodeproj based on the build path
+        string projectPath = PBXProject.GetPBXProjectPath(buildPath);
 
-            // Load and parse the xcodeproj
-            PBXProject project = new PBXProject();
-            project.ReadFromFile(projectPath);
+        // Load and parse the xcodeproj
+        PBXProject project = new PBXProject();
+        project.ReadFromFile(projectPath);
 
-            // Find the default (non-test) target
-            string targetGuid = project.TargetGuidByName(PBXProject.GetUnityTargetName());
+        // Find the default (non-test) target
+        string targetGuid = project.TargetGuidByName(PBXProject.GetUnityTargetName());
 
-            // Perform our customizations to their xcodeproj
-            AddLinkerFlags(project, targetGuid);
-            AddFrameworks(project, targetGuid);
-            EnableBitcode(project, targetGuid);
-            // Remove OSX bundle to work around Unity 4.X bug that incorrectly imports the
-            // OSX bundle in iOS projects
-            RemoveMacBundle(project);
+        // Perform our customizations to their xcodeproj
+        AddLinkerFlags(project, targetGuid);
+        AddFrameworks(project, targetGuid);
+        EnableBitcode(project, targetGuid);
+        // Remove OSX bundle to work around Unity 4.X bug that incorrectly imports the
+        // OSX bundle in iOS projects
+        RemoveMacBundle(project);
 
-            project.WriteToFile (projectPath);
-        }
+        project.WriteToFile (projectPath);
 
         UnityEngine.Debug.Log("******** END Mixpanel iOS Postprocess Script ********");
     }
