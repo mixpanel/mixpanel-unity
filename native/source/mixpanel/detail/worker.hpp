@@ -58,6 +58,7 @@ namespace mixpanel
                 std::atomic<bool> thread_should_exit;
                 std::atomic<bool> new_data;
                 std::atomic<bool> should_flush_queue;
+                std::atomic<int> failure_count;
                 std::atomic<unsigned> flush_interval;
                 std::atomic<time_t> network_requests_allowed_time;
                 std::thread send_thread;

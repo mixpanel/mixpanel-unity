@@ -53,6 +53,7 @@ namespace mixpanel
         {
             delivery_failure_flag = false;
             network_requests_allowed_time = time(0);
+            failure_count = 0;
 
             assert(mixpanel);
             mixpanel->log(Mixpanel::LogEntry::LL_INFO, "starting mixpanel worker");
@@ -198,9 +199,6 @@ namespace mixpanel
 
         int Worker::parse_www_retry_after(nanowww::Response& response)
         {
-            auto success = false;
-            static auto failure_count = 0;
-
             mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Headers: \n" + response.headers()->as_string());
             mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Body: \n" + response.content());
 
@@ -219,7 +217,6 @@ namespace mixpanel
                 mixpanel->log(Mixpanel::LogEntry::LL_ERROR, "/track HTTP Call Failed - Status Code (" + std::to_string(response.status()) + "): " + response.content());
             } else {
                 failure_count = 0;
-                success = true;
             }
 
             // Calculate exponential back off
