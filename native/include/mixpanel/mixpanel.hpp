@@ -277,7 +277,7 @@ namespace mixpanel
             LogEntry::Level min_log_level;
             std::queue<LogEntry> log_entries;
             std::mutex log_queue_mutex;
-        
+
             static std::shared_ptr<detail::Worker> worker;
     };
 }

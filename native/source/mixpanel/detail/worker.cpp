@@ -34,7 +34,7 @@ namespace mixpanel
         #ifdef HAVE_MBEDTLS
         const static std::string api_host = "https://api.mixpanel.com/";
         #else
-        const static std::string api_host = "https://api.mixpanel.com/";
+        const static std::string api_host = "";
         #endif
 
         static std::string encode(const Value& v);
@@ -137,13 +137,11 @@ namespace mixpanel
             nanowww::Response response;
             if (client.send_request(request, &response))
             {
-                // Lock on updating the network requests allowed time
                 {
                     std::lock_guard<std::mutex> lock(mutex);
                     // Prevent requests until the back off time has passed
                     network_requests_allowed_time = parse_www_retry_after(response);
                 }
-                condition.notify_one();
 
                 Json::Reader reader;
                 Value parsed_response;
@@ -214,8 +212,8 @@ namespace mixpanel
             // Check for a 5XX response code
             bool failed = (500 <= response.status() && response.status() <= 599);
             if (failed) {
-                failure_count++;
                 mixpanel->log(Mixpanel::LogEntry::LL_ERROR, "/track HTTP Call Failed - Status Code (" + std::to_string(response.status()) + "): " + response.content());
+                failure_count++;
             } else {
                 failure_count = 0;
             }
@@ -226,9 +224,10 @@ namespace mixpanel
                 mixpanel->log(Mixpanel::LogEntry::LL_INFO, "Adding exponential back off time of " + std::to_string(retry_after) + " seconds.");
             }
 
-            auto allowed_after_time = time(0) + retry_after;
+            auto now = time(0);
+            auto allowed_after_time = now + retry_after;
             mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Network requests allowed after time " + std::to_string(allowed_after_time) +
-                          ". Current time " + std::to_string(time(0)) + ". Delta: " + std::to_string(allowed_after_time - time(0)));
+                          ". Current time " + std::to_string(now) + ". Delta: " + std::to_string(allowed_after_time - now));
             return allowed_after_time;
         }
 
@@ -252,7 +251,7 @@ namespace mixpanel
         {
             {
                 std::lock_guard<std::mutex> lock(mutex);
-                this->flush_interval = seconds;
+                flush_interval = seconds;
             }
             condition.notify_one();
         }

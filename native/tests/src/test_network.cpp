@@ -13,10 +13,10 @@ TEST(MixpanelNetwork, RetryAfter)
 {
     Mixpanel mp(mp_token);
     auto worker = Mixpanel::worker;
-    
+
     nanowww::Response retry_after_response;
     retry_after_response.push_header("Retry-After", "51");
-    
+
     auto retry_after_time = worker->parse_www_retry_after(retry_after_response);
     auto back_off_duration = retry_after_time - time(0);
     ASSERT_EQ(back_off_duration, 51);
@@ -79,10 +79,8 @@ TEST(MixpanelNetwork, FailureRecovery)
 
     auto retry_after_time = worker->parse_www_retry_after(success_response);
     ASSERT_EQ(worker->failure_count, 0);
-    
+
     auto back_off_duration = retry_after_time - time(0);
     // Back off time should be reset
     ASSERT_EQ(back_off_duration, 0);
 }
-
-
