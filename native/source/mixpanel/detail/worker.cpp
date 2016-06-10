@@ -196,7 +196,7 @@ namespace mixpanel
             }
         }
 
-        int Worker::parse_www_retry_after(nanowww::Response& response)
+        int Worker::parse_www_retry_after(const nanowww::Response& response)
         {
             mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Headers: \n" + response.headers()->as_string());
             mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Body: \n" + response.content());

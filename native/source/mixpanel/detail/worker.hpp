@@ -51,7 +51,7 @@ namespace mixpanel
                 Result send_engage_batch();
                 Result send_batch(const std::string& name, bool verbose);
 
-                int parse_www_retry_after(nanowww::Response& response);
+                int parse_www_retry_after(const nanowww::Response& response);
                 int calculate_back_off_time(int failure_count);
 
                 Mixpanel* mixpanel;
