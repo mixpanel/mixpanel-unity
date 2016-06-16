@@ -1,5 +1,6 @@
+#include <algorithm>
+#include <math.h>
 #include "./worker.hpp"
-#include "../../dependencies/nano/include/nanowww/nanowww.h"
 #include <mixpanel/value.hpp>
 #include "./base64.hpp"
 #include "./persistence.hpp"
@@ -30,11 +31,10 @@ namespace mixpanel
         } _wsinit_;
         #endif
 
-
         #ifdef HAVE_MBEDTLS
         const static std::string api_host = "https://api.mixpanel.com/";
         #else
-        const static std::string api_host = "https://api.mixpanel.com/";
+        const static std::string api_host = "";
         #endif
 
         static std::string encode(const Value& v);
@@ -53,6 +53,8 @@ namespace mixpanel
         #endif
         {
             delivery_failure_flag = false;
+            network_requests_allowed_time = time(0);
+            failure_count = 0;
 
             assert(mixpanel);
             mixpanel->log(Mixpanel::LogEntry::LL_INFO, "starting mixpanel worker");
@@ -135,7 +137,11 @@ namespace mixpanel
             nanowww::Response response;
             if (client.send_request(request, &response))
             {
-                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "response: " + response.content());
+                {
+                    std::lock_guard<std::mutex> lock(mutex);
+                    // Prevent requests until the back off time has passed
+                    network_requests_allowed_time = parse_www_retry_after(response);
+                }
 
                 Json::Reader reader;
                 Value parsed_response;
@@ -190,6 +196,48 @@ namespace mixpanel
             }
         }
 
+        int Worker::parse_www_retry_after(const nanowww::Response& response)
+        {
+            // Check for an HTTP Retry-After header
+            auto retry_after_header = response.get_header("Retry-After");
+            auto retry_after = 0;
+            if (!retry_after_header.empty()) {
+                retry_after = atoi(retry_after_header.c_str());
+            }
+
+            // Check for a 5XX response code
+            bool failed = (500 <= response.status() && response.status() <= 599);
+            if (failed) {
+                mixpanel->log(Mixpanel::LogEntry::LL_ERROR, "/track HTTP Call Failed - Status Code (" + std::to_string(response.status()) + "): " + response.content());
+                failure_count++;
+            } else {
+                failure_count = 0;
+            }
+
+            // Calculate exponential back off
+            if (failure_count > 1) {
+                retry_after = std::max(retry_after, calculate_back_off_time(failure_count));
+            }
+
+            auto now = time(0);
+            auto allowed_after_time = now + retry_after;
+            
+            if (mixpanel->min_log_level >= Mixpanel::LogEntry::LL_TRACE) {
+                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Headers: \n" + response.headers()->as_string());
+                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Body: \n" + response.content());
+                mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Network requests allowed after time " + std::to_string(allowed_after_time) +
+                              ". Current time " + std::to_string(now) + ". Delta: " + std::to_string(allowed_after_time - now));
+            }
+            
+            return allowed_after_time;
+        }
+
+        int Worker::calculate_back_off_time(int failure_count)
+        {
+            int back_off_time = pow(2.0, failure_count - 1) * 60.0 + rand() % 30;
+            return std::min(std::max(60, back_off_time), 600);
+        }
+
         void Worker::notify()
         {
             {
@@ -204,7 +252,7 @@ namespace mixpanel
         {
             {
                 std::lock_guard<std::mutex> lock(mutex);
-                this->flush_interval = seconds;
+                flush_interval = seconds;
             }
             condition.notify_one();
         }
@@ -245,7 +293,9 @@ namespace mixpanel
                     should_flush_queue = false;
                 }
 
-                if (mixpanel->network_reachability != Mixpanel::NetworkReachability::NotReachable && flush_interval > 0)
+                auto block_time_left = network_requests_allowed_time.load() - time(0);
+                auto network_blocked = (mixpanel->network_reachability == Mixpanel::NetworkReachability::NotReachable || block_time_left > 0);
+                if (flush_interval > 0 && !network_blocked)
                 {
                     // here thread_should_exit might be true, but we try to send anyways
                     auto results = send_batches();

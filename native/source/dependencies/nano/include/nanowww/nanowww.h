@@ -114,6 +114,7 @@ namespace nanowww {
     private:
         std::map< std::string, std::vector<std::string> > headers_;
         typedef std::map< std::string, std::vector<std::string> >::iterator iterator;
+        typedef std::map< std::string, std::vector<std::string> >::const_iterator const_iterator;
     public:
         inline void push_header(const char *key, const char *val) {
             this->push_header(key, std::string(val));
@@ -147,17 +148,17 @@ namespace nanowww {
         inline void set_header(const char *key, const char *val) {
             this->set_header(key, std::string(val));
         }
-        inline std::string get_header(const char *key) {
-            iterator iter = headers_.find(key);
+        inline std::string get_header(const char *key) const {
+            const_iterator iter = headers_.find(key);
             if (iter != headers_.end()) {
                 return iter->second[0];
             }
-            return NULL;
+            return std::string();
         }
-        inline std::string as_string() {
+        inline std::string as_string() const {
             std::string res;
-            for ( iterator iter = headers_.begin(); iter != headers_.end(); ++iter ) {
-                std::vector<std::string>::iterator ci = iter->second.begin();
+            for ( const_iterator iter = headers_.begin(); iter != headers_.end(); ++iter ) {
+                std::vector<std::string>::const_iterator ci = iter->second.begin();
                 for (;ci!=iter->second.end(); ++ci) {
                     assert(
                            ci->find('\n') == std::string::npos
@@ -205,19 +206,19 @@ namespace nanowww {
         inline bool is_success() {
             return status_ == 200;
         }
-        inline int status() { return status_; }
+        inline int status() const { return status_; }
         inline void set_status(int _status) {
             status_ = _status;
         }
-        inline std::string message() { return msg_; }
+        inline std::string message() const { return msg_; }
         inline void set_message(const char *str, size_t len) {
             msg_.assign(str, len);
         }
-        inline Headers * headers() { return &hdr_; }
+        inline const Headers * headers() const { return &hdr_; }
         inline void push_header(const std::string &key, const std::string &val) {
             hdr_.push_header(key.c_str(), val.c_str());
         }
-        inline std::string get_header(const char *key) {
+        inline std::string get_header(const char *key) const {
             return hdr_.get_header(key);
         }
         inline void add_content(const std::string &src) {
@@ -226,7 +227,7 @@ namespace nanowww {
         inline void add_content(const char *src, size_t len) {
             content_.append(src, len);
         }
-        std::string content() { return content_; }
+        std::string content() const { return content_; }
     };
 
     class Request {

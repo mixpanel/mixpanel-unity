@@ -19,7 +19,7 @@
 
 namespace mixpanel
 {
-    static const std::string sdk_version = "1.0.0";
+    static const std::string sdk_version = "v1.0.0";
 
     // helper function to get the time since epoch as double / float etc.
     template <typename T>
@@ -33,14 +33,14 @@ namespace mixpanel
 
     static std::chrono::steady_clock::time_point app_start = std::chrono::steady_clock::now();
 
-    std::shared_ptr<detail::Worker> worker;
+    std::shared_ptr<detail::Worker> Mixpanel::worker;
 
     Mixpanel::Mixpanel(
         const std::string& token,
         const std::string& distinct_id,
         const std::string& storage_directory,
         const bool enable_log_queue
-    ) throw(std::logic_error)
+    )
         :people(this)
         ,token(token)
         ,automatic_properties(collect_automatic_properties())
@@ -55,12 +55,12 @@ namespace mixpanel
     {
         if (worker)
         {
-            throw std::logic_error("Only one Mixpanel instance is allowed at any time");
+            throw std::logic_error("Only one Mixpanel instance at a time is supported.");
         }
 
         if (token.size() < 8)
         {
-            throw std::invalid_argument("You must provide a valid mixpanel token");
+            throw std::invalid_argument("You must provide a valid Mixpanel token.");
         }
 
         Persistence::set_storage_directory(storage_directory);
@@ -93,7 +93,7 @@ namespace mixpanel
     Mixpanel::Mixpanel(
         const std::string& token,
         const bool enable_log_queue
-    ) throw(std::logic_error)
+    )
         :Mixpanel(
             token,
             "", // the other constructor will take care of that
@@ -110,7 +110,11 @@ namespace mixpanel
 
     void Mixpanel::log(LogEntry::Level level, const std::string& message)
     {
-        assert(level == LogEntry::LL_TRACE || level == LogEntry::LL_DEBUG || level == LogEntry::LL_INFO || level == LogEntry::LL_WARNING || level == LogEntry::LL_ERROR);
+        assert(level == LogEntry::LL_TRACE      ||
+               level == LogEntry::LL_DEBUG      ||
+               level == LogEntry::LL_INFO       ||
+               level == LogEntry::LL_WARNING    ||
+               level == LogEntry::LL_ERROR);
 
         if (level < min_log_level) return;
 

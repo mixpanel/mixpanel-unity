@@ -1,6 +1,6 @@
 /*
     *** do not modify the line below, it is updated by the build scripts ***
-    Mixpanel C++ SDK version 1.0.0
+    Mixpanel C++ SDK version v1.0.0
 */
 
 #ifndef _MIXPANEL_HPP_
@@ -14,10 +14,15 @@
 #include <stdexcept>
 #include <memory>
 #include "./value.hpp"
+#include "../../tests/gtest/include/gtest/gtest_prod.h"
 
 #if defined(_MSC_VER)
 #    pragma warning( disable : 4290 )
 #endif
+
+class MixpanelNetwork_RetryAfter_Test;
+class MixpanelNetwork_BackOffTime_Test;
+class MixpanelNetwork_FailureRecovery_Test;
 
 namespace mixpanel
 {
@@ -50,7 +55,7 @@ namespace mixpanel
                 /// don't print to std::clog, but queue the log entries for retrieval via get_next_log_entry().
                 /// note that the queue will hold at most 100 entries. So make sure to get_next_log_entry() frequently enough.
                 const bool enable_log_queue = false
-            ) throw(std::logic_error);
+            );
 
             /// construct a Mixpanel instance with custom parameters. This is useful, if you want to modify the defaults
             Mixpanel(
@@ -58,7 +63,7 @@ namespace mixpanel
                 const std::string& distinct_id,        ///< if empty, we're going to get the device id on Android, iOS and OSX and a random UUID on Windows
                 const std::string& storage_directory,  ///< a writable directory to persist the data to
                 const bool enable_log_queue = false    ///< if true, don't print to std::clog, but queue the log entries for retrieval via get_next_log_entry()
-            ) throw(std::logic_error);
+            );
 
             virtual ~Mixpanel();
 
@@ -228,6 +233,9 @@ namespace mixpanel
         private:
             friend class People;
             friend class mixpanel::detail::Worker;
+            FRIEND_TEST(::MixpanelNetwork, RetryAfter);
+            FRIEND_TEST(::MixpanelNetwork, BackOffTime);
+            FRIEND_TEST(::MixpanelNetwork, FailureRecovery);
 
             enum Op
             {
@@ -248,7 +256,6 @@ namespace mixpanel
 
             /// iso-format a time in UTC
             static std::string utc_iso_format(time_t time);
-
             static std::time_t utc_now_timestamp();
 
             std::string get_distinct_id() const;
@@ -270,6 +277,8 @@ namespace mixpanel
             LogEntry::Level min_log_level;
             std::queue<LogEntry> log_entries;
             std::mutex log_queue_mutex;
+
+            static std::shared_ptr<detail::Worker> worker;
     };
 }
 
