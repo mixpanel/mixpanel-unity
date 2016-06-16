@@ -15,9 +15,9 @@ namespace mixpanel
         volatile bool delivery_failure_flag = false;
 
         #ifdef WIN32
-		// We're using algorithm instead
-		#undef min
-		#undef max
+        // We're using algorithm instead
+        #undef min
+        #undef max
         struct _WSInit_
         {
             _WSInit_()
@@ -224,14 +224,14 @@ namespace mixpanel
 
             auto now = time(0);
             auto allowed_after_time = now + retry_after;
-            
+
             if (mixpanel->min_log_level >= Mixpanel::LogEntry::LL_TRACE) {
                 mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Headers: \n" + response.headers()->as_string());
                 mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "/track HTTP Response Body: \n" + response.content());
                 mixpanel->log(Mixpanel::LogEntry::LL_TRACE, "Network requests allowed after time " + std::to_string(allowed_after_time) +
                               ". Current time " + std::to_string(now) + ". Delta: " + std::to_string(allowed_after_time - now));
             }
-            
+
             return allowed_after_time;
         }
 
