@@ -14,6 +14,8 @@
 #endif
 
 using UnityEngine;
+using System;
+using System.Text;
 using System.Collections.Generic;
 
 namespace mixpanel
@@ -47,7 +49,7 @@ namespace mixpanel
 
         [Header("Debugging")]
         [Tooltip("Also send out data when inside the Unity editor.")]
-        public bool trackInEditor=false;
+        public bool trackInEditor = false;
         [Tooltip("The minimum log level you're interested in. If set to LL_NONE, logging will be disabled.")]
         public detail.Mixpanel.LogEntry.Level minLogLevel = detail.Mixpanel.LogEntry.Level.LL_WARNING;
 
@@ -552,9 +554,13 @@ namespace mixpanel
         }
 
         static bool tracking_enabled = true;
+
         void Awake()
         {
             DontDestroyOnLoad(this);
+
+            var reporter = gameObject.AddComponent<IntegrationReporter>();
+            reporter.token = token;
 
             #if UNITY_EDITOR
             tracking_enabled = trackInEditor;
@@ -668,4 +674,31 @@ namespace mixpanel
         #endregion
     }
 
+    class IntegrationReporter : MonoBehaviour {
+        public string token = null;
+
+        void Update() {
+            if (token == null || token.Length == 0) return;
+
+            enabled = false;
+            string url = BuildRequestURL();
+            var request = new WWW(url);
+            StartCoroutine(WaitForRequest(request));
+        }
+
+        string BuildRequestURL() {
+            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + this.token +"\"}}";
+            byte[] bytes = Encoding.UTF8.GetBytes(body);
+            string encoded = Convert.ToBase64String(bytes);
+            return "https://api.mixpanel.com/track/?data=" + encoded;
+        }
+
+        IEnumerator<WWW> WaitForRequest(WWW request) {
+            yield return request;
+
+            if (request.error != null) {
+				enabled = true;
+            }
+        }
+    }
 }
