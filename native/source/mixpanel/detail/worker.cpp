@@ -15,6 +15,9 @@ namespace mixpanel
         volatile bool delivery_failure_flag = false;
 
         #ifdef WIN32
+		// We're using algorithm instead
+		#undef min
+		#undef max
         struct _WSInit_
         {
             _WSInit_()
