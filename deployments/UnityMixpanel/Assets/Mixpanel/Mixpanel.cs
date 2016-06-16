@@ -687,20 +687,17 @@ namespace mixpanel
         }
 
         string BuildRequestURL() {
-            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + token +"\"}}";
+            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + this.token +"\"}}";
             byte[] bytes = Encoding.UTF8.GetBytes(body);
             string encoded = Convert.ToBase64String(bytes);
             return "https://api.mixpanel.com/track/?data=" + encoded;
         }
 
         IEnumerator<WWW> WaitForRequest(WWW request) {
-            UnityEngine.Debug.Log("yield request.");
             yield return request;
 
-            if (request.error == null) {
-                UnityEngine.Debug.Log("Integration Reporter no error.");
-            } else {
-                UnityEngine.Debug.Log("Integration Reporter WWW error: " + request.error);
+            if (request.error != null) {
+				enabled = true;
             }
         }
     }
