@@ -1,12 +1,14 @@
 #ifndef _PERSISTENCE_HPP_
 #define _PERSISTENCE_HPP_
 
-#include <fstream>
-#include <cassert>
-#include <mutex>
-#include <mixpanel/value.hpp>
 #include <atomic>
 #include <list>
+#include <map>
+#include <mutex>
+#include <string>
+#include <utility>
+
+#include <mixpanel/value.hpp>
 
 class Persistence_TestDropFront_Test;
 class Mixpanel_HugeRequest_Test;
@@ -70,7 +72,7 @@ namespace mixpanel
                 typedef std::map<std::string, std::list<Value>> Memory_queues;
                 static Memory_queues memory_queues;
         };
-    }
-}
+    } // namespace detail
+} // namespace mixpanel
 
 #endif /* _PERSISTENCE_HPP_ */

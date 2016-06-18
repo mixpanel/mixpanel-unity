@@ -1,10 +1,13 @@
-#include <string>
+#include <chrono>
+#include <cmath>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
-#include <ctime>
+#include <string>
+#include <vector>
+
 #include <mixpanel/mixpanel.hpp>
-#include <cmath>
-#include <chrono>
+
 #include "./persistence.hpp"
 #include "./worker.hpp"
 #include "platform_helpers.hpp"
@@ -471,4 +474,4 @@ namespace mixpanel
         return ret;
     }
 
-}
+} // namespace mixpanel

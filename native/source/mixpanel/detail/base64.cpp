@@ -1,5 +1,6 @@
 #include "base64.hpp"
 #include <iostream>
+#include <string>
 
 /*
  * based upon http://www.adp-gmbh.ch/cpp/common/base64.html
@@ -84,11 +85,9 @@ namespace mixpanel
 
             while((i++ < 3))
               ret += '=';
-
           }
 
           return ret;
-
         }
 
 
@@ -96,5 +95,5 @@ namespace mixpanel
         {
             return base64_encode(reinterpret_cast<const unsigned char*>(s.data()), s.size());
         }
-    }
-}
+    } // namespace detail
+} // namespace mixpanel

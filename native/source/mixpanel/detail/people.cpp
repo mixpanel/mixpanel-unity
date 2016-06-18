@@ -1,3 +1,5 @@
+#include <string>
+
 #include <mixpanel/mixpanel.hpp>
 #include "platform_helpers.hpp"
 
@@ -143,5 +145,4 @@ namespace mixpanel
         }
     }
 
-
-}
+} // namespace mixpanel

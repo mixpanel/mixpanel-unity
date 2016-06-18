@@ -1,10 +1,15 @@
 #include <algorithm>
-#include <math.h>
-#include "./worker.hpp"
+#include <cmath>
+#include <map>
+#include <string>
+#include <utility>
+
+#include <mixpanel/mixpanel.hpp>
 #include <mixpanel/value.hpp>
+
+#include "./worker.hpp"
 #include "./base64.hpp"
 #include "./persistence.hpp"
-#include <mixpanel/mixpanel.hpp>
 #include "./workarounds.hpp"
 
 namespace mixpanel
@@ -35,14 +40,14 @@ namespace mixpanel
         #endif
 
         #ifdef HAVE_MBEDTLS
-        const static std::string api_host = "https://api.mixpanel.com/";
+        static const std::string api_host = "https://api.mixpanel.com/";
         #else
-        const static std::string api_host = "";
+        static const std::string api_host = "";
         #endif
 
         static std::string encode(const Value& v);
 
-        const static bool verbose = true;
+        static const bool verbose = true;
 
         Worker::Worker(Mixpanel* mixpanel)
         : mixpanel(mixpanel)
@@ -173,7 +178,6 @@ namespace mixpanel
                 {
                     return {false, "failed to parse: " + response.content()};
                 }
-
             }
 
             return {false, client.errstr()};
@@ -311,5 +315,5 @@ namespace mixpanel
                 }
             }
         }
-    }
-}
+    } // namespace detail
+} // namespace mixpanel

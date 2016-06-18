@@ -1,5 +1,7 @@
-#include <iostream>
 #include <algorithm>
+#include <iostream>
+#include <string>
+#include <utility>
 #include "./persistence.hpp"
 #include "./platform_helpers.hpp"
 
@@ -160,5 +162,5 @@ namespace mixpanel
         {
             Persistence::maximum_queue_size = maximum_size;
         }
-    }
-}
+    } // namespace detail
+} // namespace mixpanel

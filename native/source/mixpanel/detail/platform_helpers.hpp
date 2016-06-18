@@ -33,7 +33,7 @@ namespace mixpanel
             static Value collect_automatic_properties();
             static Value collect_automatic_people_properties();
         };
-    }
-}
+    } // namespace detail
+} // namespace mixpanel
 
 #endif //MIXPANEL_PLATFORM_HELPERS_HPP

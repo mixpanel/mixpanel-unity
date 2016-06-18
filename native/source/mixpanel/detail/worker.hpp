@@ -1,12 +1,13 @@
 #ifndef _MIXPANEL_WORKER_HPP_
 #define _MIXPANEL_WORKER_HPP_
 
-#include <memory>
-#include <string>
-#include <thread>
-#include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <utility>
 #include <mixpanel/value.hpp>
 #include "../../../tests/gtest/include/gtest/gtest_prod.h"
 #include "../../dependencies/nano/include/nanowww/nanowww.h"
@@ -24,7 +25,7 @@ namespace mixpanel
         class Worker
         {
             public:
-                Worker(Mixpanel* mixpanel);
+                explicit Worker(Mixpanel* mixpanel);
                 ~Worker();
 
                 void enqueue(const std::string& name, const Value& o);
@@ -66,7 +67,7 @@ namespace mixpanel
                 std::mutex mutex;
                 std::condition_variable condition;
         };
-    }
-}
+    } // namespace detail
+} // namespace mixpanel
 
 #endif
