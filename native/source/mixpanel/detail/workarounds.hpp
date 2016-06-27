@@ -2,6 +2,10 @@
 #define MIXPANEL_WORKAROUNDS_HPP
 
 #if defined(__ANDROID__)
+
+#include <sstream>
+#include <string>
+
 namespace std
 {
     template <typename T>
@@ -11,7 +15,8 @@ namespace std
         ss << t;
         return ss.str();
     }
-}
+} // namespace std
+
 #endif
 
 #endif //MIXPANEL_WORKAROUNDS_HPP

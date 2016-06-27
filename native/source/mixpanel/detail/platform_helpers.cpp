@@ -1,9 +1,12 @@
 #include "platform_helpers.hpp"
-#include <fstream>
 #include <codecvt>
+#include <fstream>
+#include <iomanip>
 #include <locale>
 #include <sstream>
-#include <iomanip>
+#include <string>
+#include <utility>
+#include <vector>
 
 #if defined(__ANDROID__)
 #   include <unistd.h>
@@ -21,7 +24,6 @@
 #        include <Objbase.h>
 #        include <wrl.h>
 #        include <windows.storage.h>
-#        include <codecvt>
 #    endif
 #endif
 
@@ -383,5 +385,5 @@ namespace mixpanel
         }
 #endif
         #endif /* __ANDROID__ */
-    }
-}
+    } // namespace detail
+} // namespace mixpanel
