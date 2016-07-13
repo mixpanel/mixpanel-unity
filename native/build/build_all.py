@@ -481,11 +481,17 @@ def make_version_code():
 	'''
 		calls git and build a version number like latest_tag.number_of_commits
 	'''
+	latest_commit_tag = subprocess.check_output([
+		'git',
+		'rev-list',
+		'--tags',
+		'--max-count=1'
+	]).strip()
 	latest_tag = subprocess.check_output([
 		'git',
 		'describe',
-		'--abbrev=0',
-		'--tags'
+		'--tags',
+		latest_commit_tag
 	]).strip()
 
 	version = '%(latest_tag)s' % locals()
