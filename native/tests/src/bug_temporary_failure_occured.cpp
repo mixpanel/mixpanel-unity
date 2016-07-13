@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <fstream>
 #include <mixpanel/detail/platform_helpers.hpp>
 #include <mixpanel/detail/persistence.hpp>
 #include <mixpanel/mixpanel.hpp>
