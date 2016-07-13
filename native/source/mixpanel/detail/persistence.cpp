@@ -1,5 +1,6 @@
 #include <algorithm>
-#include <iostream>
+#include <fstream>
+#include <assert.h>
 #include <string>
 #include <utility>
 #include "./persistence.hpp"

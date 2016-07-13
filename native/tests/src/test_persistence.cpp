@@ -2,6 +2,7 @@
 #include <mixpanel/mixpanel.hpp>
 #include <mixpanel/detail/persistence.hpp>
 #include <thread>
+#include <fstream>
 
 TEST(Persistence, TestDropFront)
 {
