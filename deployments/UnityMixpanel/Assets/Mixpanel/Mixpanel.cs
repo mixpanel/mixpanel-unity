@@ -591,8 +591,8 @@ namespace mixpanel
                 Register("$screen_dpi", Screen.dpi);
 
                 #if UNITY_ANDROID && !UNITY_EDITOR
-                Register("$app_build_number", platform.MixpanelUnityPlatform.get_android_version_name());
-                Register("$app_version_string", platform.MixpanelUnityPlatform.get_android_version_code());
+                Register("$app_build_number", platform.MixpanelUnityPlatform.get_android_version_code());
+                Register("$app_version_string", platform.MixpanelUnityPlatform.get_android_version_name());
 
                 people.Set("$android_app_version_string", platform.MixpanelUnityPlatform.get_android_version_name());
                 people.Set("$android_app_build_number", platform.MixpanelUnityPlatform.get_android_version_code());
