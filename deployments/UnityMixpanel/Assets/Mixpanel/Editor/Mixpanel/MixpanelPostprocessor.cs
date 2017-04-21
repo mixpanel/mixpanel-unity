@@ -1,5 +1,4 @@
-﻿#if UNITY_IOS
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using MixpanelSDK.UnityEditor.iOS.Xcode;
@@ -13,6 +12,10 @@ public class MixpanelPostprocessScript : MonoBehaviour
     [PostProcessBuild]
     public static void OnPostprocessBuild(BuildTarget target, string buildPath)
     {
+        //Don't do any of this if we aren't building for iOS
+        if( BuildTarget.iOS != target )
+            return;
+
         UnityEngine.Debug.Log("******** START Mixpanel iOS Postprocess Script ********");
 
         // Find the xcodeproj based on the build path
@@ -53,4 +56,3 @@ public class MixpanelPostprocessScript : MonoBehaviour
         project.RemoveFile(bundleGuid);
     }
 }
-#endif
