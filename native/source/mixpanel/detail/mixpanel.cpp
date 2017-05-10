@@ -247,8 +247,24 @@ namespace mixpanel
 
         if (unique_id != get_distinct_id())
         {
-            state["distinct_id"] = unique_id;
-            Persistence::write("state", state);
+            if (state["alias_id"].empty() || !state["alias_id"].isString() || state["alias_id"].asString().empty())
+            {
+                state["distinct_id"] = unique_id;
+                Persistence::write("state", state);
+            }
+            else
+            {
+                if(state["alias_id"] != unique_id)
+                {
+                    state["alias"] = "";
+                    state["distinct_id"] = unique_id;
+                    Persistence::write("state", state);
+                }
+                else
+                {
+                    log(LogEntry::LL_WARNING, "WARNING: unique_id matches current alias; keeping current distinct_id.");
+                }
+            }
         }
         else
         {
@@ -265,6 +281,8 @@ namespace mixpanel
             Value data;
             data["alias"] = alias;
             track("$create_alias", data);
+            state["alias_id"] = alias;
+            Persistence::write("state", state);
             identify(alias);
         }
         else
