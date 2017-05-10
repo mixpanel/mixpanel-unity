@@ -247,7 +247,7 @@ namespace mixpanel
 
         if (unique_id != get_distinct_id())
         {
-            if (state["alias_id"].empty() || !state["alias_id"].isString() || state["alias_id"].asString().empty())
+            if (!state["alias_id"].isString() || state["alias_id"].asString().empty())
             {
                 state["distinct_id"] = unique_id;
                 Persistence::write("state", state);
@@ -256,7 +256,7 @@ namespace mixpanel
             {
                 if(state["alias_id"] != unique_id)
                 {
-                    state["alias"] = "";
+                    state["alias_id"] = "";
                     state["distinct_id"] = unique_id;
                     Persistence::write("state", state);
                 }
