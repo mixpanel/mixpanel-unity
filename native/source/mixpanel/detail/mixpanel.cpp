@@ -182,6 +182,18 @@ namespace mixpanel
         return state["distinct_id"].asString();
     }
 
+    std::string Mixpanel::get_alias() const
+    {
+        if (state["alias"].isString())
+        {
+            return state["distinct_id"].asString();
+        }
+        else
+        {
+            return "";
+        }
+    }
+
     void Mixpanel::track(const std::string event, const Value& properties)
     {
         Value data;
@@ -245,8 +257,9 @@ namespace mixpanel
     {
         if (unique_id.empty()) throw std::invalid_argument("unique_id cannot be empty");
 
-        if (unique_id != get_distinct_id())
+        if (unique_id != get_alias() && unique_id != get_distinct_id())
         {
+            state.removeMember("alias");
             state["distinct_id"] = unique_id;
             Persistence::write("state", state);
         }
@@ -262,15 +275,16 @@ namespace mixpanel
 
         if (alias != get_distinct_id())
         {
+            state["alias"] = alias;
+            Persistence::write("state", state);
+
             Value data;
             data["alias"] = alias;
             track("$create_alias", data);
-            identify(alias);
         }
         else
         {
             log(LogEntry::LL_WARNING, "alias matches current distinct_id - skipping api call.");
-            identify(alias);
         }
     }
 
@@ -419,6 +433,8 @@ namespace mixpanel
         if (get_distinct_id() != uuid) {
             identify(uuid);
         }
+        state.removeMember("alias");
+        Persistence::write("state", state);
         clear_super_properties();
         clear_send_queues();
         clear_timed_events();
