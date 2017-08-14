@@ -415,6 +415,10 @@ namespace mixpanel
 
     void Mixpanel::reset()
     {
+        std::string uuid = PlatformHelpers::get_uuid();
+        if (get_distinct_id() != uuid) {
+            identify(uuid);
+        }
         clear_super_properties();
         clear_send_queues();
         clear_timed_events();
