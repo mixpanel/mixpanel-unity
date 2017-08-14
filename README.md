@@ -31,6 +31,8 @@ Add all dependencies of the Mixpanel SDK to your app using the following code in
 sh ./native/build/install_dependencies.sh
 ```
 
+Make sure you've logged in to the Unity app.
+
 Then, run the following build script in your terminal: 
 
 ```

@@ -69,9 +69,6 @@ elseif("${PLATFORM}" STREQUAL "osx")
 	set(CMAKE_OSX_ARCHITECTURES "x86_64;i386")
 	set(UNITY_PLUGIN_FILE_NAME "MixpanelSDK.bundle/Contents/MacOS/MixpanelSDK")
 
-	# ugly workaround for Version 7.0
-	set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk")
-
 	set(STRIP_ARGS -S -x)
     set(SOURCES ${SOURCES} "${SOURCE_DIR}/mixpanel/detail/platform_helpers.mm")
 endif("${PLATFORM}" STREQUAL "win32")
@@ -170,6 +167,7 @@ foreach(SAMPLE_FILE ${SAMPLE_FILES})
 
 	if(IOS)
 		set_target_properties(${SAMPLE_NAME} PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer")
+		set(CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM E8FVX7QLET)
         TARGET_LINK_LIBRARIES (${SAMPLE_NAME} "-framework UIKit")
         set_xcode_property (${SAMPLE_NAME} IPHONEOS_DEPLOYMENT_TARGET "7.0")
 	endif()
