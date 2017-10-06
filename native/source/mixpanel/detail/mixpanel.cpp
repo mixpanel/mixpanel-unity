@@ -184,7 +184,7 @@ namespace mixpanel
 
     std::string Mixpanel::get_alias() const
     {
-        if (!state["alias"].isNull() && state["alias"].isString())
+        if (state["alias"].isString() && !state["alias"].asString().empty())
         {
             return state["alias"].asString();
         }
