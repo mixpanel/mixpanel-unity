@@ -22,7 +22,7 @@
 
 namespace mixpanel
 {
-    static const std::string sdk_version = "v1.0.1";
+    static const std::string sdk_version = "v1.1.0";
 
     // helper function to get the time since epoch as double / float etc.
     template <typename T>

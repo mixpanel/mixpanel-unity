@@ -1,6 +1,6 @@
 /*
     *** do not modify the line below, it is updated by the build scripts ***
-    Mixpanel C++ SDK version v1.0.1
+    Mixpanel C++ SDK version v1.1.0
 */
 
 #ifndef _MIXPANEL_HPP_
