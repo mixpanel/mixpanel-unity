@@ -259,6 +259,7 @@ namespace mixpanel
             static std::time_t utc_now_timestamp();
 
             std::string get_distinct_id() const;
+            std::string get_alias() const;
 
             std::string token;
             Value state;
