@@ -124,6 +124,9 @@ namespace mixpanel
             /// track a named *event* with optional *properties*.
             void track(const std::string event, const Value& properties=Value());
 
+            bool has_tracked_integration();
+            void set_tracked_integration();
+
             /// access to profile related tracking functionality. Use Mixpanel::people to get access to the member functions.
             class People
             {

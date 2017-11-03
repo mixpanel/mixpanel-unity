@@ -555,12 +555,32 @@ namespace mixpanel
 
         static bool tracking_enabled = true;
 
+        private string BuildTrackIntegrationRequestURL() {
+            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + this.token +"\"}}";
+            byte[] bytes = Encoding.UTF8.GetBytes(body);
+            string encoded = Convert.ToBase64String(bytes);
+            return "https://api.mixpanel.com/track/?data=" + encoded;
+        }
+
+        private IEnumerator<WWW> WaitForRequest(WWW request) {
+            yield return request;
+            instance.set_tracked_integration();
+        }
+
+        private void TrackIntegrationEvent() {
+            if (instance.has_tracked_integration()) {
+                return;
+            }
+            string url = BuildTrackIntegrationRequestURL();
+            var request = new WWW(url);
+            StartCoroutine(WaitForRequest(request));
+        }
+
         void Awake()
         {
             DontDestroyOnLoad(this);
 
-            var reporter = gameObject.AddComponent<IntegrationReporter>();
-            reporter.token = token;
+            TrackIntegrationEvent();
 
             #if UNITY_EDITOR
             tracking_enabled = trackInEditor;
@@ -670,35 +690,7 @@ namespace mixpanel
             }
         }
 
-        static People people_;
-        #endregion
-    }
-
-    class IntegrationReporter : MonoBehaviour {
-        public string token = null;
-
-        void Update() {
-            if (token == null || token.Length == 0) return;
-
-            enabled = false;
-            string url = BuildRequestURL();
-            var request = new WWW(url);
-            StartCoroutine(WaitForRequest(request));
-        }
-
-        string BuildRequestURL() {
-            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + this.token +"\"}}";
-            byte[] bytes = Encoding.UTF8.GetBytes(body);
-            string encoded = Convert.ToBase64String(bytes);
-            return "https://api.mixpanel.com/track/?data=" + encoded;
-        }
-
-        IEnumerator<WWW> WaitForRequest(WWW request) {
-            yield return request;
-
-            if (request.error != null) {
-                enabled = true;
-            }
-        }
+		static People people_;
+		#endregion
     }
 }
