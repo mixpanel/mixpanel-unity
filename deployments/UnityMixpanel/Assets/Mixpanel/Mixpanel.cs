@@ -678,9 +678,10 @@ namespace mixpanel
         public string token = null;
 
         void Update() {
-            if (token == null || token.Length == 0) return;
+            if (token == null || token.Length == 0 || PlayerPrefs.GetInt("mp_integration_sent") == 1) return;
 
             enabled = false;
+            PlayerPrefs.SetInt("mp_integration_sent",1);
             string url = BuildRequestURL();
             var request = new WWW(url);
             StartCoroutine(WaitForRequest(request));
