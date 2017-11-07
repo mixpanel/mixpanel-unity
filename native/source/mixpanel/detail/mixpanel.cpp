@@ -494,4 +494,14 @@ namespace mixpanel
         return ret;
     }
 
+    bool Mixpanel::has_tracked_integration()
+    {
+        return state["tracked_integration"].asBool();
+    }
+
+    void Mixpanel::set_tracked_integration()
+    {
+        state["tracked_integration"] = true;
+        Persistence::write("state", state);
+    }
 } // namespace mixpanel
