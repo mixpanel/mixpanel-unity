@@ -1,6 +1,6 @@
 ﻿/*
     *** do not modify the line below, it is updated by the build scripts ***
-    Mixpanel SDK for Unity version v1.1.0
+    Mixpanel SDK for Unity version v1.1.1
 */
 
 #if !UNITY_PRO_LICENSE && (UNITY_2_6||UNITY_2_6_1||UNITY_3_0||UNITY_3_0_0||UNITY_3_1||UNITY_3_2||UNITY_3_3||UNITY_3_4||UNITY_3_5||UNITY_4_0||UNITY_4_0_1||UNITY_4_1||UNITY_4_2||UNITY_4_3||UNITY_4_5||UNITY_4_6)
@@ -690,7 +690,7 @@ namespace mixpanel
             }
         }
 
-		static People people_;
-		#endregion
+        static People people_;
+        #endregion
     }
 }
