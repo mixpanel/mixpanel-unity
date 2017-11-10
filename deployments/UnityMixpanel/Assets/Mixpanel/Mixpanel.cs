@@ -580,8 +580,6 @@ namespace mixpanel
         {
             DontDestroyOnLoad(this);
 
-            TrackIntegrationEvent();
-
             #if UNITY_EDITOR
             tracking_enabled = trackInEditor;
             #endif
@@ -648,6 +646,8 @@ namespace mixpanel
                 }
 
                 mp_interface.set_flush_interval((uint)flushInterval);
+                
+                TrackIntegrationEvent();
             }
         }
 
