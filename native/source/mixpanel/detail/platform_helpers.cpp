@@ -142,8 +142,6 @@ namespace mixpanel
             ret["$android_device"] = get_system_property("ro.product.device");
             ret["$android_manufacturer"] = get_system_property("ro.product.manufacturer");
             ret["$android_model"] = get_system_property("ro.product.model");
-            ret["$android_app_version_string"] = platform.MixpanelUnityPlatform.get_android_version_name();
-            ret["$android_app_build_number"] = platform.MixpanelUnityPlatform.get_android_version_code();
 
             return ret;
         }
