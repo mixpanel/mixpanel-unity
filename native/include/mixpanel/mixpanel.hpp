@@ -62,7 +62,8 @@ namespace mixpanel
                 const std::string& token,              ///< the token you get from the mixpanel dashboard
                 const std::string& distinct_id,        ///< if empty, we're going to get the device id on Android, iOS and OSX and a random UUID on Windows
                 const std::string& storage_directory,  ///< a writable directory to persist the data to
-                const bool enable_log_queue = false    ///< if true, don't print to std::clog, but queue the log entries for retrieval via get_next_log_entry()
+                const bool enable_log_queue = false,    ///< if true, don't print to std::clog, but queue the log entries for retrieval via get_next_log_entry()
+                const bool opt_out = false
             );
 
             virtual ~Mixpanel();
@@ -127,6 +128,10 @@ namespace mixpanel
             bool has_tracked_integration();
             void set_tracked_integration();
 
+            bool has_opted_out();
+            void opt_out_tracking();
+            void opt_in_tracking(const std::string distinct_id, const Value& properties=Value());
+
             /// access to profile related tracking functionality. Use Mixpanel::people to get access to the member functions.
             class People
             {
@@ -166,6 +171,8 @@ namespace mixpanel
 
                     /// clear all charges related to the current profile
                     void clear_charges();
+
+                    void delete_user();
 
                     /// adds *token* to $ios_devices on iOS or $android_devices on Android. Does nothing on other platforms.
                     void set_push_id(const std::string& token);

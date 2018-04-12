@@ -115,6 +115,11 @@ namespace mixpanel
 
         Worker::Result Worker::send_batch(const std::string& name, bool verbose)
         {
+            if (mixpanel->has_opted_out())
+            {
+                return {true, ""};
+            }
+
             auto objs = Persistence::dequeue(name, 50);
             if (objs.first.empty())
             {

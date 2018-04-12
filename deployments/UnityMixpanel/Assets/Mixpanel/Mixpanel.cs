@@ -200,6 +200,44 @@ namespace mixpanel
             return false;
         }
 
+        public static void OptOutTracking()
+        {
+            #if !DISABLE_MIXPANEL
+            if (tracking_enabled)
+                instance.opt_out_tracking();
+            #endif
+        }
+
+        public static void OptInTracking()
+        {
+            #if !DISABLE_MIXPANEL
+            if (tracking_enabled)
+                instance.opt_in_tracking("", new Value());
+            #endif
+        }
+
+        public static void OptInTracking(string distinct_id)
+        {
+            #if !DISABLE_MIXPANEL
+            if (tracking_enabled)
+                instance.opt_in_tracking(distinct_id, new Value());
+            #endif
+        }
+
+        public static void OptInTracking(string distinct_id, Value properties)
+        {
+            #if !DISABLE_MIXPANEL
+            if (tracking_enabled)
+                instance.opt_in_tracking(distinct_id, properties);
+            #endif
+        }
+
+        public static bool hasOptedOut() {
+            if (tracking_enabled)
+                return instance.has_opted_out();
+            return false;
+        }
+
         /// <summary>
         /// Tracks an event.
         /// </summary>
@@ -598,7 +636,8 @@ namespace mixpanel
                     #endif
                     distinct_id:mixpanel.platform.MixpanelUnityPlatform.get_distinct_id(),
                     storage_directory:mixpanel.platform.MixpanelUnityPlatform.get_storage_directory(),
-                    enable_log_queue:true
+                    enable_log_queue:true,
+                    opt_out:true
                 );
                 mp_interface.set_minimum_log_level(minLogLevel);
                 mp_interface.set_maximum_queue_size((uint)(maxQueueSizeInMB * 1024 * 1024));
@@ -646,7 +685,7 @@ namespace mixpanel
                 }
 
                 mp_interface.set_flush_interval((uint)flushInterval);
-                
+
                 TrackIntegrationEvent();
             }
         }

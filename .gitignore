@@ -45,7 +45,12 @@ MixpanelSDK.bundle.meta
 Android.meta
 armeabi-v7a.meta
 Assets.meta
+deployments/native
 deployments/combined
+deployments/UnityMixpanel/Library
+deployments/UnityMixpanel/UnityPackageManager
+deployments/UnityMixpanel/Temp
+deployments/UnityMixpanel/ProjectSettings
 deployments/UnityMixpanel/Assets/Mixpanel/detail/Mixpanel.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/detail/MixpanelSDKPINVOKE.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/detail/Value.cs.meta
@@ -80,6 +85,8 @@ native/build/.idea
 native/build/build-*
 native/build/JUnit-*
 native/build/UnityPackageExport.log
+native/build/bin
+native/build/CMakeFiles
 native/tests/.idea
 post_process.py.meta
 Sample.unity.meta
