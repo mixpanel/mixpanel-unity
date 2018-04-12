@@ -63,7 +63,7 @@ namespace mixpanel
                 const std::string& distinct_id,        ///< if empty, we're going to get the device id on Android, iOS and OSX and a random UUID on Windows
                 const std::string& storage_directory,  ///< a writable directory to persist the data to
                 const bool enable_log_queue = false,    ///< if true, don't print to std::clog, but queue the log entries for retrieval via get_next_log_entry()
-                const bool opt_out = false
+                const bool opt_out = false              ///< if true, the device should be opted out from tracking by default
             );
 
             virtual ~Mixpanel();
@@ -128,8 +128,13 @@ namespace mixpanel
             bool has_tracked_integration();
             void set_tracked_integration();
 
+            /// returns true if the current device has opted out tracking, false if the current device has opted in tracking.
             bool has_opted_out();
+            /// Opt out tracking, this causes all events and people request no longer to be sent back to the Mixpanel server.
             void opt_out_tracking();
+            /// Opt out tracking, this is to opt in an already opted out device from tracking. People updates and track calls will be
+            /// sent to Mixpanel after using this method. Takes a string to use as the distinct ID for events. Also it takes a JSON object containing 
+            /// values of properties to be passed to $opt_in event that is sent to Mixpanel.
             void opt_in_tracking(const std::string distinct_id, const Value& properties=Value());
 
             /// access to profile related tracking functionality. Use Mixpanel::people to get access to the member functions.
