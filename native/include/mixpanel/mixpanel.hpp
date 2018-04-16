@@ -131,7 +131,7 @@ namespace mixpanel
             /// Opt out tracking, this causes all events and people request no longer to be sent back to the Mixpanel server.
             void opt_out_tracking();
             /// Opt out tracking, this is to opt in an already opted out device from tracking. People updates and track calls will be
-            /// sent to Mixpanel after using this method. Takes a string to use as the distinct ID for events. Also it takes a JSON object containing 
+            /// sent to Mixpanel after using this method. Takes a string to use as the distinct ID for events. Also it takes a JSON object containing
             /// values of properties to be passed to $opt_in event that is sent to Mixpanel.
             void opt_in_tracking(const std::string distinct_id, const Value& properties=Value());
 

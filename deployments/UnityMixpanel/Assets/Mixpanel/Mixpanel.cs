@@ -225,7 +225,7 @@ namespace mixpanel
         /// <summary>
         /// Opt in tracking.
         /// </summary>
-        /// <param name="distinct_id">the distinct id for events. Behind the scenes, 
+        /// <param name="distinct_id">the distinct id for events. Behind the scenes,
         /// <code>Identify</code> will be called by using this distinct id.</param>
         public static void OptInTracking(string distinct_id)
         {
@@ -238,7 +238,7 @@ namespace mixpanel
         /// <summary>
         /// Opt in tracking.
         /// </summary>
-        /// <param name="distinct_id">the distinct id for events. Behind the scenes, 
+        /// <param name="distinct_id">the distinct id for events. Behind the scenes,
         /// <code>Identify</code> will be called by using this distinct id.</param>
         /// <param name="properties">A JSONObject containing the key value pairs of the properties
         /// to include in $opt_in event. Pass null if no extra properties exist.

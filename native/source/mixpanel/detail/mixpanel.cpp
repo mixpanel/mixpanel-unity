@@ -97,7 +97,7 @@ namespace mixpanel
             opt_out_tracking();
         }
     }
-    
+
     Mixpanel::Mixpanel(
                        const std::string& token,
                        const bool enable_log_queue,
@@ -574,7 +574,7 @@ namespace mixpanel
         {
             state["distinct_id"] = uuid;
         }
-        
+
         state.removeMember("alias");
         if (!get_super_properties().isNull())
         {

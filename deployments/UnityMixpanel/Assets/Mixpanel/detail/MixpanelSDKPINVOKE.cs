@@ -500,35 +500,42 @@ class MixpanelSDKPINVOKE {
   #else
     [global::System.Runtime.InteropServices.DllImport("MixpanelSDK", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_0___")]
   #endif
-  public static extern global::System.IntPtr new_Mixpanel__SWIG_0(string jarg1, bool jarg2);
+  public static extern global::System.IntPtr new_Mixpanel__SWIG_0(string jarg1, bool jarg2, bool jarg3);
 
   #if (UNITY_IPHONE || UNITY_XBOX360) && !UNITY_EDITOR
     [global::System.Runtime.InteropServices.DllImport("__Internal", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_1___")]
   #else
     [global::System.Runtime.InteropServices.DllImport("MixpanelSDK", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_1___")]
   #endif
-  public static extern global::System.IntPtr new_Mixpanel__SWIG_1(string jarg1);
+  public static extern global::System.IntPtr new_Mixpanel__SWIG_1(string jarg1, bool jarg2);
 
   #if (UNITY_IPHONE || UNITY_XBOX360) && !UNITY_EDITOR
     [global::System.Runtime.InteropServices.DllImport("__Internal", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_2___")]
   #else
     [global::System.Runtime.InteropServices.DllImport("MixpanelSDK", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_2___")]
   #endif
-  public static extern global::System.IntPtr new_Mixpanel__SWIG_2(string jarg1, string jarg2, string jarg3, bool jarg4, bool jarg5);
+  public static extern global::System.IntPtr new_Mixpanel__SWIG_2(string jarg1);
 
   #if (UNITY_IPHONE || UNITY_XBOX360) && !UNITY_EDITOR
     [global::System.Runtime.InteropServices.DllImport("__Internal", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_3___")]
   #else
     [global::System.Runtime.InteropServices.DllImport("MixpanelSDK", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_3___")]
   #endif
-  public static extern global::System.IntPtr new_Mixpanel__SWIG_3(string jarg1, string jarg2, string jarg3, bool jarg4);
+  public static extern global::System.IntPtr new_Mixpanel__SWIG_3(string jarg1, string jarg2, string jarg3, bool jarg4, bool jarg5);
 
   #if (UNITY_IPHONE || UNITY_XBOX360) && !UNITY_EDITOR
     [global::System.Runtime.InteropServices.DllImport("__Internal", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_4___")]
   #else
     [global::System.Runtime.InteropServices.DllImport("MixpanelSDK", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_4___")]
   #endif
-  public static extern global::System.IntPtr new_Mixpanel__SWIG_4(string jarg1, string jarg2, string jarg3);
+  public static extern global::System.IntPtr new_Mixpanel__SWIG_4(string jarg1, string jarg2, string jarg3, bool jarg4);
+
+  #if (UNITY_IPHONE || UNITY_XBOX360) && !UNITY_EDITOR
+    [global::System.Runtime.InteropServices.DllImport("__Internal", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_5___")]
+  #else
+    [global::System.Runtime.InteropServices.DllImport("MixpanelSDK", EntryPoint="CSharp_mixpanelfdetail_new_Mixpanel__SWIG_5___")]
+  #endif
+  public static extern global::System.IntPtr new_Mixpanel__SWIG_5(string jarg1, string jarg2, string jarg3);
 
   #if (UNITY_IPHONE || UNITY_XBOX360) && !UNITY_EDITOR
     [global::System.Runtime.InteropServices.DllImport("__Internal", EntryPoint="CSharp_mixpanelfdetail_delete_Mixpanel___")]

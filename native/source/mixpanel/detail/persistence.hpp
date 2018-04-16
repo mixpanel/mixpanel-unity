@@ -67,7 +67,7 @@ namespace mixpanel
                 friend class ::GDPR_outOutTrackingWillClearEngageQueue_Test;
                 friend class ::GDPR_outOutTrackingWillSkipFlushEvent_Test;
                 friend class ::GDPR_outOutTrackingWillSkipFlushPeople_Test;
-            
+
                 friend void ::test_drain_queues();
 
                 friend class Worker;
