@@ -14,10 +14,22 @@ class Persistence_TestDropFront_Test;
 class Mixpanel_HugeRequest_Test;
 class Persistence_Corruption_Test;
 class Persistence_MaxQueueSize_Test;
+class GDPR_optInTrackingEvent_Test;
+class GDPR_noTrackCallDuringOrAfterInitWithOptOut_Test;
+class GDPR_optInTrackingForDistinctId_Test;
+class GDPR_optInTrackingForDistinctIdAndProperties_Test;
+class GDPR_outOutTrackingWillNoLongerTrack_Test;
 class Engage_set_Test;
 class Reachability_NotSending_Test;
 class Bugs_TemporaryFailure_Test;
 class Bugs_TemporaryFailure2_Test;
+class GDPR_outOutTrackingWillNoLongerEngage_Test;
+class GDPR_outOutTrackingWillClearTrackQueue_Test;
+class GDPR_outOutTrackingWillClearEngageQueue_Test;
+class GDPR_outOutTrackingWillSkipFlushEvent_Test;
+class GDPR_outOutTrackingWillSkipFlushPeople_Test;
+
+
 void test_drain_queues();
 void testsuite_wait_for_delivery(const std::string &queue_name, long for_seconds);
 
@@ -45,6 +57,17 @@ namespace mixpanel
                 friend class ::Persistence_MaxQueueSize_Test;
                 friend class ::Bugs_TemporaryFailure_Test;
                 friend class ::Bugs_TemporaryFailure2_Test;
+                friend class ::GDPR_optInTrackingEvent_Test;
+                friend class ::GDPR_noTrackCallDuringOrAfterInitWithOptOut_Test;
+                friend class ::GDPR_optInTrackingForDistinctId_Test;
+                friend class ::GDPR_optInTrackingForDistinctIdAndProperties_Test;
+                friend class ::GDPR_outOutTrackingWillNoLongerTrack_Test;
+                friend class ::GDPR_outOutTrackingWillNoLongerEngage_Test;
+                friend class ::GDPR_outOutTrackingWillClearTrackQueue_Test;
+                friend class ::GDPR_outOutTrackingWillClearEngageQueue_Test;
+                friend class ::GDPR_outOutTrackingWillSkipFlushEvent_Test;
+                friend class ::GDPR_outOutTrackingWillSkipFlushPeople_Test;
+            
                 friend void ::test_drain_queues();
 
                 friend class Worker;

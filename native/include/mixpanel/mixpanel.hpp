@@ -49,12 +49,10 @@ namespace mixpanel
         public:
             /// construct a Mixpanel instance where most parameters are determined automatically
             Mixpanel(
-                /// the token you get from the mixpanel dashboard
-                const std::string& token,
-
-                /// don't print to std::clog, but queue the log entries for retrieval via get_next_log_entry().
+                const std::string& token,              ///< the token you get from the mixpanel dashboard
                 /// note that the queue will hold at most 100 entries. So make sure to get_next_log_entry() frequently enough.
-                const bool enable_log_queue = false
+                const bool enable_log_queue = false,    ///< if true, don't print to std::clog, but queue the log entries for retrieval via get_next_log_entry()
+                const bool opt_out = false              ///< if true, the device should be opted out from tracking by default
             );
 
             /// construct a Mixpanel instance with custom parameters. This is useful, if you want to modify the defaults

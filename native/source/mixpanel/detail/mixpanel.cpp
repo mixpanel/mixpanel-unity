@@ -97,18 +97,19 @@ namespace mixpanel
             opt_out_tracking();
         }
     }
-
+    
     Mixpanel::Mixpanel(
-        const std::string& token,
-        const bool enable_log_queue
-    )
-        :Mixpanel(
-            token,
-            "", // the other constructor will take care of that
-            PlatformHelpers::get_storage_directory(token),
-            enable_log_queue,
-            false
-    ) {}
+                       const std::string& token,
+                       const bool enable_log_queue,
+                       const bool opt_out
+                       )
+    :Mixpanel(
+    token,
+              "", // the other constructor will take care of that
+              PlatformHelpers::get_storage_directory(token),
+              enable_log_queue,
+              opt_out
+              ) {}
 
 
     Mixpanel::~Mixpanel()
@@ -453,6 +454,10 @@ namespace mixpanel
 
     void Mixpanel::flush_queue()
     {
+        if (has_opted_out())
+        {
+            return;
+        }
         worker->flush_queue();
     }
 
@@ -569,8 +574,12 @@ namespace mixpanel
         {
             state["distinct_id"] = uuid;
         }
+        
         state.removeMember("alias");
-        clear_super_properties();
+        if (!get_super_properties().isNull())
+        {
+            clear_super_properties();
+        }
         clear_send_queues();
         clear_timed_events();
         people.clear_charges();
