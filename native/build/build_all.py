@@ -13,6 +13,7 @@ from sanitize_white_space import main as sanitize_white_space
 
 parser = argparse.ArgumentParser(description='Build Mixpanel Unity SDK Package.')
 parser.add_argument('--no-test', help='Do not run any tests.', action="store_true")
+parser.add_argument('--run-tests', help='Only run tests.', action="store_true")
 parser.add_argument('--platforms', choices=['all', 'ios', 'android', 'osx', 'windows'],
                     help='Platforms to build. This is meant to speed up incremental development.', default='all')
 args = parser.parse_args()
@@ -569,6 +570,11 @@ def main():
             # http://www.cmake.org/cmake/help/v3.1/release/3.1.0.html (WindowsPhone, WindowsStore)
             builds.append(WindowsBuild('Win32', 'Release'))
             builds.append(WindowsBuild('Win64', 'Release'))
+
+    if args.run_tests is True:
+        for build in builds:
+            build.run_tests()
+        return
 
     for build in builds:
         build.generate_project()

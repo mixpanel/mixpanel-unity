@@ -46,6 +46,7 @@ Android.meta
 armeabi-v7a.meta
 Assets.meta
 deployments/combined
+deployments/UnityMixpanel/Library
 deployments/UnityMixpanel/Assets/Mixpanel/detail/Mixpanel.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/detail/MixpanelSDKPINVOKE.cs.meta
 deployments/UnityMixpanel/Assets/Mixpanel/detail/Value.cs.meta
