@@ -18,6 +18,10 @@ namespace mixpanel
 
     void Mixpanel::People::set_properties(const Value& properties) throw(std::invalid_argument)
     {
+        if (mixpanel->has_opted_out())
+        {
+            return;
+        }
         if (!properties.isObject()) throw std::invalid_argument("properties must be an object");
         mixpanel->engage(Mixpanel::op_set, properties);
     }
@@ -31,6 +35,10 @@ namespace mixpanel
 
     void Mixpanel::People::set_once_properties(const Value& properties) throw(std::invalid_argument)
     {
+        if (mixpanel->has_opted_out())
+        {
+            return;
+        }
         if (!properties.isObject()) throw std::invalid_argument("properties must be an object");
         mixpanel->engage(Mixpanel::op_set_once, properties);
     }
@@ -59,6 +67,10 @@ namespace mixpanel
 
     void Mixpanel::People::increment_properties(const Value& properties) throw(std::invalid_argument)
     {
+        if (mixpanel->has_opted_out())
+        {
+            return;
+        }
         if (!properties.isObject()) throw std::invalid_argument("properties must be an object");
         mixpanel->engage(Mixpanel::op_add, properties);
     }
@@ -72,6 +84,10 @@ namespace mixpanel
 
     void Mixpanel::People::append_properties(const Value& properties) throw(std::invalid_argument)
     {
+        if (mixpanel->has_opted_out())
+        {
+            return;
+        }
         if (!properties.isObject()) throw std::invalid_argument("properties must be an object");
         mixpanel->engage(Mixpanel::op_append, properties);
     }
@@ -86,6 +102,10 @@ namespace mixpanel
 
     void Mixpanel::People::union_properties(const Value& properties) throw(std::invalid_argument)
     {
+        if (mixpanel->has_opted_out())
+        {
+            return;
+        }
         if (!properties.isObject()) throw std::invalid_argument("properties must be an object");
         mixpanel->engage(Mixpanel::op_union, properties);
     }
@@ -93,6 +113,11 @@ namespace mixpanel
     void Mixpanel::People::track_charge(double amount, const Value& properties)
     {
         mixpanel->track_charge(amount, properties);
+    }
+
+    void Mixpanel::People::delete_user()
+    {
+        mixpanel->engage(Mixpanel::op_delete, Value(Json::objectValue));
     }
 
     void Mixpanel::People::clear_charges()
@@ -127,6 +152,10 @@ namespace mixpanel
 
     void Mixpanel::People::set_push_id(const std::string &token)
     {
+        if (mixpanel->has_opted_out())
+        {
+            return;
+        }
         if (PlatformHelpers::is_android())
         {
             Value array;

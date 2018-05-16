@@ -201,6 +201,66 @@ namespace mixpanel
         }
 
         /// <summary>
+        /// Opt out tracking.
+        /// </summary>
+        public static void OptOutTracking()
+        {
+            #if !DISABLE_MIXPANEL
+            if (tracking_enabled)
+                instance.opt_out_tracking();
+            #endif
+        }
+
+        /// <summary>
+        /// Opt in tracking.
+        /// </summary>
+        public static void OptInTracking()
+        {
+            #if !DISABLE_MIXPANEL
+            if (tracking_enabled)
+                instance.opt_in_tracking("", new Value());
+            #endif
+        }
+
+        /// <summary>
+        /// Opt in tracking.
+        /// </summary>
+        /// <param name="distinct_id">the distinct id for events. Behind the scenes,
+        /// <code>Identify</code> will be called by using this distinct id.</param>
+        public static void OptInTracking(string distinct_id)
+        {
+            #if !DISABLE_MIXPANEL
+            if (tracking_enabled)
+                instance.opt_in_tracking(distinct_id, new Value());
+            #endif
+        }
+
+        /// <summary>
+        /// Opt in tracking.
+        /// </summary>
+        /// <param name="distinct_id">the distinct id for events. Behind the scenes,
+        /// <code>Identify</code> will be called by using this distinct id.</param>
+        /// <param name="properties">A JSONObject containing the key value pairs of the properties
+        /// to include in $opt_in event. Pass null if no extra properties exist.
+        /// </param>
+        public static void OptInTracking(string distinct_id, Value properties)
+        {
+            #if !DISABLE_MIXPANEL
+            if (tracking_enabled)
+                instance.opt_in_tracking(distinct_id, properties);
+            #endif
+        }
+
+        /// <summary>
+        /// Return true if the current device has opted out tracking, false if the current device has opted in tracking.
+        /// </summary>
+        public static bool hasOptedOut() {
+            if (tracking_enabled)
+                return instance.has_opted_out();
+            return false;
+        }
+
+        /// <summary>
         /// Tracks an event.
         /// </summary>
         /// <param name="eventName">the name of the event to send</param>
@@ -598,7 +658,8 @@ namespace mixpanel
                     #endif
                     distinct_id:mixpanel.platform.MixpanelUnityPlatform.get_distinct_id(),
                     storage_directory:mixpanel.platform.MixpanelUnityPlatform.get_storage_directory(),
-                    enable_log_queue:true
+                    enable_log_queue:true,
+                    opt_out:false
                 );
                 mp_interface.set_minimum_log_level(minLogLevel);
                 mp_interface.set_maximum_queue_size((uint)(maxQueueSizeInMB * 1024 * 1024));
@@ -646,7 +707,7 @@ namespace mixpanel
                 }
 
                 mp_interface.set_flush_interval((uint)flushInterval);
-                
+
                 TrackIntegrationEvent();
             }
         }
