@@ -4,7 +4,7 @@
 
 int main(int argc, const char* argv[])
 {
-    mixpanel::Mixpanel mp("05b7195383129757cbf5172dbc5f67e1");
+    mixpanel::Mixpanel mp("c530a1e90cfe01783793dab2bf1580b5");
 
     // send data every ten seconds
     mp.set_flush_interval(10);
