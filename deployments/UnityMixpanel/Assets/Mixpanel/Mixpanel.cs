@@ -720,13 +720,12 @@ namespace mixpanel
             }
         }
 
+        detail.Mixpanel.LogEntry le = new mixpanel.detail.Mixpanel.LogEntry();
         NetworkReachability reachability = NetworkReachability.ReachableViaLocalAreaNetwork;
         void Update()
         {
             if (tracking_enabled)
             {
-                detail.Mixpanel.LogEntry le = new mixpanel.detail.Mixpanel.LogEntry();
-
                 while (mp_interface.get_next_log_entry(le))
                 {
                     string msg = string.Format("Mixpanel[{0}]: {1}", le.level, le.message);
