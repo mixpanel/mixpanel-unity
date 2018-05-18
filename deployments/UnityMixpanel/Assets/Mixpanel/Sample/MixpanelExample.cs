@@ -2,7 +2,6 @@ using UnityEngine;
 using mixpanel;
 using System;
 using System.Collections.Generic;
-using UnityEditor;
 
 #if UNITY_IOS && UNITY_5_0_0
 using NotificationServices = UnityEngine.iOS.NotificationServices;
@@ -44,7 +43,6 @@ public class MixpanelExample : MonoBehaviour
         if (GUILayout.Button("Opt Out Tracking")) // an engage call
         {
             Mixpanel.OptOutTracking();
-            EditorUtility.DisplayDialog("Opt status", "Has opted out:  " + Mixpanel.hasOptedOut() , "Ok");
         }
 
         if (GUILayout.Button("Opt In Tracking")) // an engage call
@@ -54,7 +52,6 @@ public class MixpanelExample : MonoBehaviour
             // args1["test"] = 100;
             // args1["me"] = 101;
             // Mixpanel.OptInTracking("newDisctinctId2", args1);
-            EditorUtility.DisplayDialog("Opt status", "Has opted out:  " + Mixpanel.hasOptedOut() , "Ok");
         }
 
         GUILayout.EndArea();
