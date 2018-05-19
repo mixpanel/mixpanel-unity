@@ -374,7 +374,13 @@ namespace mixpanel
             {
                 #if !DISABLE_MIXPANEL
                 if (tracking_enabled)
+                {
                     mixpanel.people.set_properties(properties);
+                    #if UNITY_ANDROID && !UNITY_EDITOR
+                    Set("$android_app_version_string", platform.MixpanelUnityPlatform.get_android_version_name());
+                    Set("$android_app_build_number", platform.MixpanelUnityPlatform.get_android_version_code());
+                    #endif
+                }
                 #endif
             }
 
@@ -387,7 +393,13 @@ namespace mixpanel
             {
                 #if !DISABLE_MIXPANEL
                 if (tracking_enabled)
+                {
                     mixpanel.people.set(property, (detail.Value)to);
+                    #if UNITY_ANDROID && !UNITY_EDITOR
+                    mixpanel.people.set("$android_app_version_string", (detail.Value)platform.MixpanelUnityPlatform.get_android_version_name());
+                    mixpanel.people.set("$android_app_build_number", (detail.Value)platform.MixpanelUnityPlatform.get_android_version_code());
+                    #endif
+                }
                 #endif
             }
 
@@ -400,8 +412,14 @@ namespace mixpanel
             {
                 #if !DISABLE_MIXPANEL
                 if (tracking_enabled)
+                {
                     mixpanel.people.set_once(property, to);
-                #endif
+                    #if UNITY_ANDROID && !UNITY_EDITOR
+                    Set("$android_app_version_string", platform.MixpanelUnityPlatform.get_android_version_name());
+                    Set("$android_app_build_number", platform.MixpanelUnityPlatform.get_android_version_code());
+                    #endif
+                }
+#endif
             }
 
             /// <summary>
@@ -412,7 +430,13 @@ namespace mixpanel
             {
                 #if !DISABLE_MIXPANEL
                 if (tracking_enabled)
+                {
                     mixpanel.people.set_once_properties(properties);
+                    #if UNITY_ANDROID && !UNITY_EDITOR
+                    Set("$android_app_version_string", platform.MixpanelUnityPlatform.get_android_version_name());
+                    Set("$android_app_build_number", platform.MixpanelUnityPlatform.get_android_version_code());
+                    #endif
+                }
                 #endif
             }
 
@@ -672,9 +696,6 @@ namespace mixpanel
                 #if UNITY_ANDROID && !UNITY_EDITOR
                 Register("$app_build_number", platform.MixpanelUnityPlatform.get_android_version_code());
                 Register("$app_version_string", platform.MixpanelUnityPlatform.get_android_version_name());
-
-                people.Set("$android_app_version_string", platform.MixpanelUnityPlatform.get_android_version_name());
-                people.Set("$android_app_build_number", platform.MixpanelUnityPlatform.get_android_version_code());
                 #endif
 
                 #if UNITY_IOS
