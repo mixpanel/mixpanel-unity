@@ -66,7 +66,7 @@ elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Android")
 	set(STRIP_ARGS --strip-unneeded)
 elseif("${PLATFORM}" STREQUAL "osx")
 	set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
-	set(CMAKE_OSX_ARCHITECTURES "x86_64;i386")
+	set(CMAKE_OSX_ARCHITECTURES "x86_64")
 	set(UNITY_PLUGIN_FILE_NAME "MixpanelSDK.bundle/Contents/MacOS/MixpanelSDK")
 
 	set(STRIP_ARGS -S -x)
@@ -100,7 +100,7 @@ SET(CMAKE_SWIG_OUTDIR "${PROJECT_SOURCE_DIR}/../../deployments/UnityMixpanel/Ass
 SET(SWIG_MODULE_MixpanelSDK_EXTRA_FLAGS "-Wall -v -namespace mixpanel.internal")
 SET_SOURCE_FILES_PROPERTIES(${PROJECT_SOURCE_DIR}/mixpanel.i PROPERTIES CPLUSPLUS ON)
 SWIG_ADD_MODULE(MixpanelSDK csharp ${PROJECT_SOURCE_DIR}/mixpanel.i ${SOURCES})
-#set_target_properties(MixpanelSDK PROPERTIES OSX_ARCHITECTURES "x86_64;i386")
+#set_target_properties(MixpanelSDK PROPERTIES OSX_ARCHITECTURES "x86_64")
 
 if(IOS)
     set_xcode_property (MixpanelSDK IPHONEOS_DEPLOYMENT_TARGET "8.0")

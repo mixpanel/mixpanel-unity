@@ -27,13 +27,32 @@ public class MixpanelExample : MonoBehaviour
     void OnGUI() {
         GUI.skin = this.skin;
 
-        GUILayout.BeginArea(new Rect(Screen.width * 0.3f, Screen.height * 0.45f, Screen.width * 0.4f, Screen.height * 0.5f));
+        GUILayout.BeginArea(new Rect(Screen.width * 0.3f, Screen.height * 0.35f, Screen.width * 0.4f, Screen.height * 2.5f));
 
-        if (GUILayout.Button("Track")) // a simple tracking call
+        if (GUILayout.Button("Track"))
+        {
+            // a simple tracking call
             Mixpanel.Track("The Button Was Clicked");
+        }
 
         if (GUILayout.Button("Engage")) // an engage call
+        {
             Mixpanel.people.Increment("clicks", 1);
+        }
+
+        if (GUILayout.Button("Opt Out Tracking")) // an engage call
+        {
+            Mixpanel.OptOutTracking();
+        }
+
+        if (GUILayout.Button("Opt In Tracking")) // an engage call
+        {
+            Mixpanel.OptInTracking();
+            // var args1 = new Value();
+            // args1["test"] = 100;
+            // args1["me"] = 101;
+            // Mixpanel.OptInTracking("newDisctinctId2", args1);
+        }
 
         GUILayout.EndArea();
     }

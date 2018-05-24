@@ -42,7 +42,8 @@ namespace mixpanel
         const std::string& token,
         const std::string& distinct_id,
         const std::string& storage_directory,
-        const bool enable_log_queue
+        const bool enable_log_queue,
+        const bool opt_out
     )
         :people(this)
         ,token(token)
@@ -90,19 +91,25 @@ namespace mixpanel
 
         Persistence::write("state", state);
         worker = std::make_shared<Worker>(this);
+
+        if (opt_out)
+        {
+            opt_out_tracking();
+        }
     }
 
-
     Mixpanel::Mixpanel(
-        const std::string& token,
-        const bool enable_log_queue
-    )
-        :Mixpanel(
-            token,
-            "", // the other constructor will take care of that
-            PlatformHelpers::get_storage_directory(token),
-            enable_log_queue
-    ) {}
+                       const std::string& token,
+                       const bool enable_log_queue,
+                       const bool opt_out
+                       )
+    :Mixpanel(
+    token,
+              "", // the other constructor will take care of that
+              PlatformHelpers::get_storage_directory(token),
+              enable_log_queue,
+              opt_out
+              ) {}
 
 
     Mixpanel::~Mixpanel()
@@ -196,6 +203,10 @@ namespace mixpanel
 
     void Mixpanel::track(const std::string event, const Value& properties)
     {
+        if (has_opted_out())
+        {
+            return;
+        }
         Value data;
         data["event"] = event;
 
@@ -229,6 +240,10 @@ namespace mixpanel
 
     void Mixpanel::engage(Op op, const Value& values)
     {
+        if (has_opted_out())
+        {
+            return;
+        }
         if (op_set > op || op > op_delete)
         {
             log(LogEntry::LL_ERROR, "error: invalid engage op: " + std::to_string(op));
@@ -255,6 +270,10 @@ namespace mixpanel
 
     void Mixpanel::identify(const std::string& unique_id) throw(std::invalid_argument)
     {
+        if (has_opted_out())
+        {
+            return;
+        }
         if (unique_id.empty()) throw std::invalid_argument("unique_id cannot be empty");
 
         if (unique_id != get_alias() && unique_id != get_distinct_id())
@@ -271,6 +290,10 @@ namespace mixpanel
 
     void Mixpanel::alias(const std::string& alias) throw(std::invalid_argument)
     {
+        if (has_opted_out())
+        {
+            return;
+        }
         if (alias.empty()) throw std::invalid_argument("alias cannot be empty");
 
         if (alias != get_distinct_id())
@@ -290,6 +313,10 @@ namespace mixpanel
 
     void Mixpanel::register_(const std::string& key, const Value& value)
     {
+        if (has_opted_out())
+        {
+            return;
+        }
         assert(!value.isNull());
         assert(!value.isObject());
         assert(!value.isArray());
@@ -299,6 +326,10 @@ namespace mixpanel
 
     void Mixpanel::register_properties(const Value& properties)
     {
+        if (has_opted_out())
+        {
+            return;
+        }
         assert(properties.isObject());
 
         for (const auto& name : properties.getMemberNames())
@@ -314,6 +345,10 @@ namespace mixpanel
 
     bool Mixpanel::register_once(const std::string& key, const Value& value)
     {
+        if (has_opted_out())
+        {
+            return false;
+        }
         if (super_properties[key].isNull())
         {
             register_(key, value);
@@ -419,6 +454,10 @@ namespace mixpanel
 
     void Mixpanel::flush_queue()
     {
+        if (has_opted_out())
+        {
+            return;
+        }
         worker->flush_queue();
     }
 
@@ -442,6 +481,10 @@ namespace mixpanel
 
     bool Mixpanel::start_timed_event(const std::string& event_name) throw(std::invalid_argument)
     {
+        if (has_opted_out())
+        {
+            return false;
+        }
         if (event_name.empty()) throw std::invalid_argument("timed event must have a value.");
 
         bool result = timed_events.get(event_name, 0) == 0;
@@ -454,6 +497,10 @@ namespace mixpanel
 
     bool Mixpanel::start_timed_event_once(const std::string& event_name) throw(std::invalid_argument)
     {
+        if (has_opted_out())
+        {
+            return false;
+        }
         if (!timed_events.isObject() || timed_events.get(event_name, 0) == 0)
             return start_timed_event(event_name);
         return false;
@@ -486,7 +533,6 @@ namespace mixpanel
         return ret;
     }
 
-
     Value Mixpanel::collect_automatic_people_properties()
     {
         Value ret = PlatformHelpers::collect_automatic_people_properties();
@@ -504,4 +550,44 @@ namespace mixpanel
         state["tracked_integration"] = true;
         Persistence::write("state", state);
     }
+
+    bool Mixpanel::has_opted_out()
+    {
+        return state["opted_out"].asBool();
+    }
+
+    void Mixpanel::opt_in_tracking(const std::string distinct_id, const Value& properties)
+    {
+        state["opted_out"] = false;
+        Persistence::write("state", state);
+        if (!distinct_id.empty())
+        {
+            identify(distinct_id);
+        }
+        track("$opt_in", properties);
+    }
+
+    void Mixpanel::opt_out_tracking()
+    {
+        std::string uuid = PlatformHelpers::get_uuid();
+        if (get_distinct_id() != uuid)
+        {
+            state["distinct_id"] = uuid;
+        }
+
+        state.removeMember("alias");
+        if (!get_super_properties().isNull())
+        {
+            clear_super_properties();
+        }
+        clear_send_queues();
+        clear_timed_events();
+        people.clear_charges();
+        people.delete_user();
+        flush_queue();
+
+        state["opted_out"] = true;
+        Persistence::write("state", state);
+    }
+
 } // namespace mixpanel

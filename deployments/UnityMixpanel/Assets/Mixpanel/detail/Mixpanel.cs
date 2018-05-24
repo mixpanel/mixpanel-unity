@@ -40,22 +40,32 @@ public class Mixpanel : global::System.IDisposable {
     }
   }
 
-  public Mixpanel(string token, bool enable_log_queue) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_0(token, enable_log_queue), true) {
+  public Mixpanel(string token, bool enable_log_queue, bool opt_out) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_0(token, enable_log_queue, opt_out), true) {
     if (MixpanelSDKPINVOKE.SWIGPendingException.Pending) throw MixpanelSDKPINVOKE.SWIGPendingException.Retrieve();
     SwigDirectorConnect();
   }
 
-  public Mixpanel(string token) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_1(token), true) {
+  public Mixpanel(string token, bool enable_log_queue) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_1(token, enable_log_queue), true) {
     if (MixpanelSDKPINVOKE.SWIGPendingException.Pending) throw MixpanelSDKPINVOKE.SWIGPendingException.Retrieve();
     SwigDirectorConnect();
   }
 
-  public Mixpanel(string token, string distinct_id, string storage_directory, bool enable_log_queue) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_2(token, distinct_id, storage_directory, enable_log_queue), true) {
+  public Mixpanel(string token) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_2(token), true) {
     if (MixpanelSDKPINVOKE.SWIGPendingException.Pending) throw MixpanelSDKPINVOKE.SWIGPendingException.Retrieve();
     SwigDirectorConnect();
   }
 
-  public Mixpanel(string token, string distinct_id, string storage_directory) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_3(token, distinct_id, storage_directory), true) {
+  public Mixpanel(string token, string distinct_id, string storage_directory, bool enable_log_queue, bool opt_out) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_3(token, distinct_id, storage_directory, enable_log_queue, opt_out), true) {
+    if (MixpanelSDKPINVOKE.SWIGPendingException.Pending) throw MixpanelSDKPINVOKE.SWIGPendingException.Retrieve();
+    SwigDirectorConnect();
+  }
+
+  public Mixpanel(string token, string distinct_id, string storage_directory, bool enable_log_queue) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_4(token, distinct_id, storage_directory, enable_log_queue), true) {
+    if (MixpanelSDKPINVOKE.SWIGPendingException.Pending) throw MixpanelSDKPINVOKE.SWIGPendingException.Retrieve();
+    SwigDirectorConnect();
+  }
+
+  public Mixpanel(string token, string distinct_id, string storage_directory) : this(MixpanelSDKPINVOKE.new_Mixpanel__SWIG_5(token, distinct_id, storage_directory), true) {
     if (MixpanelSDKPINVOKE.SWIGPendingException.Pending) throw MixpanelSDKPINVOKE.SWIGPendingException.Retrieve();
     SwigDirectorConnect();
   }
@@ -156,6 +166,25 @@ public class Mixpanel : global::System.IDisposable {
 
   public void set_tracked_integration() {
     MixpanelSDKPINVOKE.Mixpanel_set_tracked_integration(swigCPtr);
+  }
+
+  public bool has_opted_out() {
+    bool ret = MixpanelSDKPINVOKE.Mixpanel_has_opted_out(swigCPtr);
+    return ret;
+  }
+
+  public void opt_out_tracking() {
+    MixpanelSDKPINVOKE.Mixpanel_opt_out_tracking(swigCPtr);
+  }
+
+  public void opt_in_tracking(string distinct_id, Value properties) {
+    MixpanelSDKPINVOKE.Mixpanel_opt_in_tracking__SWIG_0(swigCPtr, distinct_id, Value.getCPtr(properties));
+    if (MixpanelSDKPINVOKE.SWIGPendingException.Pending) throw MixpanelSDKPINVOKE.SWIGPendingException.Retrieve();
+  }
+
+  public void opt_in_tracking(string distinct_id) {
+    MixpanelSDKPINVOKE.Mixpanel_opt_in_tracking__SWIG_1(swigCPtr, distinct_id);
+    if (MixpanelSDKPINVOKE.SWIGPendingException.Pending) throw MixpanelSDKPINVOKE.SWIGPendingException.Retrieve();
   }
 
   public class People : global::System.IDisposable {
@@ -259,6 +288,10 @@ public class Mixpanel : global::System.IDisposable {
 
     public void clear_charges() {
       MixpanelSDKPINVOKE.Mixpanel_People_clear_charges(swigCPtr);
+    }
+
+    public void delete_user() {
+      MixpanelSDKPINVOKE.Mixpanel_People_delete_user(swigCPtr);
     }
 
     public void set_push_id(string token) {
