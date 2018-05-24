@@ -1,8 +1,8 @@
 Latest Version 
 --------------
-##### _December 18th, 2017_ - [v1.1.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.1.1)
+##### _May 24th, 2018_ - [v1.2.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.2.0)
 
-[See the changes](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.1.1).
+[See the changes](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.2.0).
 
 Getting Started
 ---------------
