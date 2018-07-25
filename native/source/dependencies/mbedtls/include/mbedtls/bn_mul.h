@@ -830,13 +830,13 @@
 
 #define MULADDC_INIT                    \
 {                                       \
-    mbedtls_t_udbl r;                           \
-    mbedtls_mpi_uint r0, r1;
+    mixpanel_mbedtls_t_udbl r;                           \
+    mixpanel_mbedtls_mpi_uint r0, r1;
 
 #define MULADDC_CORE                    \
-    r   = *(s++) * (mbedtls_t_udbl) b;          \
-    r0  = (mbedtls_mpi_uint) r;                   \
-    r1  = (mbedtls_mpi_uint)( r >> biL );         \
+    r   = *(s++) * (mixpanel_mbedtls_t_udbl) b;          \
+    r0  = (mixpanel_mbedtls_mpi_uint) r;                   \
+    r1  = (mixpanel_mbedtls_mpi_uint)( r >> biL );         \
     r0 += c;  r1 += (r0 <  c);          \
     r0 += *d; r1 += (r0 < *d);          \
     c = r1; *(d++) = r0;
@@ -847,8 +847,8 @@
 #else
 #define MULADDC_INIT                    \
 {                                       \
-    mbedtls_mpi_uint s0, s1, b0, b1;              \
-    mbedtls_mpi_uint r0, r1, rx, ry;              \
+    mixpanel_mbedtls_mpi_uint s0, s1, b0, b1;              \
+    mixpanel_mbedtls_mpi_uint r0, r1, rx, ry;              \
     b0 = ( b << biH ) >> biH;           \
     b1 = ( b >> biH );
 

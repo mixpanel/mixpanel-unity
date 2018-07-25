@@ -149,25 +149,25 @@ extern "C" {
 typedef struct
 {
     size_t len; /*!<  size(P) in chars  */
-    mbedtls_mpi P;      /*!<  prime modulus     */
-    mbedtls_mpi G;      /*!<  generator         */
-    mbedtls_mpi X;      /*!<  secret value      */
-    mbedtls_mpi GX;     /*!<  self = G^X mod P  */
-    mbedtls_mpi GY;     /*!<  peer = G^Y mod P  */
-    mbedtls_mpi K;      /*!<  key = GY^X mod P  */
-    mbedtls_mpi RP;     /*!<  cached R^2 mod P  */
-    mbedtls_mpi Vi;     /*!<  blinding value    */
-    mbedtls_mpi Vf;     /*!<  un-blinding value */
-    mbedtls_mpi pX;     /*!<  previous X        */
+    mixpanel_mbedtls_mpi P;      /*!<  prime modulus     */
+    mixpanel_mbedtls_mpi G;      /*!<  generator         */
+    mixpanel_mbedtls_mpi X;      /*!<  secret value      */
+    mixpanel_mbedtls_mpi GX;     /*!<  self = G^X mod P  */
+    mixpanel_mbedtls_mpi GY;     /*!<  peer = G^Y mod P  */
+    mixpanel_mbedtls_mpi K;      /*!<  key = GY^X mod P  */
+    mixpanel_mbedtls_mpi RP;     /*!<  cached R^2 mod P  */
+    mixpanel_mbedtls_mpi Vi;     /*!<  blinding value    */
+    mixpanel_mbedtls_mpi Vf;     /*!<  un-blinding value */
+    mixpanel_mbedtls_mpi pX;     /*!<  previous X        */
 }
-mbedtls_dhm_context;
+mixpanel_mbedtls_dhm_context;
 
 /**
  * \brief          Initialize DHM context
  *
  * \param ctx      DHM context to be initialized
  */
-void mbedtls_dhm_init( mbedtls_dhm_context *ctx );
+void mixpanel_mbedtls_dhm_init( mixpanel_mbedtls_dhm_context *ctx );
 
 /**
  * \brief          Parse the ServerKeyExchange parameters
@@ -178,7 +178,7 @@ void mbedtls_dhm_init( mbedtls_dhm_context *ctx );
  *
  * \return         0 if successful, or an MBEDTLS_ERR_DHM_XXX error code
  */
-int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
+int mixpanel_mbedtls_dhm_read_params( mixpanel_mbedtls_dhm_context *ctx,
                      unsigned char **p,
                      const unsigned char *end );
 
@@ -194,11 +194,11 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
  *
  * \note           This function assumes that ctx->P and ctx->G
  *                 have already been properly set (for example
- *                 using mbedtls_mpi_read_string or mbedtls_mpi_read_binary).
+ *                 using mixpanel_mbedtls_mpi_read_string or mixpanel_mbedtls_mpi_read_binary).
  *
  * \return         0 if successful, or an MBEDTLS_ERR_DHM_XXX error code
  */
-int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
+int mixpanel_mbedtls_dhm_make_params( mixpanel_mbedtls_dhm_context *ctx, int x_size,
                      unsigned char *output, size_t *olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng );
@@ -212,7 +212,7 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
  *
  * \return         0 if successful, or an MBEDTLS_ERR_DHM_XXX error code
  */
-int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
+int mixpanel_mbedtls_dhm_read_public( mixpanel_mbedtls_dhm_context *ctx,
                      const unsigned char *input, size_t ilen );
 
 /**
@@ -227,7 +227,7 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
  *
  * \return         0 if successful, or an MBEDTLS_ERR_DHM_XXX error code
  */
-int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
+int mixpanel_mbedtls_dhm_make_public( mixpanel_mbedtls_dhm_context *ctx, int x_size,
                      unsigned char *output, size_t olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng );
@@ -250,7 +250,7 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
  *                 re-used and costs nothing otherwise, so it is recommended
  *                 to always pass a non-NULL f_rng argument.
  */
-int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
+int mixpanel_mbedtls_dhm_calc_secret( mixpanel_mbedtls_dhm_context *ctx,
                      unsigned char *output, size_t output_size, size_t *olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng );
@@ -260,7 +260,7 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
  *
  * \param ctx      DHM context to free and clear
  */
-void mbedtls_dhm_free( mbedtls_dhm_context *ctx );
+void mixpanel_mbedtls_dhm_free( mixpanel_mbedtls_dhm_context *ctx );
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
 /** \ingroup x509_module */
@@ -274,7 +274,7 @@ void mbedtls_dhm_free( mbedtls_dhm_context *ctx );
  *
  * \return         0 if successful, or a specific DHM or PEM error code
  */
-int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
+int mixpanel_mbedtls_dhm_parse_dhm( mixpanel_mbedtls_dhm_context *dhm, const unsigned char *dhmin,
                    size_t dhminlen );
 
 #if defined(MBEDTLS_FS_IO)
@@ -287,7 +287,7 @@ int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
  *
  * \return         0 if successful, or a specific DHM or PEM error code
  */
-int mbedtls_dhm_parse_dhmfile( mbedtls_dhm_context *dhm, const char *path );
+int mixpanel_mbedtls_dhm_parse_dhmfile( mixpanel_mbedtls_dhm_context *dhm, const char *path );
 #endif /* MBEDTLS_FS_IO */
 #endif /* MBEDTLS_ASN1_PARSE_C */
 
@@ -296,7 +296,7 @@ int mbedtls_dhm_parse_dhmfile( mbedtls_dhm_context *dhm, const char *path );
  *
  * \return         0 if successful, or 1 if the test failed
  */
-int mbedtls_dhm_self_test( int verbose );
+int mixpanel_mbedtls_dhm_self_test( int verbose );
 
 #ifdef __cplusplus
 }

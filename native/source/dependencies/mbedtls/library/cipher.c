@@ -50,21 +50,21 @@
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 static int supported_init = 0;
 
-const int *mbedtls_cipher_list( void )
+const int *mixpanel_mbedtls_cipher_list( void )
 {
-    const mbedtls_cipher_definition_t *def;
+    const mixpanel_mbedtls_cipher_definition_t *def;
     int *type;
 
     if( ! supported_init )
     {
-        def = mbedtls_cipher_definitions;
-        type = mbedtls_cipher_supported;
+        def = mixpanel_mbedtls_cipher_definitions;
+        type = mixpanel_mbedtls_cipher_supported;
 
         while( def->type != 0 )
             *type++ = (*def++).type;
@@ -74,41 +74,41 @@ const int *mbedtls_cipher_list( void )
         supported_init = 1;
     }
 
-    return( mbedtls_cipher_supported );
+    return( mixpanel_mbedtls_cipher_supported );
 }
 
-const mbedtls_cipher_info_t *mbedtls_cipher_info_from_type( const mbedtls_cipher_type_t cipher_type )
+const mixpanel_mbedtls_cipher_info_t *mixpanel_mbedtls_cipher_info_from_type( const mixpanel_mbedtls_cipher_type_t cipher_type )
 {
-    const mbedtls_cipher_definition_t *def;
+    const mixpanel_mbedtls_cipher_definition_t *def;
 
-    for( def = mbedtls_cipher_definitions; def->info != NULL; def++ )
+    for( def = mixpanel_mbedtls_cipher_definitions; def->info != NULL; def++ )
         if( def->type == cipher_type )
             return( def->info );
 
     return( NULL );
 }
 
-const mbedtls_cipher_info_t *mbedtls_cipher_info_from_string( const char *cipher_name )
+const mixpanel_mbedtls_cipher_info_t *mixpanel_mbedtls_cipher_info_from_string( const char *cipher_name )
 {
-    const mbedtls_cipher_definition_t *def;
+    const mixpanel_mbedtls_cipher_definition_t *def;
 
     if( NULL == cipher_name )
         return( NULL );
 
-    for( def = mbedtls_cipher_definitions; def->info != NULL; def++ )
+    for( def = mixpanel_mbedtls_cipher_definitions; def->info != NULL; def++ )
         if( !  strcmp( def->info->name, cipher_name ) )
             return( def->info );
 
     return( NULL );
 }
 
-const mbedtls_cipher_info_t *mbedtls_cipher_info_from_values( const mbedtls_cipher_id_t cipher_id,
+const mixpanel_mbedtls_cipher_info_t *mixpanel_mbedtls_cipher_info_from_values( const mixpanel_mbedtls_cipher_id_t cipher_id,
                                               int key_bitlen,
-                                              const mbedtls_cipher_mode_t mode )
+                                              const mixpanel_mbedtls_cipher_mode_t mode )
 {
-    const mbedtls_cipher_definition_t *def;
+    const mixpanel_mbedtls_cipher_definition_t *def;
 
-    for( def = mbedtls_cipher_definitions; def->info != NULL; def++ )
+    for( def = mixpanel_mbedtls_cipher_definitions; def->info != NULL; def++ )
         if( def->info->base->cipher == cipher_id &&
             def->info->key_bitlen == (unsigned) key_bitlen &&
             def->info->mode == mode )
@@ -117,12 +117,12 @@ const mbedtls_cipher_info_t *mbedtls_cipher_info_from_values( const mbedtls_ciph
     return( NULL );
 }
 
-void mbedtls_cipher_init( mbedtls_cipher_context_t *ctx )
+void mixpanel_mbedtls_cipher_init( mixpanel_mbedtls_cipher_context_t *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_cipher_context_t ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_cipher_context_t ) );
 }
 
-void mbedtls_cipher_free( mbedtls_cipher_context_t *ctx )
+void mixpanel_mbedtls_cipher_free( mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( ctx == NULL )
         return;
@@ -130,15 +130,15 @@ void mbedtls_cipher_free( mbedtls_cipher_context_t *ctx )
     if( ctx->cipher_ctx )
         ctx->cipher_info->base->ctx_free_func( ctx->cipher_ctx );
 
-    mbedtls_zeroize( ctx, sizeof(mbedtls_cipher_context_t) );
+    mixpanel_mbedtls_zeroize( ctx, sizeof(mixpanel_mbedtls_cipher_context_t) );
 }
 
-int mbedtls_cipher_setup( mbedtls_cipher_context_t *ctx, const mbedtls_cipher_info_t *cipher_info )
+int mixpanel_mbedtls_cipher_setup( mixpanel_mbedtls_cipher_context_t *ctx, const mixpanel_mbedtls_cipher_info_t *cipher_info )
 {
     if( NULL == cipher_info || NULL == ctx )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
-    memset( ctx, 0, sizeof( mbedtls_cipher_context_t ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_cipher_context_t ) );
 
     if( NULL == ( ctx->cipher_ctx = cipher_info->base->ctx_alloc_func() ) )
         return( MBEDTLS_ERR_CIPHER_ALLOC_FAILED );
@@ -150,17 +150,17 @@ int mbedtls_cipher_setup( mbedtls_cipher_context_t *ctx, const mbedtls_cipher_in
      * Ignore possible errors caused by a cipher mode that doesn't use padding
      */
 #if defined(MBEDTLS_CIPHER_PADDING_PKCS7)
-    (void) mbedtls_cipher_set_padding_mode( ctx, MBEDTLS_PADDING_PKCS7 );
+    (void) mixpanel_mbedtls_cipher_set_padding_mode( ctx, MBEDTLS_PADDING_PKCS7 );
 #else
-    (void) mbedtls_cipher_set_padding_mode( ctx, MBEDTLS_PADDING_NONE );
+    (void) mixpanel_mbedtls_cipher_set_padding_mode( ctx, MBEDTLS_PADDING_NONE );
 #endif
 #endif /* MBEDTLS_CIPHER_MODE_WITH_PADDING */
 
     return( 0 );
 }
 
-int mbedtls_cipher_setkey( mbedtls_cipher_context_t *ctx, const unsigned char *key,
-        int key_bitlen, const mbedtls_operation_t operation )
+int mixpanel_mbedtls_cipher_setkey( mixpanel_mbedtls_cipher_context_t *ctx, const unsigned char *key,
+        int key_bitlen, const mixpanel_mbedtls_operation_t operation )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
@@ -192,7 +192,7 @@ int mbedtls_cipher_setkey( mbedtls_cipher_context_t *ctx, const unsigned char *k
     return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 }
 
-int mbedtls_cipher_set_iv( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_set_iv( mixpanel_mbedtls_cipher_context_t *ctx,
                    const unsigned char *iv, size_t iv_len )
 {
     size_t actual_iv_size;
@@ -221,7 +221,7 @@ int mbedtls_cipher_set_iv( mbedtls_cipher_context_t *ctx,
     return( 0 );
 }
 
-int mbedtls_cipher_reset( mbedtls_cipher_context_t *ctx )
+int mixpanel_mbedtls_cipher_reset( mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
@@ -232,7 +232,7 @@ int mbedtls_cipher_reset( mbedtls_cipher_context_t *ctx )
 }
 
 #if defined(MBEDTLS_GCM_C)
-int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_update_ad( mixpanel_mbedtls_cipher_context_t *ctx,
                       const unsigned char *ad, size_t ad_len )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
@@ -240,7 +240,7 @@ int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
 
     if( MBEDTLS_MODE_GCM == ctx->cipher_info->mode )
     {
-        return mbedtls_gcm_starts( (mbedtls_gcm_context *) ctx->cipher_ctx, ctx->operation,
+        return mixpanel_mbedtls_gcm_starts( (mixpanel_mbedtls_gcm_context *) ctx->cipher_ctx, ctx->operation,
                            ctx->iv, ctx->iv_size, ad, ad_len );
     }
 
@@ -248,7 +248,7 @@ int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
 }
 #endif /* MBEDTLS_GCM_C */
 
-int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *input,
+int mixpanel_mbedtls_cipher_update( mixpanel_mbedtls_cipher_context_t *ctx, const unsigned char *input,
                    size_t ilen, unsigned char *output, size_t *olen )
 {
     int ret;
@@ -262,7 +262,7 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
 
     if( ctx->cipher_info->mode == MBEDTLS_MODE_ECB )
     {
-        if( ilen != mbedtls_cipher_get_block_size( ctx ) )
+        if( ilen != mixpanel_mbedtls_cipher_get_block_size( ctx ) )
             return( MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED );
 
         *olen = ilen;
@@ -280,13 +280,13 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
     if( ctx->cipher_info->mode == MBEDTLS_MODE_GCM )
     {
         *olen = ilen;
-        return mbedtls_gcm_update( (mbedtls_gcm_context *) ctx->cipher_ctx, ilen, input,
+        return mixpanel_mbedtls_gcm_update( (mixpanel_mbedtls_gcm_context *) ctx->cipher_ctx, ilen, input,
                            output );
     }
 #endif
 
     if( input == output &&
-       ( ctx->unprocessed_len != 0 || ilen % mbedtls_cipher_get_block_size( ctx ) ) )
+       ( ctx->unprocessed_len != 0 || ilen % mixpanel_mbedtls_cipher_get_block_size( ctx ) ) )
     {
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     }
@@ -300,9 +300,9 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
          * If there is not enough data for a full block, cache it.
          */
         if( ( ctx->operation == MBEDTLS_DECRYPT &&
-                ilen + ctx->unprocessed_len <= mbedtls_cipher_get_block_size( ctx ) ) ||
+                ilen + ctx->unprocessed_len <= mixpanel_mbedtls_cipher_get_block_size( ctx ) ) ||
              ( ctx->operation == MBEDTLS_ENCRYPT &&
-                ilen + ctx->unprocessed_len < mbedtls_cipher_get_block_size( ctx ) ) )
+                ilen + ctx->unprocessed_len < mixpanel_mbedtls_cipher_get_block_size( ctx ) ) )
         {
             memcpy( &( ctx->unprocessed_data[ctx->unprocessed_len] ), input,
                     ilen );
@@ -316,20 +316,20 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
          */
         if( ctx->unprocessed_len != 0 )
         {
-            copy_len = mbedtls_cipher_get_block_size( ctx ) - ctx->unprocessed_len;
+            copy_len = mixpanel_mbedtls_cipher_get_block_size( ctx ) - ctx->unprocessed_len;
 
             memcpy( &( ctx->unprocessed_data[ctx->unprocessed_len] ), input,
                     copy_len );
 
             if( 0 != ( ret = ctx->cipher_info->base->cbc_func( ctx->cipher_ctx,
-                    ctx->operation, mbedtls_cipher_get_block_size( ctx ), ctx->iv,
+                    ctx->operation, mixpanel_mbedtls_cipher_get_block_size( ctx ), ctx->iv,
                     ctx->unprocessed_data, output ) ) )
             {
                 return( ret );
             }
 
-            *olen += mbedtls_cipher_get_block_size( ctx );
-            output += mbedtls_cipher_get_block_size( ctx );
+            *olen += mixpanel_mbedtls_cipher_get_block_size( ctx );
+            output += mixpanel_mbedtls_cipher_get_block_size( ctx );
             ctx->unprocessed_len = 0;
 
             input += copy_len;
@@ -341,9 +341,9 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
          */
         if( 0 != ilen )
         {
-            copy_len = ilen % mbedtls_cipher_get_block_size( ctx );
+            copy_len = ilen % mixpanel_mbedtls_cipher_get_block_size( ctx );
             if( copy_len == 0 && ctx->operation == MBEDTLS_DECRYPT )
-                copy_len = mbedtls_cipher_get_block_size( ctx );
+                copy_len = mixpanel_mbedtls_cipher_get_block_size( ctx );
 
             memcpy( ctx->unprocessed_data, &( input[ilen - copy_len] ),
                     copy_len );
@@ -577,7 +577,7 @@ static int get_zeros_padding( unsigned char *input, size_t input_len,
 /*
  * No padding: don't pad :)
  *
- * There is no add_padding function (check for NULL in mbedtls_cipher_finish)
+ * There is no add_padding function (check for NULL in mixpanel_mbedtls_cipher_finish)
  * but a trivial get_padding function
  */
 static int get_no_padding( unsigned char *input, size_t input_len,
@@ -592,7 +592,7 @@ static int get_no_padding( unsigned char *input, size_t input_len,
 }
 #endif /* MBEDTLS_CIPHER_MODE_WITH_PADDING */
 
-int mbedtls_cipher_finish( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_finish( mixpanel_mbedtls_cipher_context_t *ctx,
                    unsigned char *output, size_t *olen )
 {
     if( NULL == ctx || NULL == ctx->cipher_info || NULL == olen )
@@ -632,10 +632,10 @@ int mbedtls_cipher_finish( mbedtls_cipher_context_t *ctx,
                 return( 0 );
             }
 
-            ctx->add_padding( ctx->unprocessed_data, mbedtls_cipher_get_iv_size( ctx ),
+            ctx->add_padding( ctx->unprocessed_data, mixpanel_mbedtls_cipher_get_iv_size( ctx ),
                     ctx->unprocessed_len );
         }
-        else if( mbedtls_cipher_get_block_size( ctx ) != ctx->unprocessed_len )
+        else if( mixpanel_mbedtls_cipher_get_block_size( ctx ) != ctx->unprocessed_len )
         {
             /*
              * For decrypt operations, expect a full block,
@@ -649,7 +649,7 @@ int mbedtls_cipher_finish( mbedtls_cipher_context_t *ctx,
 
         /* cipher block */
         if( 0 != ( ret = ctx->cipher_info->base->cbc_func( ctx->cipher_ctx,
-                ctx->operation, mbedtls_cipher_get_block_size( ctx ), ctx->iv,
+                ctx->operation, mixpanel_mbedtls_cipher_get_block_size( ctx ), ctx->iv,
                 ctx->unprocessed_data, output ) ) )
         {
             return( ret );
@@ -657,11 +657,11 @@ int mbedtls_cipher_finish( mbedtls_cipher_context_t *ctx,
 
         /* Set output size for decryption */
         if( MBEDTLS_DECRYPT == ctx->operation )
-            return ctx->get_padding( output, mbedtls_cipher_get_block_size( ctx ),
+            return ctx->get_padding( output, mixpanel_mbedtls_cipher_get_block_size( ctx ),
                                      olen );
 
         /* Set output size for encryption */
-        *olen = mbedtls_cipher_get_block_size( ctx );
+        *olen = mixpanel_mbedtls_cipher_get_block_size( ctx );
         return( 0 );
     }
 #else
@@ -672,7 +672,7 @@ int mbedtls_cipher_finish( mbedtls_cipher_context_t *ctx,
 }
 
 #if defined(MBEDTLS_CIPHER_MODE_WITH_PADDING)
-int mbedtls_cipher_set_padding_mode( mbedtls_cipher_context_t *ctx, mbedtls_cipher_padding_t mode )
+int mixpanel_mbedtls_cipher_set_padding_mode( mixpanel_mbedtls_cipher_context_t *ctx, mixpanel_mbedtls_cipher_padding_t mode )
 {
     if( NULL == ctx ||
         MBEDTLS_MODE_CBC != ctx->cipher_info->mode )
@@ -720,7 +720,7 @@ int mbedtls_cipher_set_padding_mode( mbedtls_cipher_context_t *ctx, mbedtls_ciph
 #endif /* MBEDTLS_CIPHER_MODE_WITH_PADDING */
 
 #if defined(MBEDTLS_GCM_C)
-int mbedtls_cipher_write_tag( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_write_tag( mixpanel_mbedtls_cipher_context_t *ctx,
                       unsigned char *tag, size_t tag_len )
 {
     if( NULL == ctx || NULL == ctx->cipher_info || NULL == tag )
@@ -730,12 +730,12 @@ int mbedtls_cipher_write_tag( mbedtls_cipher_context_t *ctx,
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
     if( MBEDTLS_MODE_GCM == ctx->cipher_info->mode )
-        return mbedtls_gcm_finish( (mbedtls_gcm_context *) ctx->cipher_ctx, tag, tag_len );
+        return mixpanel_mbedtls_gcm_finish( (mixpanel_mbedtls_gcm_context *) ctx->cipher_ctx, tag, tag_len );
 
     return( 0 );
 }
 
-int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_check_tag( mixpanel_mbedtls_cipher_context_t *ctx,
                       const unsigned char *tag, size_t tag_len )
 {
     int ret;
@@ -755,7 +755,7 @@ int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
         if( tag_len > sizeof( check_tag ) )
             return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
-        if( 0 != ( ret = mbedtls_gcm_finish( (mbedtls_gcm_context *) ctx->cipher_ctx,
+        if( 0 != ( ret = mixpanel_mbedtls_gcm_finish( (mixpanel_mbedtls_gcm_context *) ctx->cipher_ctx,
                                      check_tag, tag_len ) ) )
         {
             return( ret );
@@ -778,7 +778,7 @@ int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
 /*
  * Packet-oriented wrapper for non-AEAD modes
  */
-int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_crypt( mixpanel_mbedtls_cipher_context_t *ctx,
                   const unsigned char *iv, size_t iv_len,
                   const unsigned char *input, size_t ilen,
                   unsigned char *output, size_t *olen )
@@ -786,16 +786,16 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     int ret;
     size_t finish_olen;
 
-    if( ( ret = mbedtls_cipher_set_iv( ctx, iv, iv_len ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_set_iv( ctx, iv, iv_len ) ) != 0 )
         return( ret );
 
-    if( ( ret = mbedtls_cipher_reset( ctx ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_reset( ctx ) ) != 0 )
         return( ret );
 
-    if( ( ret = mbedtls_cipher_update( ctx, input, ilen, output, olen ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_update( ctx, input, ilen, output, olen ) ) != 0 )
         return( ret );
 
-    if( ( ret = mbedtls_cipher_finish( ctx, output + *olen, &finish_olen ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_finish( ctx, output + *olen, &finish_olen ) ) != 0 )
         return( ret );
 
     *olen += finish_olen;
@@ -807,7 +807,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
 /*
  * Packet-oriented encryption for AEAD modes
  */
-int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_auth_encrypt( mixpanel_mbedtls_cipher_context_t *ctx,
                          const unsigned char *iv, size_t iv_len,
                          const unsigned char *ad, size_t ad_len,
                          const unsigned char *input, size_t ilen,
@@ -818,7 +818,7 @@ int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
     if( MBEDTLS_MODE_GCM == ctx->cipher_info->mode )
     {
         *olen = ilen;
-        return( mbedtls_gcm_crypt_and_tag( ctx->cipher_ctx, MBEDTLS_GCM_ENCRYPT, ilen,
+        return( mixpanel_mbedtls_gcm_crypt_and_tag( ctx->cipher_ctx, MBEDTLS_GCM_ENCRYPT, ilen,
                                    iv, iv_len, ad, ad_len, input, output,
                                    tag_len, tag ) );
     }
@@ -827,7 +827,7 @@ int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
     if( MBEDTLS_MODE_CCM == ctx->cipher_info->mode )
     {
         *olen = ilen;
-        return( mbedtls_ccm_encrypt_and_tag( ctx->cipher_ctx, ilen,
+        return( mixpanel_mbedtls_ccm_encrypt_and_tag( ctx->cipher_ctx, ilen,
                                      iv, iv_len, ad, ad_len, input, output,
                                      tag, tag_len ) );
     }
@@ -839,7 +839,7 @@ int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
 /*
  * Packet-oriented decryption for AEAD modes
  */
-int mbedtls_cipher_auth_decrypt( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_auth_decrypt( mixpanel_mbedtls_cipher_context_t *ctx,
                          const unsigned char *iv, size_t iv_len,
                          const unsigned char *ad, size_t ad_len,
                          const unsigned char *input, size_t ilen,
@@ -852,7 +852,7 @@ int mbedtls_cipher_auth_decrypt( mbedtls_cipher_context_t *ctx,
         int ret;
 
         *olen = ilen;
-        ret = mbedtls_gcm_auth_decrypt( ctx->cipher_ctx, ilen,
+        ret = mixpanel_mbedtls_gcm_auth_decrypt( ctx->cipher_ctx, ilen,
                                 iv, iv_len, ad, ad_len,
                                 tag, tag_len, input, output );
 
@@ -868,7 +868,7 @@ int mbedtls_cipher_auth_decrypt( mbedtls_cipher_context_t *ctx,
         int ret;
 
         *olen = ilen;
-        ret = mbedtls_ccm_auth_decrypt( ctx->cipher_ctx, ilen,
+        ret = mixpanel_mbedtls_ccm_auth_decrypt( ctx->cipher_ctx, ilen,
                                 iv, iv_len, ad, ad_len,
                                 input, output, tag, tag_len );
 

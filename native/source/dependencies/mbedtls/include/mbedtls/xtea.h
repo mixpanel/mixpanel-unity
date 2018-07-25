@@ -52,21 +52,21 @@ typedef struct
 {
     uint32_t k[4];       /*!< key */
 }
-mbedtls_xtea_context;
+mixpanel_mbedtls_xtea_context;
 
 /**
  * \brief          Initialize XTEA context
  *
  * \param ctx      XTEA context to be initialized
  */
-void mbedtls_xtea_init( mbedtls_xtea_context *ctx );
+void mixpanel_mbedtls_xtea_init( mixpanel_mbedtls_xtea_context *ctx );
 
 /**
  * \brief          Clear XTEA context
  *
  * \param ctx      XTEA context to be cleared
  */
-void mbedtls_xtea_free( mbedtls_xtea_context *ctx );
+void mixpanel_mbedtls_xtea_free( mixpanel_mbedtls_xtea_context *ctx );
 
 /**
  * \brief          XTEA key schedule
@@ -74,7 +74,7 @@ void mbedtls_xtea_free( mbedtls_xtea_context *ctx );
  * \param ctx      XTEA context to be initialized
  * \param key      the secret key
  */
-void mbedtls_xtea_setup( mbedtls_xtea_context *ctx, const unsigned char key[16] );
+void mixpanel_mbedtls_xtea_setup( mixpanel_mbedtls_xtea_context *ctx, const unsigned char key[16] );
 
 /**
  * \brief          XTEA cipher function
@@ -86,7 +86,7 @@ void mbedtls_xtea_setup( mbedtls_xtea_context *ctx, const unsigned char key[16] 
  *
  * \return         0 if successful
  */
-int mbedtls_xtea_crypt_ecb( mbedtls_xtea_context *ctx,
+int mixpanel_mbedtls_xtea_crypt_ecb( mixpanel_mbedtls_xtea_context *ctx,
                     int mode,
                     const unsigned char input[8],
                     unsigned char output[8] );
@@ -105,7 +105,7 @@ int mbedtls_xtea_crypt_ecb( mbedtls_xtea_context *ctx,
  * \return         0 if successful,
  *                 MBEDTLS_ERR_XTEA_INVALID_INPUT_LENGTH if the length % 8 != 0
  */
-int mbedtls_xtea_crypt_cbc( mbedtls_xtea_context *ctx,
+int mixpanel_mbedtls_xtea_crypt_cbc( mixpanel_mbedtls_xtea_context *ctx,
                     int mode,
                     size_t length,
                     unsigned char iv[8],
@@ -130,7 +130,7 @@ extern "C" {
  *
  * \return         0 if successful, or 1 if the test failed
  */
-int mbedtls_xtea_self_test( int verbose );
+int mixpanel_mbedtls_xtea_self_test( int verbose );
 
 #ifdef __cplusplus
 }

@@ -47,7 +47,7 @@
 #include <windows.h>
 #include <wincrypt.h>
 
-int mbedtls_platform_entropy_poll( void *data, unsigned char *output, size_t len,
+int mixpanel_mbedtls_platform_entropy_poll( void *data, unsigned char *output, size_t len,
                            size_t *olen )
 {
     HCRYPTPROV provider;
@@ -135,7 +135,7 @@ static int has_getrandom = -1;
 
 #include <stdio.h>
 
-int mbedtls_platform_entropy_poll( void *data,
+int mixpanel_mbedtls_platform_entropy_poll( void *data,
                            unsigned char *output, size_t len, size_t *olen )
 {
     FILE *file;
@@ -180,10 +180,10 @@ int mbedtls_platform_entropy_poll( void *data,
 #endif /* !MBEDTLS_NO_PLATFORM_ENTROPY */
 
 #if defined(MBEDTLS_TIMING_C)
-int mbedtls_hardclock_poll( void *data,
+int mixpanel_mbedtls_hardclock_poll( void *data,
                     unsigned char *output, size_t len, size_t *olen )
 {
-    unsigned long timer = mbedtls_timing_hardclock();
+    unsigned long timer = mixpanel_mbedtls_timing_hardclock();
     ((void) data);
     *olen = 0;
 
@@ -198,13 +198,13 @@ int mbedtls_hardclock_poll( void *data,
 #endif /* MBEDTLS_TIMING_C */
 
 #if defined(MBEDTLS_HAVEGE_C)
-int mbedtls_havege_poll( void *data,
+int mixpanel_mbedtls_havege_poll( void *data,
                  unsigned char *output, size_t len, size_t *olen )
 {
-    mbedtls_havege_state *hs = (mbedtls_havege_state *) data;
+    mixpanel_mbedtls_havege_state *hs = (mixpanel_mbedtls_havege_state *) data;
     *olen = 0;
 
-    if( mbedtls_havege_random( hs, output, len ) != 0 )
+    if( mixpanel_mbedtls_havege_random( hs, output, len ) != 0 )
         return( MBEDTLS_ERR_ENTROPY_SOURCE_FAILED );
 
     *olen = len;

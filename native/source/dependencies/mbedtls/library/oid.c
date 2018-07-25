@@ -38,7 +38,7 @@
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
-#define mbedtls_snprintf snprintf
+#define mixpanel_mbedtls_snprintf snprintf
 #endif
 
 #if defined(MBEDTLS_X509_USE_C) || defined(MBEDTLS_X509_CREATE_C)
@@ -55,10 +55,10 @@
  * the other functions)
  */
 #define FN_OID_TYPED_FROM_ASN1( TYPE_T, NAME, LIST )                        \
-static const TYPE_T * oid_ ## NAME ## _from_asn1( const mbedtls_asn1_buf *oid )     \
+static const TYPE_T * oid_ ## NAME ## _from_asn1( const mixpanel_mbedtls_asn1_buf *oid )     \
 {                                                                           \
     const TYPE_T *p = LIST;                                                 \
-    const mbedtls_oid_descriptor_t *cur = (const mbedtls_oid_descriptor_t *) p;             \
+    const mixpanel_mbedtls_oid_descriptor_t *cur = (const mixpanel_mbedtls_oid_descriptor_t *) p;             \
     if( p == NULL || oid == NULL ) return( NULL );                          \
     while( cur->asn1 != NULL ) {                                            \
         if( cur->asn1_len == oid->len &&                                    \
@@ -66,17 +66,17 @@ static const TYPE_T * oid_ ## NAME ## _from_asn1( const mbedtls_asn1_buf *oid ) 
             return( p );                                                    \
         }                                                                   \
         p++;                                                                \
-        cur = (const mbedtls_oid_descriptor_t *) p;                                 \
+        cur = (const mixpanel_mbedtls_oid_descriptor_t *) p;                                 \
     }                                                                       \
     return( NULL );                                                         \
 }
 
 /*
  * Macro to generate a function for retrieving a single attribute from the
- * descriptor of an mbedtls_oid_descriptor_t wrapper.
+ * descriptor of an mixpanel_mbedtls_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_DESCRIPTOR_ATTR1(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1) \
-int FN_NAME( const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1 )                  \
+int FN_NAME( const mixpanel_mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1 )                  \
 {                                                                       \
     const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1( oid );        \
     if( data == NULL ) return( MBEDTLS_ERR_OID_NOT_FOUND );            \
@@ -86,10 +86,10 @@ int FN_NAME( const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1 )                  
 
 /*
  * Macro to generate a function for retrieving a single attribute from an
- * mbedtls_oid_descriptor_t wrapper.
+ * mixpanel_mbedtls_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_ATTR1(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1) \
-int FN_NAME( const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1 )                  \
+int FN_NAME( const mixpanel_mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1 )                  \
 {                                                                       \
     const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1( oid );        \
     if( data == NULL ) return( MBEDTLS_ERR_OID_NOT_FOUND );            \
@@ -99,11 +99,11 @@ int FN_NAME( const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1 )                  
 
 /*
  * Macro to generate a function for retrieving two attributes from an
- * mbedtls_oid_descriptor_t wrapper.
+ * mixpanel_mbedtls_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_ATTR2(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1,     \
                          ATTR2_TYPE, ATTR2)                                 \
-int FN_NAME( const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1, ATTR2_TYPE * ATTR2 )  \
+int FN_NAME( const mixpanel_mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1, ATTR2_TYPE * ATTR2 )  \
 {                                                                           \
     const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1( oid );            \
     if( data == NULL ) return( MBEDTLS_ERR_OID_NOT_FOUND );                \
@@ -114,7 +114,7 @@ int FN_NAME( const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1, ATTR2_TYPE * ATTR2
 
 /*
  * Macro to generate a function for retrieving the OID based on a single
- * attribute from a mbedtls_oid_descriptor_t wrapper.
+ * attribute from a mixpanel_mbedtls_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_OID_BY_ATTR1(FN_NAME, TYPE_T, LIST, ATTR1_TYPE, ATTR1)   \
 int FN_NAME( ATTR1_TYPE ATTR1, const char **oid, size_t *olen )             \
@@ -133,7 +133,7 @@ int FN_NAME( ATTR1_TYPE ATTR1, const char **oid, size_t *olen )             \
 
 /*
  * Macro to generate a function for retrieving the OID based on two
- * attributes from a mbedtls_oid_descriptor_t wrapper.
+ * attributes from a mixpanel_mbedtls_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_OID_BY_ATTR2(FN_NAME, TYPE_T, LIST, ATTR1_TYPE, ATTR1,   \
                                 ATTR2_TYPE, ATTR2)                          \
@@ -156,7 +156,7 @@ int FN_NAME( ATTR1_TYPE ATTR1, ATTR2_TYPE ATTR2, const char **oid ,         \
  * For X520 attribute types
  */
 typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
+    mixpanel_mbedtls_oid_descriptor_t    descriptor;
     const char          *short_name;
 } oid_x520_attr_t;
 
@@ -245,14 +245,14 @@ static const oid_x520_attr_t oid_x520_attr_type[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_x520_attr_t, x520_attr, oid_x520_attr_type)
-FN_OID_GET_ATTR1(mbedtls_oid_get_attr_short_name, oid_x520_attr_t, x520_attr, const char *, short_name)
+FN_OID_GET_ATTR1(mixpanel_mbedtls_oid_get_attr_short_name, oid_x520_attr_t, x520_attr, const char *, short_name)
 
 #if defined(MBEDTLS_X509_USE_C) || defined(MBEDTLS_X509_CREATE_C)
 /*
  * For X509 extensions
  */
 typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
+    mixpanel_mbedtls_oid_descriptor_t    descriptor;
     int                 ext_type;
 } oid_x509_ext_t;
 
@@ -285,9 +285,9 @@ static const oid_x509_ext_t oid_x509_ext[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_x509_ext_t, x509_ext, oid_x509_ext)
-FN_OID_GET_ATTR1(mbedtls_oid_get_x509_ext_type, oid_x509_ext_t, x509_ext, int, ext_type)
+FN_OID_GET_ATTR1(mixpanel_mbedtls_oid_get_x509_ext_type, oid_x509_ext_t, x509_ext, int, ext_type)
 
-static const mbedtls_oid_descriptor_t oid_ext_key_usage[] =
+static const mixpanel_mbedtls_oid_descriptor_t oid_ext_key_usage[] =
 {
     { ADD_LEN( MBEDTLS_OID_SERVER_AUTH ),      "id-kp-serverAuth",      "TLS Web Server Authentication" },
     { ADD_LEN( MBEDTLS_OID_CLIENT_AUTH ),      "id-kp-clientAuth",      "TLS Web Client Authentication" },
@@ -298,8 +298,8 @@ static const mbedtls_oid_descriptor_t oid_ext_key_usage[] =
     { NULL, 0, NULL, NULL },
 };
 
-FN_OID_TYPED_FROM_ASN1(mbedtls_oid_descriptor_t, ext_key_usage, oid_ext_key_usage)
-FN_OID_GET_ATTR1(mbedtls_oid_get_extended_key_usage, mbedtls_oid_descriptor_t, ext_key_usage, const char *, description)
+FN_OID_TYPED_FROM_ASN1(mixpanel_mbedtls_oid_descriptor_t, ext_key_usage, oid_ext_key_usage)
+FN_OID_GET_ATTR1(mixpanel_mbedtls_oid_get_extended_key_usage, mixpanel_mbedtls_oid_descriptor_t, ext_key_usage, const char *, description)
 #endif /* MBEDTLS_X509_USE_C || MBEDTLS_X509_CREATE_C */
 
 #if defined(MBEDTLS_MD_C)
@@ -307,9 +307,9 @@ FN_OID_GET_ATTR1(mbedtls_oid_get_extended_key_usage, mbedtls_oid_descriptor_t, e
  * For SignatureAlgorithmIdentifier
  */
 typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_md_type_t           md_alg;
-    mbedtls_pk_type_t           pk_alg;
+    mixpanel_mbedtls_oid_descriptor_t    descriptor;
+    mixpanel_mbedtls_md_type_t           md_alg;
+    mixpanel_mbedtls_pk_type_t           pk_alg;
 } oid_sig_alg_t;
 
 static const oid_sig_alg_t oid_sig_alg[] =
@@ -381,17 +381,17 @@ static const oid_sig_alg_t oid_sig_alg[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_sig_alg_t, sig_alg, oid_sig_alg)
-FN_OID_GET_DESCRIPTOR_ATTR1(mbedtls_oid_get_sig_alg_desc, oid_sig_alg_t, sig_alg, const char *, description)
-FN_OID_GET_ATTR2(mbedtls_oid_get_sig_alg, oid_sig_alg_t, sig_alg, mbedtls_md_type_t, md_alg, mbedtls_pk_type_t, pk_alg)
-FN_OID_GET_OID_BY_ATTR2(mbedtls_oid_get_oid_by_sig_alg, oid_sig_alg_t, oid_sig_alg, mbedtls_pk_type_t, pk_alg, mbedtls_md_type_t, md_alg)
+FN_OID_GET_DESCRIPTOR_ATTR1(mixpanel_mbedtls_oid_get_sig_alg_desc, oid_sig_alg_t, sig_alg, const char *, description)
+FN_OID_GET_ATTR2(mixpanel_mbedtls_oid_get_sig_alg, oid_sig_alg_t, sig_alg, mixpanel_mbedtls_md_type_t, md_alg, mixpanel_mbedtls_pk_type_t, pk_alg)
+FN_OID_GET_OID_BY_ATTR2(mixpanel_mbedtls_oid_get_oid_by_sig_alg, oid_sig_alg_t, oid_sig_alg, mixpanel_mbedtls_pk_type_t, pk_alg, mixpanel_mbedtls_md_type_t, md_alg)
 #endif /* MBEDTLS_MD_C */
 
 /*
  * For PublicKeyInfo (PKCS1, RFC 5480)
  */
 typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_pk_type_t           pk_alg;
+    mixpanel_mbedtls_oid_descriptor_t    descriptor;
+    mixpanel_mbedtls_pk_type_t           pk_alg;
 } oid_pk_alg_t;
 
 static const oid_pk_alg_t oid_pk_alg[] =
@@ -415,16 +415,16 @@ static const oid_pk_alg_t oid_pk_alg[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_pk_alg_t, pk_alg, oid_pk_alg)
-FN_OID_GET_ATTR1(mbedtls_oid_get_pk_alg, oid_pk_alg_t, pk_alg, mbedtls_pk_type_t, pk_alg)
-FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_pk_alg, oid_pk_alg_t, oid_pk_alg, mbedtls_pk_type_t, pk_alg)
+FN_OID_GET_ATTR1(mixpanel_mbedtls_oid_get_pk_alg, oid_pk_alg_t, pk_alg, mixpanel_mbedtls_pk_type_t, pk_alg)
+FN_OID_GET_OID_BY_ATTR1(mixpanel_mbedtls_oid_get_oid_by_pk_alg, oid_pk_alg_t, oid_pk_alg, mixpanel_mbedtls_pk_type_t, pk_alg)
 
 #if defined(MBEDTLS_ECP_C)
 /*
  * For namedCurve (RFC 5480)
  */
 typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_ecp_group_id        grp_id;
+    mixpanel_mbedtls_oid_descriptor_t    descriptor;
+    mixpanel_mbedtls_ecp_group_id        grp_id;
 } oid_ecp_grp_t;
 
 static const oid_ecp_grp_t oid_ecp_grp[] =
@@ -480,8 +480,8 @@ static const oid_ecp_grp_t oid_ecp_grp[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_ecp_grp_t, grp_id, oid_ecp_grp)
-FN_OID_GET_ATTR1(mbedtls_oid_get_ec_grp, oid_ecp_grp_t, grp_id, mbedtls_ecp_group_id, grp_id)
-FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_ec_grp, oid_ecp_grp_t, oid_ecp_grp, mbedtls_ecp_group_id, grp_id)
+FN_OID_GET_ATTR1(mixpanel_mbedtls_oid_get_ec_grp, oid_ecp_grp_t, grp_id, mixpanel_mbedtls_ecp_group_id, grp_id)
+FN_OID_GET_OID_BY_ATTR1(mixpanel_mbedtls_oid_get_oid_by_ec_grp, oid_ecp_grp_t, oid_ecp_grp, mixpanel_mbedtls_ecp_group_id, grp_id)
 #endif /* MBEDTLS_ECP_C */
 
 #if defined(MBEDTLS_CIPHER_C)
@@ -489,8 +489,8 @@ FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_ec_grp, oid_ecp_grp_t, oid_ecp_gr
  * For PKCS#5 PBES2 encryption algorithm
  */
 typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_cipher_type_t       cipher_alg;
+    mixpanel_mbedtls_oid_descriptor_t    descriptor;
+    mixpanel_mbedtls_cipher_type_t       cipher_alg;
 } oid_cipher_alg_t;
 
 static const oid_cipher_alg_t oid_cipher_alg[] =
@@ -510,7 +510,7 @@ static const oid_cipher_alg_t oid_cipher_alg[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_cipher_alg_t, cipher_alg, oid_cipher_alg)
-FN_OID_GET_ATTR1(mbedtls_oid_get_cipher_alg, oid_cipher_alg_t, cipher_alg, mbedtls_cipher_type_t, cipher_alg)
+FN_OID_GET_ATTR1(mixpanel_mbedtls_oid_get_cipher_alg, oid_cipher_alg_t, cipher_alg, mixpanel_mbedtls_cipher_type_t, cipher_alg)
 #endif /* MBEDTLS_CIPHER_C */
 
 #if defined(MBEDTLS_MD_C)
@@ -518,8 +518,8 @@ FN_OID_GET_ATTR1(mbedtls_oid_get_cipher_alg, oid_cipher_alg_t, cipher_alg, mbedt
  * For digestAlgorithm
  */
 typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_md_type_t           md_alg;
+    mixpanel_mbedtls_oid_descriptor_t    descriptor;
+    mixpanel_mbedtls_md_type_t           md_alg;
 } oid_md_alg_t;
 
 static const oid_md_alg_t oid_md_alg[] =
@@ -563,8 +563,8 @@ static const oid_md_alg_t oid_md_alg[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_md_alg_t, md_alg, oid_md_alg)
-FN_OID_GET_ATTR1(mbedtls_oid_get_md_alg, oid_md_alg_t, md_alg, mbedtls_md_type_t, md_alg)
-FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_md, oid_md_alg_t, oid_md_alg, mbedtls_md_type_t, md_alg)
+FN_OID_GET_ATTR1(mixpanel_mbedtls_oid_get_md_alg, oid_md_alg_t, md_alg, mixpanel_mbedtls_md_type_t, md_alg)
+FN_OID_GET_OID_BY_ATTR1(mixpanel_mbedtls_oid_get_oid_by_md, oid_md_alg_t, oid_md_alg, mixpanel_mbedtls_md_type_t, md_alg)
 #endif /* MBEDTLS_MD_C */
 
 #if defined(MBEDTLS_PKCS12_C)
@@ -572,9 +572,9 @@ FN_OID_GET_OID_BY_ATTR1(mbedtls_oid_get_oid_by_md, oid_md_alg_t, oid_md_alg, mbe
  * For PKCS#12 PBEs
  */
 typedef struct {
-    mbedtls_oid_descriptor_t    descriptor;
-    mbedtls_md_type_t           md_alg;
-    mbedtls_cipher_type_t       cipher_alg;
+    mixpanel_mbedtls_oid_descriptor_t    descriptor;
+    mixpanel_mbedtls_md_type_t           md_alg;
+    mixpanel_mbedtls_cipher_type_t       cipher_alg;
 } oid_pkcs12_pbe_alg_t;
 
 static const oid_pkcs12_pbe_alg_t oid_pkcs12_pbe_alg[] =
@@ -594,7 +594,7 @@ static const oid_pkcs12_pbe_alg_t oid_pkcs12_pbe_alg[] =
 };
 
 FN_OID_TYPED_FROM_ASN1(oid_pkcs12_pbe_alg_t, pkcs12_pbe_alg, oid_pkcs12_pbe_alg)
-FN_OID_GET_ATTR2(mbedtls_oid_get_pkcs12_pbe_alg, oid_pkcs12_pbe_alg_t, pkcs12_pbe_alg, mbedtls_md_type_t, md_alg, mbedtls_cipher_type_t, cipher_alg)
+FN_OID_GET_ATTR2(mixpanel_mbedtls_oid_get_pkcs12_pbe_alg, oid_pkcs12_pbe_alg_t, pkcs12_pbe_alg, mixpanel_mbedtls_md_type_t, md_alg, mixpanel_mbedtls_cipher_type_t, cipher_alg)
 #endif /* MBEDTLS_PKCS12_C */
 
 #define OID_SAFE_SNPRINTF                               \
@@ -607,8 +607,8 @@ FN_OID_GET_ATTR2(mbedtls_oid_get_pkcs12_pbe_alg, oid_pkcs12_pbe_alg_t, pkcs12_pb
     } while( 0 )
 
 /* Return the x.y.z.... style numeric string for the given OID */
-int mbedtls_oid_get_numeric_string( char *buf, size_t size,
-                            const mbedtls_asn1_buf *oid )
+int mixpanel_mbedtls_oid_get_numeric_string( char *buf, size_t size,
+                            const mixpanel_mbedtls_asn1_buf *oid )
 {
     int ret;
     size_t i, n;
@@ -621,7 +621,7 @@ int mbedtls_oid_get_numeric_string( char *buf, size_t size,
     /* First byte contains first two dots */
     if( oid->len > 0 )
     {
-        ret = mbedtls_snprintf( p, n, "%d.%d", oid->p[0] / 40, oid->p[0] % 40 );
+        ret = mixpanel_mbedtls_snprintf( p, n, "%d.%d", oid->p[0] / 40, oid->p[0] % 40 );
         OID_SAFE_SNPRINTF;
     }
 
@@ -638,7 +638,7 @@ int mbedtls_oid_get_numeric_string( char *buf, size_t size,
         if( !( oid->p[i] & 0x80 ) )
         {
             /* Last byte */
-            ret = mbedtls_snprintf( p, n, ".%d", value );
+            ret = mixpanel_mbedtls_snprintf( p, n, ".%d", value );
             OID_SAFE_SNPRINTF;
             value = 0;
         }

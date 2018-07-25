@@ -46,20 +46,20 @@
  * Derive a suitable integer for group grp from a buffer of length len
  * SEC1 4.1.3 step 5 aka SEC1 4.1.4 step 3
  */
-static int derive_mpi( const mbedtls_ecp_group *grp, mbedtls_mpi *x,
+static int derive_mpi( const mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_mpi *x,
                        const unsigned char *buf, size_t blen )
 {
     int ret;
     size_t n_size = ( grp->nbits + 7 ) / 8;
     size_t use_size = blen > n_size ? n_size : blen;
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( x, buf, use_size ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_read_binary( x, buf, use_size ) );
     if( use_size * 8 > grp->nbits )
-        MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( x, use_size * 8 - grp->nbits ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_shift_r( x, use_size * 8 - grp->nbits ) );
 
     /* While at it, reduce modulo N */
-    if( mbedtls_mpi_cmp_mpi( x, &grp->N ) >= 0 )
-        MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( x, x, &grp->N ) );
+    if( mixpanel_mbedtls_mpi_cmp_mpi( x, &grp->N ) >= 0 )
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_sub_mpi( x, x, &grp->N ) );
 
 cleanup:
     return( ret );
@@ -69,20 +69,20 @@ cleanup:
  * Compute ECDSA signature of a hashed message (SEC1 4.1.3)
  * Obviously, compared to SEC1 4.1.3, we skip step 4 (hash message)
  */
-int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
-                const mbedtls_mpi *d, const unsigned char *buf, size_t blen,
+int mixpanel_mbedtls_ecdsa_sign( mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_mpi *r, mixpanel_mbedtls_mpi *s,
+                const mixpanel_mbedtls_mpi *d, const unsigned char *buf, size_t blen,
                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
     int ret, key_tries, sign_tries, blind_tries;
-    mbedtls_ecp_point R;
-    mbedtls_mpi k, e, t;
+    mixpanel_mbedtls_ecp_point R;
+    mixpanel_mbedtls_mpi k, e, t;
 
     /* Fail cleanly on curves such as Curve25519 that can't be used for ECDSA */
     if( grp->N.p == NULL )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    mbedtls_ecp_point_init( &R );
-    mbedtls_mpi_init( &k ); mbedtls_mpi_init( &e ); mbedtls_mpi_init( &t );
+    mixpanel_mbedtls_ecp_point_init( &R );
+    mixpanel_mbedtls_mpi_init( &k ); mixpanel_mbedtls_mpi_init( &e ); mixpanel_mbedtls_mpi_init( &t );
 
     sign_tries = 0;
     do
@@ -94,8 +94,8 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
         key_tries = 0;
         do
         {
-            MBEDTLS_MPI_CHK( mbedtls_ecp_gen_keypair( grp, &k, &R, f_rng, p_rng ) );
-            MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( r, &R.X, &grp->N ) );
+            MBEDTLS_MPI_CHK( mixpanel_mbedtls_ecp_gen_keypair( grp, &k, &R, f_rng, p_rng ) );
+            MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( r, &R.X, &grp->N ) );
 
             if( key_tries++ > 10 )
             {
@@ -103,7 +103,7 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
                 goto cleanup;
             }
         }
-        while( mbedtls_mpi_cmp_int( r, 0 ) == 0 );
+        while( mixpanel_mbedtls_mpi_cmp_int( r, 0 ) == 0 );
 
         /*
          * Step 5: derive MPI from hashed message
@@ -118,26 +118,26 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
         do
         {
             size_t n_size = ( grp->nbits + 7 ) / 8;
-            MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &t, n_size, f_rng, p_rng ) );
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &t, 8 * n_size - grp->nbits ) );
+            MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_fill_random( &t, n_size, f_rng, p_rng ) );
+            MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_shift_r( &t, 8 * n_size - grp->nbits ) );
 
-            /* See mbedtls_ecp_gen_keypair() */
+            /* See mixpanel_mbedtls_ecp_gen_keypair() */
             if( ++blind_tries > 30 )
                 return( MBEDTLS_ERR_ECP_RANDOM_FAILED );
         }
-        while( mbedtls_mpi_cmp_int( &t, 1 ) < 0 ||
-               mbedtls_mpi_cmp_mpi( &t, &grp->N ) >= 0 );
+        while( mixpanel_mbedtls_mpi_cmp_int( &t, 1 ) < 0 ||
+               mixpanel_mbedtls_mpi_cmp_mpi( &t, &grp->N ) >= 0 );
 
         /*
          * Step 6: compute s = (e + r * d) / k = t (e + rd) / (kt) mod n
          */
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( s, r, d ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &e, &e, s ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &e, &e, &t ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &k, &k, &t ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_inv_mod( s, &k, &grp->N ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( s, s, &e ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( s, s, &grp->N ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( s, r, d ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_add_mpi( &e, &e, s ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( &e, &e, &t ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( &k, &k, &t ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_inv_mod( s, &k, &grp->N ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( s, s, &e ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( s, s, &grp->N ) );
 
         if( sign_tries++ > 10 )
         {
@@ -145,11 +145,11 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
             goto cleanup;
         }
     }
-    while( mbedtls_mpi_cmp_int( s, 0 ) == 0 );
+    while( mixpanel_mbedtls_mpi_cmp_int( s, 0 ) == 0 );
 
 cleanup:
-    mbedtls_ecp_point_free( &R );
-    mbedtls_mpi_free( &k ); mbedtls_mpi_free( &e ); mbedtls_mpi_free( &t );
+    mixpanel_mbedtls_ecp_point_free( &R );
+    mixpanel_mbedtls_mpi_free( &k ); mixpanel_mbedtls_mpi_free( &e ); mixpanel_mbedtls_mpi_free( &t );
 
     return( ret );
 }
@@ -158,35 +158,35 @@ cleanup:
 /*
  * Deterministic signature wrapper
  */
-int mbedtls_ecdsa_sign_det( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
-                    const mbedtls_mpi *d, const unsigned char *buf, size_t blen,
-                    mbedtls_md_type_t md_alg )
+int mixpanel_mbedtls_ecdsa_sign_det( mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_mpi *r, mixpanel_mbedtls_mpi *s,
+                    const mixpanel_mbedtls_mpi *d, const unsigned char *buf, size_t blen,
+                    mixpanel_mbedtls_md_type_t md_alg )
 {
     int ret;
-    mbedtls_hmac_drbg_context rng_ctx;
+    mixpanel_mbedtls_hmac_drbg_context rng_ctx;
     unsigned char data[2 * MBEDTLS_ECP_MAX_BYTES];
     size_t grp_len = ( grp->nbits + 7 ) / 8;
-    const mbedtls_md_info_t *md_info;
-    mbedtls_mpi h;
+    const mixpanel_mbedtls_md_info_t *md_info;
+    mixpanel_mbedtls_mpi h;
 
-    if( ( md_info = mbedtls_md_info_from_type( md_alg ) ) == NULL )
+    if( ( md_info = mixpanel_mbedtls_md_info_from_type( md_alg ) ) == NULL )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    mbedtls_mpi_init( &h );
-    mbedtls_hmac_drbg_init( &rng_ctx );
+    mixpanel_mbedtls_mpi_init( &h );
+    mixpanel_mbedtls_hmac_drbg_init( &rng_ctx );
 
     /* Use private key and message hash (reduced) to initialize HMAC_DRBG */
-    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( d, data, grp_len ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_write_binary( d, data, grp_len ) );
     MBEDTLS_MPI_CHK( derive_mpi( grp, &h, buf, blen ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &h, data + grp_len, grp_len ) );
-    mbedtls_hmac_drbg_seed_buf( &rng_ctx, md_info, data, 2 * grp_len );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_write_binary( &h, data + grp_len, grp_len ) );
+    mixpanel_mbedtls_hmac_drbg_seed_buf( &rng_ctx, md_info, data, 2 * grp_len );
 
-    ret = mbedtls_ecdsa_sign( grp, r, s, d, buf, blen,
-                      mbedtls_hmac_drbg_random, &rng_ctx );
+    ret = mixpanel_mbedtls_ecdsa_sign( grp, r, s, d, buf, blen,
+                      mixpanel_mbedtls_hmac_drbg_random, &rng_ctx );
 
 cleanup:
-    mbedtls_hmac_drbg_free( &rng_ctx );
-    mbedtls_mpi_free( &h );
+    mixpanel_mbedtls_hmac_drbg_free( &rng_ctx );
+    mixpanel_mbedtls_mpi_free( &h );
 
     return( ret );
 }
@@ -196,16 +196,16 @@ cleanup:
  * Verify ECDSA signature of hashed message (SEC1 4.1.4)
  * Obviously, compared to SEC1 4.1.3, we skip step 2 (hash message)
  */
-int mbedtls_ecdsa_verify( mbedtls_ecp_group *grp,
+int mixpanel_mbedtls_ecdsa_verify( mixpanel_mbedtls_ecp_group *grp,
                   const unsigned char *buf, size_t blen,
-                  const mbedtls_ecp_point *Q, const mbedtls_mpi *r, const mbedtls_mpi *s)
+                  const mixpanel_mbedtls_ecp_point *Q, const mixpanel_mbedtls_mpi *r, const mixpanel_mbedtls_mpi *s)
 {
     int ret;
-    mbedtls_mpi e, s_inv, u1, u2;
-    mbedtls_ecp_point R;
+    mixpanel_mbedtls_mpi e, s_inv, u1, u2;
+    mixpanel_mbedtls_ecp_point R;
 
-    mbedtls_ecp_point_init( &R );
-    mbedtls_mpi_init( &e ); mbedtls_mpi_init( &s_inv ); mbedtls_mpi_init( &u1 ); mbedtls_mpi_init( &u2 );
+    mixpanel_mbedtls_ecp_point_init( &R );
+    mixpanel_mbedtls_mpi_init( &e ); mixpanel_mbedtls_mpi_init( &s_inv ); mixpanel_mbedtls_mpi_init( &u1 ); mixpanel_mbedtls_mpi_init( &u2 );
 
     /* Fail cleanly on curves such as Curve25519 that can't be used for ECDSA */
     if( grp->N.p == NULL )
@@ -214,8 +214,8 @@ int mbedtls_ecdsa_verify( mbedtls_ecp_group *grp,
     /*
      * Step 1: make sure r and s are in range 1..n-1
      */
-    if( mbedtls_mpi_cmp_int( r, 1 ) < 0 || mbedtls_mpi_cmp_mpi( r, &grp->N ) >= 0 ||
-        mbedtls_mpi_cmp_int( s, 1 ) < 0 || mbedtls_mpi_cmp_mpi( s, &grp->N ) >= 0 )
+    if( mixpanel_mbedtls_mpi_cmp_int( r, 1 ) < 0 || mixpanel_mbedtls_mpi_cmp_mpi( r, &grp->N ) >= 0 ||
+        mixpanel_mbedtls_mpi_cmp_int( s, 1 ) < 0 || mixpanel_mbedtls_mpi_cmp_mpi( s, &grp->N ) >= 0 )
     {
         ret = MBEDTLS_ERR_ECP_VERIFY_FAILED;
         goto cleanup;
@@ -224,7 +224,7 @@ int mbedtls_ecdsa_verify( mbedtls_ecp_group *grp,
     /*
      * Additional precaution: make sure Q is valid
      */
-    MBEDTLS_MPI_CHK( mbedtls_ecp_check_pubkey( grp, Q ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_ecp_check_pubkey( grp, Q ) );
 
     /*
      * Step 3: derive MPI from hashed message
@@ -234,23 +234,23 @@ int mbedtls_ecdsa_verify( mbedtls_ecp_group *grp,
     /*
      * Step 4: u1 = e / s mod n, u2 = r / s mod n
      */
-    MBEDTLS_MPI_CHK( mbedtls_mpi_inv_mod( &s_inv, s, &grp->N ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_inv_mod( &s_inv, s, &grp->N ) );
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &u1, &e, &s_inv ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &u1, &u1, &grp->N ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( &u1, &e, &s_inv ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( &u1, &u1, &grp->N ) );
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &u2, r, &s_inv ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &u2, &u2, &grp->N ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( &u2, r, &s_inv ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( &u2, &u2, &grp->N ) );
 
     /*
      * Step 5: R = u1 G + u2 Q
      *
      * Since we're not using any secret data, no need to pass a RNG to
-     * mbedtls_ecp_mul() for countermesures.
+     * mixpanel_mbedtls_ecp_mul() for countermesures.
      */
-    MBEDTLS_MPI_CHK( mbedtls_ecp_muladd( grp, &R, &u1, &grp->G, &u2, Q ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_ecp_muladd( grp, &R, &u1, &grp->G, &u2, Q ) );
 
-    if( mbedtls_ecp_is_zero( &R ) )
+    if( mixpanel_mbedtls_ecp_is_zero( &R ) )
     {
         ret = MBEDTLS_ERR_ECP_VERIFY_FAILED;
         goto cleanup;
@@ -260,20 +260,20 @@ int mbedtls_ecdsa_verify( mbedtls_ecp_group *grp,
      * Step 6: convert xR to an integer (no-op)
      * Step 7: reduce xR mod n (gives v)
      */
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &R.X, &R.X, &grp->N ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( &R.X, &R.X, &grp->N ) );
 
     /*
      * Step 8: check if v (that is, R.X) is equal to r
      */
-    if( mbedtls_mpi_cmp_mpi( &R.X, r ) != 0 )
+    if( mixpanel_mbedtls_mpi_cmp_mpi( &R.X, r ) != 0 )
     {
         ret = MBEDTLS_ERR_ECP_VERIFY_FAILED;
         goto cleanup;
     }
 
 cleanup:
-    mbedtls_ecp_point_free( &R );
-    mbedtls_mpi_free( &e ); mbedtls_mpi_free( &s_inv ); mbedtls_mpi_free( &u1 ); mbedtls_mpi_free( &u2 );
+    mixpanel_mbedtls_ecp_point_free( &R );
+    mixpanel_mbedtls_mpi_free( &e ); mixpanel_mbedtls_mpi_free( &s_inv ); mixpanel_mbedtls_mpi_free( &u1 ); mixpanel_mbedtls_mpi_free( &u2 );
 
     return( ret );
 }
@@ -281,7 +281,7 @@ cleanup:
 /*
  * Convert a signature (given by context) to ASN.1
  */
-static int ecdsa_signature_to_asn1( const mbedtls_mpi *r, const mbedtls_mpi *s,
+static int ecdsa_signature_to_asn1( const mixpanel_mbedtls_mpi *r, const mixpanel_mbedtls_mpi *s,
                                     unsigned char *sig, size_t *slen )
 {
     int ret;
@@ -289,11 +289,11 @@ static int ecdsa_signature_to_asn1( const mbedtls_mpi *r, const mbedtls_mpi *s,
     unsigned char *p = buf + sizeof( buf );
     size_t len = 0;
 
-    MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_mpi( &p, buf, s ) );
-    MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_mpi( &p, buf, r ) );
+    MBEDTLS_ASN1_CHK_ADD( len, mixpanel_mbedtls_asn1_write_mpi( &p, buf, s ) );
+    MBEDTLS_ASN1_CHK_ADD( len, mixpanel_mbedtls_asn1_write_mpi( &p, buf, r ) );
 
-    MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( &p, buf, len ) );
-    MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( &p, buf,
+    MBEDTLS_ASN1_CHK_ADD( len, mixpanel_mbedtls_asn1_write_len( &p, buf, len ) );
+    MBEDTLS_ASN1_CHK_ADD( len, mixpanel_mbedtls_asn1_write_tag( &p, buf,
                                        MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) );
 
     memcpy( sig, p, len );
@@ -305,48 +305,48 @@ static int ecdsa_signature_to_asn1( const mbedtls_mpi *r, const mbedtls_mpi *s,
 /*
  * Compute and write signature
  */
-int mbedtls_ecdsa_write_signature( mbedtls_ecdsa_context *ctx, mbedtls_md_type_t md_alg,
+int mixpanel_mbedtls_ecdsa_write_signature( mixpanel_mbedtls_ecdsa_context *ctx, mixpanel_mbedtls_md_type_t md_alg,
                            const unsigned char *hash, size_t hlen,
                            unsigned char *sig, size_t *slen,
                            int (*f_rng)(void *, unsigned char *, size_t),
                            void *p_rng )
 {
     int ret;
-    mbedtls_mpi r, s;
+    mixpanel_mbedtls_mpi r, s;
 
-    mbedtls_mpi_init( &r );
-    mbedtls_mpi_init( &s );
+    mixpanel_mbedtls_mpi_init( &r );
+    mixpanel_mbedtls_mpi_init( &s );
 
 #if defined(MBEDTLS_ECDSA_DETERMINISTIC)
     (void) f_rng;
     (void) p_rng;
 
-    MBEDTLS_MPI_CHK( mbedtls_ecdsa_sign_det( &ctx->grp, &r, &s, &ctx->d,
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_ecdsa_sign_det( &ctx->grp, &r, &s, &ctx->d,
                              hash, hlen, md_alg ) );
 #else
     (void) md_alg;
 
-    MBEDTLS_MPI_CHK( mbedtls_ecdsa_sign( &ctx->grp, &r, &s, &ctx->d,
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_ecdsa_sign( &ctx->grp, &r, &s, &ctx->d,
                          hash, hlen, f_rng, p_rng ) );
 #endif
 
     MBEDTLS_MPI_CHK( ecdsa_signature_to_asn1( &r, &s, sig, slen ) );
 
 cleanup:
-    mbedtls_mpi_free( &r );
-    mbedtls_mpi_free( &s );
+    mixpanel_mbedtls_mpi_free( &r );
+    mixpanel_mbedtls_mpi_free( &s );
 
     return( ret );
 }
 
 #if ! defined(MBEDTLS_DEPRECATED_REMOVED) && \
     defined(MBEDTLS_ECDSA_DETERMINISTIC)
-int mbedtls_ecdsa_write_signature_det( mbedtls_ecdsa_context *ctx,
+int mixpanel_mbedtls_ecdsa_write_signature_det( mixpanel_mbedtls_ecdsa_context *ctx,
                                const unsigned char *hash, size_t hlen,
                                unsigned char *sig, size_t *slen,
-                               mbedtls_md_type_t md_alg )
+                               mixpanel_mbedtls_md_type_t md_alg )
 {
-    return( mbedtls_ecdsa_write_signature( ctx, md_alg, hash, hlen, sig, slen,
+    return( mixpanel_mbedtls_ecdsa_write_signature( ctx, md_alg, hash, hlen, sig, slen,
                                    NULL, NULL ) );
 }
 #endif
@@ -354,7 +354,7 @@ int mbedtls_ecdsa_write_signature_det( mbedtls_ecdsa_context *ctx,
 /*
  * Read and check signature
  */
-int mbedtls_ecdsa_read_signature( mbedtls_ecdsa_context *ctx,
+int mixpanel_mbedtls_ecdsa_read_signature( mixpanel_mbedtls_ecdsa_context *ctx,
                           const unsigned char *hash, size_t hlen,
                           const unsigned char *sig, size_t slen )
 {
@@ -362,12 +362,12 @@ int mbedtls_ecdsa_read_signature( mbedtls_ecdsa_context *ctx,
     unsigned char *p = (unsigned char *) sig;
     const unsigned char *end = sig + slen;
     size_t len;
-    mbedtls_mpi r, s;
+    mixpanel_mbedtls_mpi r, s;
 
-    mbedtls_mpi_init( &r );
-    mbedtls_mpi_init( &s );
+    mixpanel_mbedtls_mpi_init( &r );
+    mixpanel_mbedtls_mpi_init( &s );
 
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
+    if( ( ret = mixpanel_mbedtls_asn1_get_tag( &p, end, &len,
                     MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 )
     {
         ret += MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
@@ -381,14 +381,14 @@ int mbedtls_ecdsa_read_signature( mbedtls_ecdsa_context *ctx,
         goto cleanup;
     }
 
-    if( ( ret = mbedtls_asn1_get_mpi( &p, end, &r ) ) != 0 ||
-        ( ret = mbedtls_asn1_get_mpi( &p, end, &s ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_asn1_get_mpi( &p, end, &r ) ) != 0 ||
+        ( ret = mixpanel_mbedtls_asn1_get_mpi( &p, end, &s ) ) != 0 )
     {
         ret += MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
         goto cleanup;
     }
 
-    if( ( ret = mbedtls_ecdsa_verify( &ctx->grp, hash, hlen,
+    if( ( ret = mixpanel_mbedtls_ecdsa_verify( &ctx->grp, hash, hlen,
                               &ctx->Q, &r, &s ) ) != 0 )
         goto cleanup;
 
@@ -396,8 +396,8 @@ int mbedtls_ecdsa_read_signature( mbedtls_ecdsa_context *ctx,
         ret = MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH;
 
 cleanup:
-    mbedtls_mpi_free( &r );
-    mbedtls_mpi_free( &s );
+    mixpanel_mbedtls_mpi_free( &r );
+    mixpanel_mbedtls_mpi_free( &s );
 
     return( ret );
 }
@@ -405,25 +405,25 @@ cleanup:
 /*
  * Generate key pair
  */
-int mbedtls_ecdsa_genkey( mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id gid,
+int mixpanel_mbedtls_ecdsa_genkey( mixpanel_mbedtls_ecdsa_context *ctx, mixpanel_mbedtls_ecp_group_id gid,
                   int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    return( mbedtls_ecp_group_load( &ctx->grp, gid ) ||
-            mbedtls_ecp_gen_keypair( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng ) );
+    return( mixpanel_mbedtls_ecp_group_load( &ctx->grp, gid ) ||
+            mixpanel_mbedtls_ecp_gen_keypair( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng ) );
 }
 
 /*
- * Set context from an mbedtls_ecp_keypair
+ * Set context from an mixpanel_mbedtls_ecp_keypair
  */
-int mbedtls_ecdsa_from_keypair( mbedtls_ecdsa_context *ctx, const mbedtls_ecp_keypair *key )
+int mixpanel_mbedtls_ecdsa_from_keypair( mixpanel_mbedtls_ecdsa_context *ctx, const mixpanel_mbedtls_ecp_keypair *key )
 {
     int ret;
 
-    if( ( ret = mbedtls_ecp_group_copy( &ctx->grp, &key->grp ) ) != 0 ||
-        ( ret = mbedtls_mpi_copy( &ctx->d, &key->d ) ) != 0 ||
-        ( ret = mbedtls_ecp_copy( &ctx->Q, &key->Q ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_ecp_group_copy( &ctx->grp, &key->grp ) ) != 0 ||
+        ( ret = mixpanel_mbedtls_mpi_copy( &ctx->d, &key->d ) ) != 0 ||
+        ( ret = mixpanel_mbedtls_ecp_copy( &ctx->Q, &key->Q ) ) != 0 )
     {
-        mbedtls_ecdsa_free( ctx );
+        mixpanel_mbedtls_ecdsa_free( ctx );
     }
 
     return( ret );
@@ -432,17 +432,17 @@ int mbedtls_ecdsa_from_keypair( mbedtls_ecdsa_context *ctx, const mbedtls_ecp_ke
 /*
  * Initialize context
  */
-void mbedtls_ecdsa_init( mbedtls_ecdsa_context *ctx )
+void mixpanel_mbedtls_ecdsa_init( mixpanel_mbedtls_ecdsa_context *ctx )
 {
-    mbedtls_ecp_keypair_init( ctx );
+    mixpanel_mbedtls_ecp_keypair_init( ctx );
 }
 
 /*
  * Free context
  */
-void mbedtls_ecdsa_free( mbedtls_ecdsa_context *ctx )
+void mixpanel_mbedtls_ecdsa_free( mixpanel_mbedtls_ecdsa_context *ctx )
 {
-    mbedtls_ecp_keypair_free( ctx );
+    mixpanel_mbedtls_ecp_keypair_free( ctx );
 }
 
 #endif /* MBEDTLS_ECDSA_C */

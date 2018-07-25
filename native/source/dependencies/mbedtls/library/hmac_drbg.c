@@ -46,34 +46,34 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf printf
+#define mixpanel_mbedtls_printf printf
 #endif /* MBEDTLS_SELF_TEST */
 #endif /* MBEDTLS_PLATFORM_C */
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 /*
  * HMAC_DRBG context initialization
  */
-void mbedtls_hmac_drbg_init( mbedtls_hmac_drbg_context *ctx )
+void mixpanel_mbedtls_hmac_drbg_init( mixpanel_mbedtls_hmac_drbg_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_hmac_drbg_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_hmac_drbg_context ) );
 
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
+    mixpanel_mbedtls_mutex_init( &ctx->mutex );
 #endif
 }
 
 /*
  * HMAC_DRBG update, using optional additional data (10.1.2.2)
  */
-void mbedtls_hmac_drbg_update( mbedtls_hmac_drbg_context *ctx,
+void mixpanel_mbedtls_hmac_drbg_update( mixpanel_mbedtls_hmac_drbg_context *ctx,
                        const unsigned char *additional, size_t add_len )
 {
-    size_t md_len = mbedtls_md_get_size( ctx->md_ctx.md_info );
+    size_t md_len = mixpanel_mbedtls_md_get_size( ctx->md_ctx.md_info );
     unsigned char rounds = ( additional != NULL && add_len != 0 ) ? 2 : 1;
     unsigned char sep[1];
     unsigned char K[MBEDTLS_MD_MAX_SIZE];
@@ -81,30 +81,30 @@ void mbedtls_hmac_drbg_update( mbedtls_hmac_drbg_context *ctx,
     for( sep[0] = 0; sep[0] < rounds; sep[0]++ )
     {
         /* Step 1 or 4 */
-        mbedtls_md_hmac_reset( &ctx->md_ctx );
-        mbedtls_md_hmac_update( &ctx->md_ctx, ctx->V, md_len );
-        mbedtls_md_hmac_update( &ctx->md_ctx, sep, 1 );
+        mixpanel_mbedtls_md_hmac_reset( &ctx->md_ctx );
+        mixpanel_mbedtls_md_hmac_update( &ctx->md_ctx, ctx->V, md_len );
+        mixpanel_mbedtls_md_hmac_update( &ctx->md_ctx, sep, 1 );
         if( rounds == 2 )
-            mbedtls_md_hmac_update( &ctx->md_ctx, additional, add_len );
-        mbedtls_md_hmac_finish( &ctx->md_ctx, K );
+            mixpanel_mbedtls_md_hmac_update( &ctx->md_ctx, additional, add_len );
+        mixpanel_mbedtls_md_hmac_finish( &ctx->md_ctx, K );
 
         /* Step 2 or 5 */
-        mbedtls_md_hmac_starts( &ctx->md_ctx, K, md_len );
-        mbedtls_md_hmac_update( &ctx->md_ctx, ctx->V, md_len );
-        mbedtls_md_hmac_finish( &ctx->md_ctx, ctx->V );
+        mixpanel_mbedtls_md_hmac_starts( &ctx->md_ctx, K, md_len );
+        mixpanel_mbedtls_md_hmac_update( &ctx->md_ctx, ctx->V, md_len );
+        mixpanel_mbedtls_md_hmac_finish( &ctx->md_ctx, ctx->V );
     }
 }
 
 /*
  * Simplified HMAC_DRBG initialisation (for use with deterministic ECDSA)
  */
-int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
-                        const mbedtls_md_info_t * md_info,
+int mixpanel_mbedtls_hmac_drbg_seed_buf( mixpanel_mbedtls_hmac_drbg_context *ctx,
+                        const mixpanel_mbedtls_md_info_t * md_info,
                         const unsigned char *data, size_t data_len )
 {
     int ret;
 
-    if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
         return( ret );
 
     /*
@@ -112,10 +112,10 @@ int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
      * Use the V memory location, which is currently all 0, to initialize the
      * MD context with an all-zero key. Then set V to its initial value.
      */
-    mbedtls_md_hmac_starts( &ctx->md_ctx, ctx->V, mbedtls_md_get_size( md_info ) );
-    memset( ctx->V, 0x01, mbedtls_md_get_size( md_info ) );
+    mixpanel_mbedtls_md_hmac_starts( &ctx->md_ctx, ctx->V, mixpanel_mbedtls_md_get_size( md_info ) );
+    memset( ctx->V, 0x01, mixpanel_mbedtls_md_get_size( md_info ) );
 
-    mbedtls_hmac_drbg_update( ctx, data, data_len );
+    mixpanel_mbedtls_hmac_drbg_update( ctx, data, data_len );
 
     return( 0 );
 }
@@ -123,7 +123,7 @@ int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
 /*
  * HMAC_DRBG reseeding: 10.1.2.4 (arabic) + 9.2 (Roman)
  */
-int mbedtls_hmac_drbg_reseed( mbedtls_hmac_drbg_context *ctx,
+int mixpanel_mbedtls_hmac_drbg_reseed( mixpanel_mbedtls_hmac_drbg_context *ctx,
                       const unsigned char *additional, size_t len )
 {
     unsigned char seed[MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT];
@@ -152,7 +152,7 @@ int mbedtls_hmac_drbg_reseed( mbedtls_hmac_drbg_context *ctx,
     }
 
     /* 2. Update state */
-    mbedtls_hmac_drbg_update( ctx, seed, seedlen );
+    mixpanel_mbedtls_hmac_drbg_update( ctx, seed, seedlen );
 
     /* 3. Reset reseed_counter */
     ctx->reseed_counter = 1;
@@ -164,8 +164,8 @@ int mbedtls_hmac_drbg_reseed( mbedtls_hmac_drbg_context *ctx,
 /*
  * HMAC_DRBG initialisation (10.1.2.3 + 9.1)
  */
-int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
-                    const mbedtls_md_info_t * md_info,
+int mixpanel_mbedtls_hmac_drbg_seed( mixpanel_mbedtls_hmac_drbg_context *ctx,
+                    const mixpanel_mbedtls_md_info_t * md_info,
                     int (*f_entropy)(void *, unsigned char *, size_t),
                     void *p_entropy,
                     const unsigned char *custom,
@@ -174,17 +174,17 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
     int ret;
     size_t entropy_len, md_size;
 
-    if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
         return( ret );
 
-    md_size = mbedtls_md_get_size( md_info );
+    md_size = mixpanel_mbedtls_md_get_size( md_info );
 
     /*
      * Set initial working state.
      * Use the V memory location, which is currently all 0, to initialize the
      * MD context with an all-zero key. Then set V to its initial value.
      */
-    mbedtls_md_hmac_starts( &ctx->md_ctx, ctx->V, md_size );
+    mixpanel_mbedtls_md_hmac_starts( &ctx->md_ctx, ctx->V, md_size );
     memset( ctx->V, 0x01, md_size );
 
     ctx->f_entropy = f_entropy;
@@ -209,7 +209,7 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
      */
     ctx->entropy_len = entropy_len * 3 / 2;
 
-    if( ( ret = mbedtls_hmac_drbg_reseed( ctx, custom, len ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_hmac_drbg_reseed( ctx, custom, len ) ) != 0 )
         return( ret );
 
     ctx->entropy_len = entropy_len;
@@ -220,7 +220,7 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
 /*
  * Set prediction resistance
  */
-void mbedtls_hmac_drbg_set_prediction_resistance( mbedtls_hmac_drbg_context *ctx,
+void mixpanel_mbedtls_hmac_drbg_set_prediction_resistance( mixpanel_mbedtls_hmac_drbg_context *ctx,
                                           int resistance )
 {
     ctx->prediction_resistance = resistance;
@@ -229,7 +229,7 @@ void mbedtls_hmac_drbg_set_prediction_resistance( mbedtls_hmac_drbg_context *ctx
 /*
  * Set entropy length grabbed for reseeds
  */
-void mbedtls_hmac_drbg_set_entropy_len( mbedtls_hmac_drbg_context *ctx, size_t len )
+void mixpanel_mbedtls_hmac_drbg_set_entropy_len( mixpanel_mbedtls_hmac_drbg_context *ctx, size_t len )
 {
     ctx->entropy_len = len;
 }
@@ -237,7 +237,7 @@ void mbedtls_hmac_drbg_set_entropy_len( mbedtls_hmac_drbg_context *ctx, size_t l
 /*
  * Set reseed interval
  */
-void mbedtls_hmac_drbg_set_reseed_interval( mbedtls_hmac_drbg_context *ctx, int interval )
+void mixpanel_mbedtls_hmac_drbg_set_reseed_interval( mixpanel_mbedtls_hmac_drbg_context *ctx, int interval )
 {
     ctx->reseed_interval = interval;
 }
@@ -246,13 +246,13 @@ void mbedtls_hmac_drbg_set_reseed_interval( mbedtls_hmac_drbg_context *ctx, int 
  * HMAC_DRBG random function with optional additional data:
  * 10.1.2.5 (arabic) + 9.3 (Roman)
  */
-int mbedtls_hmac_drbg_random_with_add( void *p_rng,
+int mixpanel_mbedtls_hmac_drbg_random_with_add( void *p_rng,
                                unsigned char *output, size_t out_len,
                                const unsigned char *additional, size_t add_len )
 {
     int ret;
-    mbedtls_hmac_drbg_context *ctx = (mbedtls_hmac_drbg_context *) p_rng;
-    size_t md_len = mbedtls_md_get_size( ctx->md_ctx.md_info );
+    mixpanel_mbedtls_hmac_drbg_context *ctx = (mixpanel_mbedtls_hmac_drbg_context *) p_rng;
+    size_t md_len = mixpanel_mbedtls_md_get_size( ctx->md_ctx.md_info );
     size_t left = out_len;
     unsigned char *out = output;
 
@@ -269,7 +269,7 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
         ( ctx->prediction_resistance == MBEDTLS_HMAC_DRBG_PR_ON ||
           ctx->reseed_counter > ctx->reseed_interval ) )
     {
-        if( ( ret = mbedtls_hmac_drbg_reseed( ctx, additional, add_len ) ) != 0 )
+        if( ( ret = mixpanel_mbedtls_hmac_drbg_reseed( ctx, additional, add_len ) ) != 0 )
             return( ret );
 
         add_len = 0; /* VII.4 */
@@ -277,16 +277,16 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
 
     /* 2. Use additional data if any */
     if( additional != NULL && add_len != 0 )
-        mbedtls_hmac_drbg_update( ctx, additional, add_len );
+        mixpanel_mbedtls_hmac_drbg_update( ctx, additional, add_len );
 
     /* 3, 4, 5. Generate bytes */
     while( left != 0 )
     {
         size_t use_len = left > md_len ? md_len : left;
 
-        mbedtls_md_hmac_reset( &ctx->md_ctx );
-        mbedtls_md_hmac_update( &ctx->md_ctx, ctx->V, md_len );
-        mbedtls_md_hmac_finish( &ctx->md_ctx, ctx->V );
+        mixpanel_mbedtls_md_hmac_reset( &ctx->md_ctx );
+        mixpanel_mbedtls_md_hmac_update( &ctx->md_ctx, ctx->V, md_len );
+        mixpanel_mbedtls_md_hmac_finish( &ctx->md_ctx, ctx->V );
 
         memcpy( out, ctx->V, use_len );
         out += use_len;
@@ -294,7 +294,7 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
     }
 
     /* 6. Update */
-    mbedtls_hmac_drbg_update( ctx, additional, add_len );
+    mixpanel_mbedtls_hmac_drbg_update( ctx, additional, add_len );
 
     /* 7. Update reseed counter */
     ctx->reseed_counter++;
@@ -306,20 +306,20 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
 /*
  * HMAC_DRBG random function
  */
-int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len )
+int mixpanel_mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len )
 {
     int ret;
-    mbedtls_hmac_drbg_context *ctx = (mbedtls_hmac_drbg_context *) p_rng;
+    mixpanel_mbedtls_hmac_drbg_context *ctx = (mixpanel_mbedtls_hmac_drbg_context *) p_rng;
 
 #if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
-    ret = mbedtls_hmac_drbg_random_with_add( ctx, output, out_len, NULL, 0 );
+    ret = mixpanel_mbedtls_hmac_drbg_random_with_add( ctx, output, out_len, NULL, 0 );
 
 #if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+    if( mixpanel_mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
@@ -329,20 +329,20 @@ int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len
 /*
  * Free an HMAC_DRBG context
  */
-void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx )
+void mixpanel_mbedtls_hmac_drbg_free( mixpanel_mbedtls_hmac_drbg_context *ctx )
 {
     if( ctx == NULL )
         return;
 
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_free( &ctx->mutex );
+    mixpanel_mbedtls_mutex_free( &ctx->mutex );
 #endif
-    mbedtls_md_free( &ctx->md_ctx );
-    mbedtls_zeroize( ctx, sizeof( mbedtls_hmac_drbg_context ) );
+    mixpanel_mbedtls_md_free( &ctx->md_ctx );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_hmac_drbg_context ) );
 }
 
 #if defined(MBEDTLS_FS_IO)
-int mbedtls_hmac_drbg_write_seed_file( mbedtls_hmac_drbg_context *ctx, const char *path )
+int mixpanel_mbedtls_hmac_drbg_write_seed_file( mixpanel_mbedtls_hmac_drbg_context *ctx, const char *path )
 {
     int ret;
     FILE *f;
@@ -351,7 +351,7 @@ int mbedtls_hmac_drbg_write_seed_file( mbedtls_hmac_drbg_context *ctx, const cha
     if( ( f = fopen( path, "wb" ) ) == NULL )
         return( MBEDTLS_ERR_HMAC_DRBG_FILE_IO_ERROR );
 
-    if( ( ret = mbedtls_hmac_drbg_random( ctx, buf, sizeof( buf ) ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_hmac_drbg_random( ctx, buf, sizeof( buf ) ) ) != 0 )
         goto exit;
 
     if( fwrite( buf, 1, sizeof( buf ), f ) != sizeof( buf ) )
@@ -367,7 +367,7 @@ exit:
     return( ret );
 }
 
-int mbedtls_hmac_drbg_update_seed_file( mbedtls_hmac_drbg_context *ctx, const char *path )
+int mixpanel_mbedtls_hmac_drbg_update_seed_file( mixpanel_mbedtls_hmac_drbg_context *ctx, const char *path )
 {
     FILE *f;
     size_t n;
@@ -394,9 +394,9 @@ int mbedtls_hmac_drbg_update_seed_file( mbedtls_hmac_drbg_context *ctx, const ch
 
     fclose( f );
 
-    mbedtls_hmac_drbg_update( ctx, buf, n );
+    mixpanel_mbedtls_hmac_drbg_update( ctx, buf, n );
 
-    return( mbedtls_hmac_drbg_write_seed_file( ctx, path ) );
+    return( mixpanel_mbedtls_hmac_drbg_write_seed_file( ctx, path ) );
 }
 #endif /* MBEDTLS_FS_IO */
 
@@ -405,7 +405,7 @@ int mbedtls_hmac_drbg_update_seed_file( mbedtls_hmac_drbg_context *ctx, const ch
 
 #if !defined(MBEDTLS_SHA1_C)
 /* Dummy checkup routine */
-int mbedtls_hmac_drbg_self_test( int verbose )
+int mixpanel_mbedtls_hmac_drbg_self_test( int verbose )
 {
     (void) verbose;
     return( 0 );
@@ -459,67 +459,67 @@ static int hmac_drbg_self_test_entropy( void *data,
 #define CHK( c )    if( (c) != 0 )                          \
                     {                                       \
                         if( verbose != 0 )                  \
-                            mbedtls_printf( "failed\n" );  \
+                            mixpanel_mbedtls_printf( "failed\n" );  \
                         return( 1 );                        \
                     }
 
 /*
  * Checkup routine for HMAC_DRBG with SHA-1
  */
-int mbedtls_hmac_drbg_self_test( int verbose )
+int mixpanel_mbedtls_hmac_drbg_self_test( int verbose )
 {
-    mbedtls_hmac_drbg_context ctx;
+    mixpanel_mbedtls_hmac_drbg_context ctx;
     unsigned char buf[OUTPUT_LEN];
-    const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type( MBEDTLS_MD_SHA1 );
+    const mixpanel_mbedtls_md_info_t *md_info = mixpanel_mbedtls_md_info_from_type( MBEDTLS_MD_SHA1 );
 
-    mbedtls_hmac_drbg_init( &ctx );
+    mixpanel_mbedtls_hmac_drbg_init( &ctx );
 
     /*
      * PR = True
      */
     if( verbose != 0 )
-        mbedtls_printf( "  HMAC_DRBG (PR = True) : " );
+        mixpanel_mbedtls_printf( "  HMAC_DRBG (PR = True) : " );
 
     test_offset = 0;
-    CHK( mbedtls_hmac_drbg_seed( &ctx, md_info,
+    CHK( mixpanel_mbedtls_hmac_drbg_seed( &ctx, md_info,
                          hmac_drbg_self_test_entropy, (void *) entropy_pr,
                          NULL, 0 ) );
-    mbedtls_hmac_drbg_set_prediction_resistance( &ctx, MBEDTLS_HMAC_DRBG_PR_ON );
-    CHK( mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
-    CHK( mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
+    mixpanel_mbedtls_hmac_drbg_set_prediction_resistance( &ctx, MBEDTLS_HMAC_DRBG_PR_ON );
+    CHK( mixpanel_mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
+    CHK( mixpanel_mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
     CHK( memcmp( buf, result_pr, OUTPUT_LEN ) );
-    mbedtls_hmac_drbg_free( &ctx );
+    mixpanel_mbedtls_hmac_drbg_free( &ctx );
 
-    mbedtls_hmac_drbg_free( &ctx );
+    mixpanel_mbedtls_hmac_drbg_free( &ctx );
 
     if( verbose != 0 )
-        mbedtls_printf( "passed\n" );
+        mixpanel_mbedtls_printf( "passed\n" );
 
     /*
      * PR = False
      */
     if( verbose != 0 )
-        mbedtls_printf( "  HMAC_DRBG (PR = False) : " );
+        mixpanel_mbedtls_printf( "  HMAC_DRBG (PR = False) : " );
 
-    mbedtls_hmac_drbg_init( &ctx );
+    mixpanel_mbedtls_hmac_drbg_init( &ctx );
 
     test_offset = 0;
-    CHK( mbedtls_hmac_drbg_seed( &ctx, md_info,
+    CHK( mixpanel_mbedtls_hmac_drbg_seed( &ctx, md_info,
                          hmac_drbg_self_test_entropy, (void *) entropy_nopr,
                          NULL, 0 ) );
-    CHK( mbedtls_hmac_drbg_reseed( &ctx, NULL, 0 ) );
-    CHK( mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
-    CHK( mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
+    CHK( mixpanel_mbedtls_hmac_drbg_reseed( &ctx, NULL, 0 ) );
+    CHK( mixpanel_mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
+    CHK( mixpanel_mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
     CHK( memcmp( buf, result_nopr, OUTPUT_LEN ) );
-    mbedtls_hmac_drbg_free( &ctx );
+    mixpanel_mbedtls_hmac_drbg_free( &ctx );
 
-    mbedtls_hmac_drbg_free( &ctx );
-
-    if( verbose != 0 )
-        mbedtls_printf( "passed\n" );
+    mixpanel_mbedtls_hmac_drbg_free( &ctx );
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "passed\n" );
+
+    if( verbose != 0 )
+        mixpanel_mbedtls_printf( "\n" );
 
     return( 0 );
 }

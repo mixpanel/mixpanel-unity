@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_sha256.h
+ * \file mixpanel_mbedtls_sha256.h
  *
  * \brief SHA-224 and SHA-256 cryptographic hash function
  *
@@ -50,21 +50,21 @@ typedef struct
     unsigned char buffer[64];   /*!< data block being processed */
     int is224;                  /*!< 0 => SHA-256, else SHA-224 */
 }
-mbedtls_sha256_context;
+mixpanel_mbedtls_sha256_context;
 
 /**
  * \brief          Initialize SHA-256 context
  *
  * \param ctx      SHA-256 context to be initialized
  */
-void mbedtls_sha256_init( mbedtls_sha256_context *ctx );
+void mixpanel_mbedtls_sha256_init( mixpanel_mbedtls_sha256_context *ctx );
 
 /**
  * \brief          Clear SHA-256 context
  *
  * \param ctx      SHA-256 context to be cleared
  */
-void mbedtls_sha256_free( mbedtls_sha256_context *ctx );
+void mixpanel_mbedtls_sha256_free( mixpanel_mbedtls_sha256_context *ctx );
 
 /**
  * \brief          Clone (the state of) a SHA-256 context
@@ -72,8 +72,8 @@ void mbedtls_sha256_free( mbedtls_sha256_context *ctx );
  * \param dst      The destination context
  * \param src      The context to be cloned
  */
-void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
-                           const mbedtls_sha256_context *src );
+void mixpanel_mbedtls_sha256_clone( mixpanel_mbedtls_sha256_context *dst,
+                           const mixpanel_mbedtls_sha256_context *src );
 
 /**
  * \brief          SHA-256 context setup
@@ -81,7 +81,7 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
  * \param ctx      context to be initialized
  * \param is224    0 = use SHA256, 1 = use SHA224
  */
-void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 );
+void mixpanel_mbedtls_sha256_starts( mixpanel_mbedtls_sha256_context *ctx, int is224 );
 
 /**
  * \brief          SHA-256 process buffer
@@ -90,7 +90,7 @@ void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 );
  * \param input    buffer holding the  data
  * \param ilen     length of the input data
  */
-void mbedtls_sha256_update( mbedtls_sha256_context *ctx, const unsigned char *input,
+void mixpanel_mbedtls_sha256_update( mixpanel_mbedtls_sha256_context *ctx, const unsigned char *input,
                     size_t ilen );
 
 /**
@@ -99,10 +99,10 @@ void mbedtls_sha256_update( mbedtls_sha256_context *ctx, const unsigned char *in
  * \param ctx      SHA-256 context
  * \param output   SHA-224/256 checksum result
  */
-void mbedtls_sha256_finish( mbedtls_sha256_context *ctx, unsigned char output[32] );
+void mixpanel_mbedtls_sha256_finish( mixpanel_mbedtls_sha256_context *ctx, unsigned char output[32] );
 
 /* Internal use */
-void mbedtls_sha256_process( mbedtls_sha256_context *ctx, const unsigned char data[64] );
+void mixpanel_mbedtls_sha256_process( mixpanel_mbedtls_sha256_context *ctx, const unsigned char data[64] );
 
 #ifdef __cplusplus
 }
@@ -124,7 +124,7 @@ extern "C" {
  * \param output   SHA-224/256 checksum result
  * \param is224    0 = use SHA256, 1 = use SHA224
  */
-void mbedtls_sha256( const unsigned char *input, size_t ilen,
+void mixpanel_mbedtls_sha256( const unsigned char *input, size_t ilen,
            unsigned char output[32], int is224 );
 
 /**
@@ -132,10 +132,10 @@ void mbedtls_sha256( const unsigned char *input, size_t ilen,
  *
  * \return         0 if successful, or 1 if the test failed
  */
-int mbedtls_sha256_self_test( int verbose );
+int mixpanel_mbedtls_sha256_self_test( int verbose );
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* mbedtls_sha256.h */
+#endif /* mixpanel_mbedtls_sha256.h */

@@ -46,7 +46,7 @@ extern "C" {
 #include <stdlib.h>
 #if !defined(MBEDTLS_PLATFORM_STD_SNPRINTF)
 #if defined(_WIN32)
-#define MBEDTLS_PLATFORM_STD_SNPRINTF   mbedtls_platform_win32_snprintf /**< Default snprintf to use  */
+#define MBEDTLS_PLATFORM_STD_SNPRINTF   mixpanel_mbedtls_platform_win32_snprintf /**< Default snprintf to use  */
 #else
 #define MBEDTLS_PLATFORM_STD_SNPRINTF   snprintf /**< Default snprintf to use  */
 #endif
@@ -80,13 +80,13 @@ extern "C" {
 #if defined(MBEDTLS_PLATFORM_MEMORY)
 #if defined(MBEDTLS_PLATFORM_FREE_MACRO) && \
     defined(MBEDTLS_PLATFORM_CALLOC_MACRO)
-#define mbedtls_free       MBEDTLS_PLATFORM_FREE_MACRO
-#define mbedtls_calloc     MBEDTLS_PLATFORM_CALLOC_MACRO
+#define mixpanel_mbedtls_free       MBEDTLS_PLATFORM_FREE_MACRO
+#define mixpanel_mbedtls_calloc     MBEDTLS_PLATFORM_CALLOC_MACRO
 #else
 /* For size_t */
 #include <stddef.h>
-extern void * (*mbedtls_calloc)( size_t n, size_t size );
-extern void (*mbedtls_free)( void *ptr );
+extern void * (*mixpanel_mbedtls_calloc)( size_t n, size_t size );
+extern void (*mixpanel_mbedtls_free)( void *ptr );
 
 /**
  * \brief   Set your own memory implementation function pointers
@@ -96,12 +96,12 @@ extern void (*mbedtls_free)( void *ptr );
  *
  * \return              0 if successful
  */
-int mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
+int mixpanel_mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
                               void (*free_func)( void * ) );
 #endif /* MBEDTLS_PLATFORM_FREE_MACRO && MBEDTLS_PLATFORM_CALLOC_MACRO */
 #else /* !MBEDTLS_PLATFORM_MEMORY */
-#define mbedtls_free       free
-#define mbedtls_calloc     calloc
+#define mixpanel_mbedtls_free       free
+#define mixpanel_mbedtls_calloc     calloc
 #endif /* MBEDTLS_PLATFORM_MEMORY && !MBEDTLS_PLATFORM_{FREE,CALLOC}_MACRO */
 
 /*
@@ -110,7 +110,7 @@ int mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
 #if defined(MBEDTLS_PLATFORM_FPRINTF_ALT)
 /* We need FILE * */
 #include <stdio.h>
-extern int (*mbedtls_fprintf)( FILE *stream, const char *format, ... );
+extern int (*mixpanel_mbedtls_fprintf)( FILE *stream, const char *format, ... );
 
 /**
  * \brief   Set your own fprintf function pointer
@@ -119,13 +119,13 @@ extern int (*mbedtls_fprintf)( FILE *stream, const char *format, ... );
  *
  * \return              0
  */
-int mbedtls_platform_set_fprintf( int (*fprintf_func)( FILE *stream, const char *,
+int mixpanel_mbedtls_platform_set_fprintf( int (*fprintf_func)( FILE *stream, const char *,
                                                ... ) );
 #else
 #if defined(MBEDTLS_PLATFORM_FPRINTF_MACRO)
-#define mbedtls_fprintf    MBEDTLS_PLATFORM_FPRINTF_MACRO
+#define mixpanel_mbedtls_fprintf    MBEDTLS_PLATFORM_FPRINTF_MACRO
 #else
-#define mbedtls_fprintf    fprintf
+#define mixpanel_mbedtls_fprintf    fprintf
 #endif /* MBEDTLS_PLATFORM_FPRINTF_MACRO */
 #endif /* MBEDTLS_PLATFORM_FPRINTF_ALT */
 
@@ -133,7 +133,7 @@ int mbedtls_platform_set_fprintf( int (*fprintf_func)( FILE *stream, const char 
  * The function pointers for printf
  */
 #if defined(MBEDTLS_PLATFORM_PRINTF_ALT)
-extern int (*mbedtls_printf)( const char *format, ... );
+extern int (*mixpanel_mbedtls_printf)( const char *format, ... );
 
 /**
  * \brief   Set your own printf function pointer
@@ -142,12 +142,12 @@ extern int (*mbedtls_printf)( const char *format, ... );
  *
  * \return              0
  */
-int mbedtls_platform_set_printf( int (*printf_func)( const char *, ... ) );
+int mixpanel_mbedtls_platform_set_printf( int (*printf_func)( const char *, ... ) );
 #else /* !MBEDTLS_PLATFORM_PRINTF_ALT */
 #if defined(MBEDTLS_PLATFORM_PRINTF_MACRO)
-#define mbedtls_printf     MBEDTLS_PLATFORM_PRINTF_MACRO
+#define mixpanel_mbedtls_printf     MBEDTLS_PLATFORM_PRINTF_MACRO
 #else
-#define mbedtls_printf     printf
+#define mixpanel_mbedtls_printf     printf
 #endif /* MBEDTLS_PLATFORM_PRINTF_MACRO */
 #endif /* MBEDTLS_PLATFORM_PRINTF_ALT */
 
@@ -162,11 +162,11 @@ int mbedtls_platform_set_printf( int (*printf_func)( const char *, ... ) );
  */
 #if defined(_WIN32)
 /* For Windows (inc. MSYS2), we provide our own fixed implementation */
-int mbedtls_platform_win32_snprintf( char *s, size_t n, const char *fmt, ... );
+int mixpanel_mbedtls_platform_win32_snprintf( char *s, size_t n, const char *fmt, ... );
 #endif
 
 #if defined(MBEDTLS_PLATFORM_SNPRINTF_ALT)
-extern int (*mbedtls_snprintf)( char * s, size_t n, const char * format, ... );
+extern int (*mixpanel_mbedtls_snprintf)( char * s, size_t n, const char * format, ... );
 
 /**
  * \brief   Set your own snprintf function pointer
@@ -175,13 +175,13 @@ extern int (*mbedtls_snprintf)( char * s, size_t n, const char * format, ... );
  *
  * \return              0
  */
-int mbedtls_platform_set_snprintf( int (*snprintf_func)( char * s, size_t n,
+int mixpanel_mbedtls_platform_set_snprintf( int (*snprintf_func)( char * s, size_t n,
                                                  const char * format, ... ) );
 #else /* MBEDTLS_PLATFORM_SNPRINTF_ALT */
 #if defined(MBEDTLS_PLATFORM_SNPRINTF_MACRO)
-#define mbedtls_snprintf   MBEDTLS_PLATFORM_SNPRINTF_MACRO
+#define mixpanel_mbedtls_snprintf   MBEDTLS_PLATFORM_SNPRINTF_MACRO
 #else
-#define mbedtls_snprintf   snprintf
+#define mixpanel_mbedtls_snprintf   snprintf
 #endif /* MBEDTLS_PLATFORM_SNPRINTF_MACRO */
 #endif /* MBEDTLS_PLATFORM_SNPRINTF_ALT */
 
@@ -189,7 +189,7 @@ int mbedtls_platform_set_snprintf( int (*snprintf_func)( char * s, size_t n,
  * The function pointers for exit
  */
 #if defined(MBEDTLS_PLATFORM_EXIT_ALT)
-extern void (*mbedtls_exit)( int status );
+extern void (*mixpanel_mbedtls_exit)( int status );
 
 /**
  * \brief   Set your own exit function pointer
@@ -198,12 +198,12 @@ extern void (*mbedtls_exit)( int status );
  *
  * \return              0
  */
-int mbedtls_platform_set_exit( void (*exit_func)( int status ) );
+int mixpanel_mbedtls_platform_set_exit( void (*exit_func)( int status ) );
 #else
 #if defined(MBEDTLS_PLATFORM_EXIT_MACRO)
-#define mbedtls_exit   MBEDTLS_PLATFORM_EXIT_MACRO
+#define mixpanel_mbedtls_exit   MBEDTLS_PLATFORM_EXIT_MACRO
 #else
-#define mbedtls_exit   exit
+#define mixpanel_mbedtls_exit   exit
 #endif /* MBEDTLS_PLATFORM_EXIT_MACRO */
 #endif /* MBEDTLS_PLATFORM_EXIT_ALT */
 

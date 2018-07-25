@@ -54,6 +54,7 @@
 #include <WinSock2.h>
 #	include <ws2tcpip.h>
 #	pragma comment(lib, "Ws2_32.lib")
+
 typedef int socklen_t;
 
 static int read(SOCKET s, char* buf, size_t len)
@@ -348,16 +349,16 @@ namespace nanosocket {
 class MBEDTLSSocket : public Socket
 {
     private:
-        mbedtls_net_context net;
-        mbedtls_ssl_context ssl;
-        mbedtls_ssl_config conf;
-        mbedtls_entropy_context entropy;
-        mbedtls_ctr_drbg_context ctr_drbg;
-        mbedtls_x509_crt cacert;
+        mixpanel_mbedtls_net_context net;
+        mixpanel_mbedtls_ssl_context ssl;
+        mixpanel_mbedtls_ssl_config conf;
+        mixpanel_mbedtls_entropy_context entropy;
+        mixpanel_mbedtls_ctr_drbg_context ctr_drbg;
+        mixpanel_mbedtls_x509_crt cacert;
 
         inline bool set_errstr(int res) {
             char buf[256];
-            mbedtls_strerror(res, buf, sizeof(buf));
+            mixpanel_mbedtls_strerror(res, buf, sizeof(buf));
             errstr_ = buf;
             return false;
         }
@@ -368,27 +369,27 @@ class MBEDTLSSocket : public Socket
         {
             ((void) level);
 
-            mbedtls_fprintf( (FILE *) ctx, "%s:%04d: %s", file, line, str );
+            mixpanel_mbedtls_fprintf( (FILE *) ctx, "%s:%04d: %s", file, line, str );
             fflush(  (FILE *) ctx  );
         }
 
         int write_one_fragment(const char *buf, size_t siz)
         {
             int ret=0;
-            do ret = mbedtls_ssl_write( &ssl, (unsigned char *) buf, siz);
+            do ret = mixpanel_mbedtls_ssl_write( &ssl, (unsigned char *) buf, siz);
             while( ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE );
             return ret; // negative in case of error
         }
     public:
         MBEDTLSSocket()
         {
-            //mbedtls_debug_set_threshold( 1000 );
-            mbedtls_net_init( &net );
-            mbedtls_ssl_init( &ssl );
-            mbedtls_ssl_config_init( &conf );
-            //mbedtls_x509_crt_init( &cacert );
-            mbedtls_ctr_drbg_init( &ctr_drbg );
-            mbedtls_entropy_init( &entropy );
+            mixpanel_mbedtls_debug_set_threshold( 4 );
+            mixpanel_mbedtls_net_init( &net );
+            mixpanel_mbedtls_ssl_init( &ssl );
+            mixpanel_mbedtls_ssl_config_init( &conf );
+            //mixpanel_mbedtls_x509_crt_init( &cacert );
+            mixpanel_mbedtls_ctr_drbg_init( &ctr_drbg );
+            mixpanel_mbedtls_entropy_init( &entropy );
         }
 
         virtual bool connect(const char *host, short port) override
@@ -396,50 +397,50 @@ class MBEDTLSSocket : public Socket
             std::stringstream ss;
             ss << port;
 
-            int res = mbedtls_net_connect(&net, host, ss.str().c_str(), MBEDTLS_NET_PROTO_TCP);
+            int res = mixpanel_mbedtls_net_connect(&net, host, ss.str().c_str(), MBEDTLS_NET_PROTO_TCP);
             if(res != 0)
             {
                 set_errstr(res);
                 return false;
             }
 
-            res = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy, nullptr, 0 );
-            res = mbedtls_ssl_config_defaults( &conf,
+            res = mixpanel_mbedtls_ctr_drbg_seed( &ctr_drbg, mixpanel_mbedtls_entropy_func, &entropy, nullptr, 0 );
+            res = mixpanel_mbedtls_ssl_config_defaults( &conf,
                     MBEDTLS_SSL_IS_CLIENT,
                     MBEDTLS_SSL_TRANSPORT_STREAM,
                     MBEDTLS_SSL_PRESET_DEFAULT );
 
             // require TLS 1.2
-            mbedtls_ssl_conf_min_version(&conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+            mixpanel_mbedtls_ssl_conf_min_version(&conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
 
             if(res != 0) return set_errstr(res);
 
              /* OPTIONAL is not optimal for security,
             * but makes interop easier in this simplified example */
-            mbedtls_ssl_conf_authmode( &conf, MBEDTLS_SSL_VERIFY_REQUIRED );
+            mixpanel_mbedtls_ssl_conf_authmode( &conf, MBEDTLS_SSL_VERIFY_REQUIRED );
 
-            //ret = mbedtls_x509_crt_parse( &cacert, (const unsigned char *) mbedtls_test_cas_pem, mbedtls_test_cas_pem_len );
-            //mbedtls_ssl_conf_ca_chain( &conf, &cacert, NULL );
+            //ret = mixpanel_mbedtls_x509_crt_parse( &cacert, (const unsigned char *) mixpanel_mbedtls_test_cas_pem, mixpanel_mbedtls_test_cas_pem_len );
+            //mixpanel_mbedtls_ssl_conf_ca_chain( &conf, &cacert, NULL );
 
-            mbedtls_ssl_conf_rng( &conf, mbedtls_ctr_drbg_random, &ctr_drbg );
-            mbedtls_ssl_conf_dbg( &conf, my_debug, stderr );
+            mixpanel_mbedtls_ssl_conf_rng( &conf, mixpanel_mbedtls_ctr_drbg_random, &ctr_drbg );
+            mixpanel_mbedtls_ssl_conf_dbg( &conf, my_debug, stderr );
 
-            res = mbedtls_ssl_setup( &ssl, &conf );
+            res = mixpanel_mbedtls_ssl_setup( &ssl, &conf );
             if(res != 0) return set_errstr(res);
 
-            res = mbedtls_ssl_set_hostname( &ssl, host );
+            res = mixpanel_mbedtls_ssl_set_hostname( &ssl, host );
             if(res != 0) return set_errstr(res);
 
-            mbedtls_ssl_set_bio( &ssl, &net, mbedtls_net_send, mbedtls_net_recv, mbedtls_net_recv_timeout );
+            mixpanel_mbedtls_ssl_set_bio( &ssl, &net, mixpanel_mbedtls_net_send, mixpanel_mbedtls_net_recv, mixpanel_mbedtls_net_recv_timeout );
 
-            do res = mbedtls_ssl_handshake( &ssl );
+            do res = mixpanel_mbedtls_ssl_handshake( &ssl );
             while( res == MBEDTLS_ERR_SSL_WANT_READ || res == MBEDTLS_ERR_SSL_WANT_WRITE );
 
             uint32_t flags;
-            if( ( flags = mbedtls_ssl_get_verify_result( &ssl ) ) != 0 )
+            if( ( flags = mixpanel_mbedtls_ssl_get_verify_result( &ssl ) ) != 0 )
             {
                 char vrfy_buf[512];
-                mbedtls_x509_crt_verify_info( vrfy_buf, sizeof( vrfy_buf ), "  ! ", flags );
+                mixpanel_mbedtls_x509_crt_verify_info( vrfy_buf, sizeof( vrfy_buf ), "  ! ", flags );
                 errstr_ = vrfy_buf;
                 return false;
             }
@@ -468,7 +469,7 @@ class MBEDTLSSocket : public Socket
         virtual int recv(char *buf, size_t siz) override
         {
             int ret=0;
-            do ret = mbedtls_ssl_read( &ssl, (unsigned char *) buf, siz);
+            do ret = mixpanel_mbedtls_ssl_read( &ssl, (unsigned char *) buf, siz);
             while( ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE );
             if(ret < 0) set_errstr(ret);
             return ret;
@@ -476,12 +477,12 @@ class MBEDTLSSocket : public Socket
 
         virtual int close() override
         {
-            mbedtls_net_free( &net );
-            //mbedtls_x509_crt_free( &cacert );
-            mbedtls_ssl_free( &ssl );
-            mbedtls_ssl_config_free( &conf );
-            mbedtls_ctr_drbg_free( &ctr_drbg );
-            mbedtls_entropy_free( &entropy );
+            mixpanel_mbedtls_net_free( &net );
+            //mixpanel_mbedtls_x509_crt_free( &cacert );
+            mixpanel_mbedtls_ssl_free( &ssl );
+            mixpanel_mbedtls_ssl_config_free( &conf );
+            mixpanel_mbedtls_ctr_drbg_free( &ctr_drbg );
+            mixpanel_mbedtls_entropy_free( &entropy );
             return 0;
         }
 };

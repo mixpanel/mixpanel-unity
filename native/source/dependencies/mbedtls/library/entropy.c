@@ -41,7 +41,7 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf     printf
+#define mixpanel_mbedtls_printf     printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
@@ -50,72 +50,72 @@
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 #define ENTROPY_MAX_LOOP    256     /**< Maximum amount to loop before error */
 
-void mbedtls_entropy_init( mbedtls_entropy_context *ctx )
+void mixpanel_mbedtls_entropy_init( mixpanel_mbedtls_entropy_context *ctx )
 {
-    memset( ctx, 0, sizeof(mbedtls_entropy_context) );
+    memset( ctx, 0, sizeof(mixpanel_mbedtls_entropy_context) );
 
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
+    mixpanel_mbedtls_mutex_init( &ctx->mutex );
 #endif
 
 #if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
-    mbedtls_sha512_starts( &ctx->accumulator, 0 );
+    mixpanel_mbedtls_sha512_starts( &ctx->accumulator, 0 );
 #else
-    mbedtls_sha256_starts( &ctx->accumulator, 0 );
+    mixpanel_mbedtls_sha256_starts( &ctx->accumulator, 0 );
 #endif
 #if defined(MBEDTLS_HAVEGE_C)
-    mbedtls_havege_init( &ctx->havege_data );
+    mixpanel_mbedtls_havege_init( &ctx->havege_data );
 #endif
 
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES)
 #if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
-    mbedtls_entropy_add_source( ctx, mbedtls_platform_entropy_poll, NULL,
+    mixpanel_mbedtls_entropy_add_source( ctx, mixpanel_mbedtls_platform_entropy_poll, NULL,
                                 MBEDTLS_ENTROPY_MIN_PLATFORM,
                                 MBEDTLS_ENTROPY_SOURCE_STRONG );
 #endif
 #if defined(MBEDTLS_TIMING_C)
-    mbedtls_entropy_add_source( ctx, mbedtls_hardclock_poll, NULL,
+    mixpanel_mbedtls_entropy_add_source( ctx, mixpanel_mbedtls_hardclock_poll, NULL,
                                 MBEDTLS_ENTROPY_MIN_HARDCLOCK,
                                 MBEDTLS_ENTROPY_SOURCE_WEAK );
 #endif
 #if defined(MBEDTLS_HAVEGE_C)
-    mbedtls_entropy_add_source( ctx, mbedtls_havege_poll, &ctx->havege_data,
+    mixpanel_mbedtls_entropy_add_source( ctx, mixpanel_mbedtls_havege_poll, &ctx->havege_data,
                                 MBEDTLS_ENTROPY_MIN_HAVEGE,
                                 MBEDTLS_ENTROPY_SOURCE_STRONG );
 #endif
 #if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
-    mbedtls_entropy_add_source( ctx, mbedtls_hardware_poll, NULL,
+    mixpanel_mbedtls_entropy_add_source( ctx, mixpanel_mbedtls_hardware_poll, NULL,
                                 MBEDTLS_ENTROPY_MIN_HARDWARE,
                                 MBEDTLS_ENTROPY_SOURCE_STRONG );
 #endif
 #endif /* MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES */
 }
 
-void mbedtls_entropy_free( mbedtls_entropy_context *ctx )
+void mixpanel_mbedtls_entropy_free( mixpanel_mbedtls_entropy_context *ctx )
 {
 #if defined(MBEDTLS_HAVEGE_C)
-    mbedtls_havege_free( &ctx->havege_data );
+    mixpanel_mbedtls_havege_free( &ctx->havege_data );
 #endif
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_free( &ctx->mutex );
+    mixpanel_mbedtls_mutex_free( &ctx->mutex );
 #endif
-    mbedtls_zeroize( ctx, sizeof( mbedtls_entropy_context ) );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_entropy_context ) );
 }
 
-int mbedtls_entropy_add_source( mbedtls_entropy_context *ctx,
-                        mbedtls_entropy_f_source_ptr f_source, void *p_source,
+int mixpanel_mbedtls_entropy_add_source( mixpanel_mbedtls_entropy_context *ctx,
+                        mixpanel_mbedtls_entropy_f_source_ptr f_source, void *p_source,
                         size_t threshold, int strong )
 {
     int index, ret = 0;
 
 #if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
@@ -135,7 +135,7 @@ int mbedtls_entropy_add_source( mbedtls_entropy_context *ctx,
 
 exit:
 #if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+    if( mixpanel_mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
@@ -145,7 +145,7 @@ exit:
 /*
  * Entropy accumulator update
  */
-static int entropy_update( mbedtls_entropy_context *ctx, unsigned char source_id,
+static int entropy_update( mixpanel_mbedtls_entropy_context *ctx, unsigned char source_id,
                            const unsigned char *data, size_t len )
 {
     unsigned char header[2];
@@ -156,9 +156,9 @@ static int entropy_update( mbedtls_entropy_context *ctx, unsigned char source_id
     if( use_len > MBEDTLS_ENTROPY_BLOCK_SIZE )
     {
 #if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
-        mbedtls_sha512( data, len, tmp, 0 );
+        mixpanel_mbedtls_sha512( data, len, tmp, 0 );
 #else
-        mbedtls_sha256( data, len, tmp, 0 );
+        mixpanel_mbedtls_sha256( data, len, tmp, 0 );
 #endif
         p = tmp;
         use_len = MBEDTLS_ENTROPY_BLOCK_SIZE;
@@ -168,30 +168,30 @@ static int entropy_update( mbedtls_entropy_context *ctx, unsigned char source_id
     header[1] = use_len & 0xFF;
 
 #if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
-    mbedtls_sha512_update( &ctx->accumulator, header, 2 );
-    mbedtls_sha512_update( &ctx->accumulator, p, use_len );
+    mixpanel_mbedtls_sha512_update( &ctx->accumulator, header, 2 );
+    mixpanel_mbedtls_sha512_update( &ctx->accumulator, p, use_len );
 #else
-    mbedtls_sha256_update( &ctx->accumulator, header, 2 );
-    mbedtls_sha256_update( &ctx->accumulator, p, use_len );
+    mixpanel_mbedtls_sha256_update( &ctx->accumulator, header, 2 );
+    mixpanel_mbedtls_sha256_update( &ctx->accumulator, p, use_len );
 #endif
 
     return( 0 );
 }
 
-int mbedtls_entropy_update_manual( mbedtls_entropy_context *ctx,
+int mixpanel_mbedtls_entropy_update_manual( mixpanel_mbedtls_entropy_context *ctx,
                            const unsigned char *data, size_t len )
 {
     int ret;
 
 #if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
     ret = entropy_update( ctx, MBEDTLS_ENTROPY_SOURCE_MANUAL, data, len );
 
 #if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+    if( mixpanel_mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
@@ -201,7 +201,7 @@ int mbedtls_entropy_update_manual( mbedtls_entropy_context *ctx,
 /*
  * Run through the different sources to add entropy to our accumulator
  */
-static int entropy_gather_internal( mbedtls_entropy_context *ctx )
+static int entropy_gather_internal( mixpanel_mbedtls_entropy_context *ctx )
 {
     int ret, i, have_one_strong = 0;
     unsigned char buf[MBEDTLS_ENTROPY_MAX_GATHER];
@@ -244,36 +244,36 @@ static int entropy_gather_internal( mbedtls_entropy_context *ctx )
 /*
  * Thread-safe wrapper for entropy_gather_internal()
  */
-int mbedtls_entropy_gather( mbedtls_entropy_context *ctx )
+int mixpanel_mbedtls_entropy_gather( mixpanel_mbedtls_entropy_context *ctx )
 {
     int ret;
 
 #if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
     ret = entropy_gather_internal( ctx );
 
 #if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+    if( mixpanel_mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
     return( ret );
 }
 
-int mbedtls_entropy_func( void *data, unsigned char *output, size_t len )
+int mixpanel_mbedtls_entropy_func( void *data, unsigned char *output, size_t len )
 {
     int ret, count = 0, i, done;
-    mbedtls_entropy_context *ctx = (mbedtls_entropy_context *) data;
+    mixpanel_mbedtls_entropy_context *ctx = (mixpanel_mbedtls_entropy_context *) data;
     unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE];
 
     if( len > MBEDTLS_ENTROPY_BLOCK_SIZE )
         return( MBEDTLS_ERR_ENTROPY_SOURCE_FAILED );
 
 #if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
@@ -301,33 +301,33 @@ int mbedtls_entropy_func( void *data, unsigned char *output, size_t len )
     memset( buf, 0, MBEDTLS_ENTROPY_BLOCK_SIZE );
 
 #if defined(MBEDTLS_ENTROPY_SHA512_ACCUMULATOR)
-    mbedtls_sha512_finish( &ctx->accumulator, buf );
+    mixpanel_mbedtls_sha512_finish( &ctx->accumulator, buf );
 
     /*
      * Reset accumulator and counters and recycle existing entropy
      */
-    memset( &ctx->accumulator, 0, sizeof( mbedtls_sha512_context ) );
-    mbedtls_sha512_starts( &ctx->accumulator, 0 );
-    mbedtls_sha512_update( &ctx->accumulator, buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
+    memset( &ctx->accumulator, 0, sizeof( mixpanel_mbedtls_sha512_context ) );
+    mixpanel_mbedtls_sha512_starts( &ctx->accumulator, 0 );
+    mixpanel_mbedtls_sha512_update( &ctx->accumulator, buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
 
     /*
      * Perform second SHA-512 on entropy
      */
-    mbedtls_sha512( buf, MBEDTLS_ENTROPY_BLOCK_SIZE, buf, 0 );
+    mixpanel_mbedtls_sha512( buf, MBEDTLS_ENTROPY_BLOCK_SIZE, buf, 0 );
 #else /* MBEDTLS_ENTROPY_SHA512_ACCUMULATOR */
-    mbedtls_sha256_finish( &ctx->accumulator, buf );
+    mixpanel_mbedtls_sha256_finish( &ctx->accumulator, buf );
 
     /*
      * Reset accumulator and counters and recycle existing entropy
      */
-    memset( &ctx->accumulator, 0, sizeof( mbedtls_sha256_context ) );
-    mbedtls_sha256_starts( &ctx->accumulator, 0 );
-    mbedtls_sha256_update( &ctx->accumulator, buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
+    memset( &ctx->accumulator, 0, sizeof( mixpanel_mbedtls_sha256_context ) );
+    mixpanel_mbedtls_sha256_starts( &ctx->accumulator, 0 );
+    mixpanel_mbedtls_sha256_update( &ctx->accumulator, buf, MBEDTLS_ENTROPY_BLOCK_SIZE );
 
     /*
      * Perform second SHA-256 on entropy
      */
-    mbedtls_sha256( buf, MBEDTLS_ENTROPY_BLOCK_SIZE, buf, 0 );
+    mixpanel_mbedtls_sha256( buf, MBEDTLS_ENTROPY_BLOCK_SIZE, buf, 0 );
 #endif /* MBEDTLS_ENTROPY_SHA512_ACCUMULATOR */
 
     for( i = 0; i < ctx->source_count; i++ )
@@ -339,7 +339,7 @@ int mbedtls_entropy_func( void *data, unsigned char *output, size_t len )
 
 exit:
 #if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+    if( mixpanel_mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
@@ -347,7 +347,7 @@ exit:
 }
 
 #if defined(MBEDTLS_FS_IO)
-int mbedtls_entropy_write_seed_file( mbedtls_entropy_context *ctx, const char *path )
+int mixpanel_mbedtls_entropy_write_seed_file( mixpanel_mbedtls_entropy_context *ctx, const char *path )
 {
     int ret = MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR;
     FILE *f;
@@ -356,7 +356,7 @@ int mbedtls_entropy_write_seed_file( mbedtls_entropy_context *ctx, const char *p
     if( ( f = fopen( path, "wb" ) ) == NULL )
         return( MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR );
 
-    if( ( ret = mbedtls_entropy_func( ctx, buf, MBEDTLS_ENTROPY_BLOCK_SIZE ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_entropy_func( ctx, buf, MBEDTLS_ENTROPY_BLOCK_SIZE ) ) != 0 )
         goto exit;
 
     if( fwrite( buf, 1, MBEDTLS_ENTROPY_BLOCK_SIZE, f ) != MBEDTLS_ENTROPY_BLOCK_SIZE )
@@ -372,7 +372,7 @@ exit:
     return( ret );
 }
 
-int mbedtls_entropy_update_seed_file( mbedtls_entropy_context *ctx, const char *path )
+int mixpanel_mbedtls_entropy_update_seed_file( mixpanel_mbedtls_entropy_context *ctx, const char *path )
 {
     FILE *f;
     size_t n;
@@ -396,9 +396,9 @@ int mbedtls_entropy_update_seed_file( mbedtls_entropy_context *ctx, const char *
 
     fclose( f );
 
-    mbedtls_entropy_update_manual( ctx, buf, n );
+    mixpanel_mbedtls_entropy_update_manual( ctx, buf, n );
 
-    return( mbedtls_entropy_write_seed_file( ctx, path ) );
+    return( mixpanel_mbedtls_entropy_write_seed_file( ctx, path ) );
 }
 #endif /* MBEDTLS_FS_IO */
 
@@ -422,33 +422,33 @@ static int entropy_dummy_source( void *data, unsigned char *output,
  * test that the functions don't cause errors and write the correct
  * amount of data to buffers.
  */
-int mbedtls_entropy_self_test( int verbose )
+int mixpanel_mbedtls_entropy_self_test( int verbose )
 {
     int ret = 0;
-    mbedtls_entropy_context ctx;
+    mixpanel_mbedtls_entropy_context ctx;
     unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE] = { 0 };
     unsigned char acc[MBEDTLS_ENTROPY_BLOCK_SIZE] = { 0 };
     size_t i, j;
 
     if( verbose != 0 )
-        mbedtls_printf( "  ENTROPY test: " );
+        mixpanel_mbedtls_printf( "  ENTROPY test: " );
 
-    mbedtls_entropy_init( &ctx );
+    mixpanel_mbedtls_entropy_init( &ctx );
 
     /* First do a gather to make sure we have default sources */
-    if( ( ret = mbedtls_entropy_gather( &ctx ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_entropy_gather( &ctx ) ) != 0 )
         goto cleanup;
 
-    ret = mbedtls_entropy_add_source( &ctx, entropy_dummy_source, NULL, 16,
+    ret = mixpanel_mbedtls_entropy_add_source( &ctx, entropy_dummy_source, NULL, 16,
                                       MBEDTLS_ENTROPY_SOURCE_WEAK );
     if( ret != 0 )
         goto cleanup;
 
-    if( ( ret = mbedtls_entropy_update_manual( &ctx, buf, sizeof buf ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_entropy_update_manual( &ctx, buf, sizeof buf ) ) != 0 )
         goto cleanup;
 
     /*
-     * To test that mbedtls_entropy_func writes correct number of bytes:
+     * To test that mixpanel_mbedtls_entropy_func writes correct number of bytes:
      * - use the whole buffer and rely on ASan to detect overruns
      * - collect entropy 8 times and OR the result in an accumulator:
      *   any byte should then be 0 with probably 2^(-64), so requiring
@@ -457,7 +457,7 @@ int mbedtls_entropy_self_test( int verbose )
      */
     for( i = 0; i < 8; i++ )
     {
-        if( ( ret = mbedtls_entropy_func( &ctx, buf, sizeof( buf ) ) ) != 0 )
+        if( ( ret = mixpanel_mbedtls_entropy_func( &ctx, buf, sizeof( buf ) ) ) != 0 )
             goto cleanup;
 
         for( j = 0; j < sizeof( buf ); j++ )
@@ -474,16 +474,16 @@ int mbedtls_entropy_self_test( int verbose )
     }
 
 cleanup:
-    mbedtls_entropy_free( &ctx );
+    mixpanel_mbedtls_entropy_free( &ctx );
 
     if( verbose != 0 )
     {
         if( ret != 0 )
-            mbedtls_printf( "failed\n" );
+            mixpanel_mbedtls_printf( "failed\n" );
         else
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
 
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
     }
 
     return( ret != 0 );

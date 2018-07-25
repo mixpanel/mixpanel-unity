@@ -229,7 +229,7 @@ extern "C" {
 #define MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8      0xC0AE  /**< TLS 1.2 */
 #define MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8      0xC0AF  /**< TLS 1.2 */
 
-/* Reminder: update mbedtls_ssl_premaster_secret when adding a new key exchange.
+/* Reminder: update mixpanel_mbedtls_ssl_premaster_secret when adding a new key exchange.
  * Reminder: update MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED below.
  */
 typedef enum {
@@ -244,7 +244,7 @@ typedef enum {
     MBEDTLS_KEY_EXCHANGE_ECDHE_PSK,
     MBEDTLS_KEY_EXCHANGE_ECDH_RSA,
     MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA,
-} mbedtls_key_exchange_type_t;
+} mixpanel_mbedtls_key_exchange_type_t;
 
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)          || \
     defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)      || \
@@ -257,7 +257,7 @@ typedef enum {
 #define MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
 #endif
 
-typedef struct mbedtls_ssl_ciphersuite_t mbedtls_ssl_ciphersuite_t;
+typedef struct mixpanel_mbedtls_ssl_ciphersuite_t mixpanel_mbedtls_ssl_ciphersuite_t;
 
 #define MBEDTLS_CIPHERSUITE_WEAK       0x01    /**< Weak ciphersuite flag  */
 #define MBEDTLS_CIPHERSUITE_SHORT_TAG  0x02    /**< Short authentication tag,
@@ -267,14 +267,14 @@ typedef struct mbedtls_ssl_ciphersuite_t mbedtls_ssl_ciphersuite_t;
 /**
  * \brief   This structure is used for storing ciphersuite information
  */
-struct mbedtls_ssl_ciphersuite_t
+struct mixpanel_mbedtls_ssl_ciphersuite_t
 {
     int id;
     const char * name;
 
-    mbedtls_cipher_type_t cipher;
-    mbedtls_md_type_t mac;
-    mbedtls_key_exchange_type_t key_exchange;
+    mixpanel_mbedtls_cipher_type_t cipher;
+    mixpanel_mbedtls_md_type_t mac;
+    mixpanel_mbedtls_key_exchange_type_t key_exchange;
 
     int min_major_ver;
     int min_minor_ver;
@@ -284,17 +284,17 @@ struct mbedtls_ssl_ciphersuite_t
     unsigned char flags;
 };
 
-const int *mbedtls_ssl_list_ciphersuites( void );
+const int *mixpanel_mbedtls_ssl_list_ciphersuites( void );
 
-const mbedtls_ssl_ciphersuite_t *mbedtls_ssl_ciphersuite_from_string( const char *ciphersuite_name );
-const mbedtls_ssl_ciphersuite_t *mbedtls_ssl_ciphersuite_from_id( int ciphersuite_id );
+const mixpanel_mbedtls_ssl_ciphersuite_t *mixpanel_mbedtls_ssl_ciphersuite_from_string( const char *ciphersuite_name );
+const mixpanel_mbedtls_ssl_ciphersuite_t *mixpanel_mbedtls_ssl_ciphersuite_from_id( int ciphersuite_id );
 
 #if defined(MBEDTLS_PK_C)
-mbedtls_pk_type_t mbedtls_ssl_get_ciphersuite_sig_pk_alg( const mbedtls_ssl_ciphersuite_t *info );
+mixpanel_mbedtls_pk_type_t mixpanel_mbedtls_ssl_get_ciphersuite_sig_pk_alg( const mixpanel_mbedtls_ssl_ciphersuite_t *info );
 #endif
 
-int mbedtls_ssl_ciphersuite_uses_ec( const mbedtls_ssl_ciphersuite_t *info );
-int mbedtls_ssl_ciphersuite_uses_psk( const mbedtls_ssl_ciphersuite_t *info );
+int mixpanel_mbedtls_ssl_ciphersuite_uses_ec( const mixpanel_mbedtls_ssl_ciphersuite_t *info );
+int mixpanel_mbedtls_ssl_ciphersuite_uses_psk( const mixpanel_mbedtls_ssl_ciphersuite_t *info );
 
 #ifdef __cplusplus
 }

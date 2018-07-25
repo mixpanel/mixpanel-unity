@@ -37,9 +37,9 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdlib.h>
-#define mbedtls_calloc      calloc
-#define mbedtls_free        free
-#define mbedtls_snprintf    snprintf
+#define mixpanel_mbedtls_calloc      calloc
+#define mixpanel_mbedtls_free        free
+#define mixpanel_mbedtls_snprintf    snprintf
 #endif
 
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && !defined(inline)
@@ -50,7 +50,7 @@
 
 static int debug_threshold = 0;
 
-void mbedtls_debug_set_threshold( int threshold )
+void mixpanel_mbedtls_debug_set_threshold( int threshold )
 {
     debug_threshold = threshold;
 }
@@ -58,7 +58,7 @@ void mbedtls_debug_set_threshold( int threshold )
 /*
  * All calls to f_dbg must be made via this function
  */
-static inline void debug_send_line( const mbedtls_ssl_context *ssl, int level,
+static inline void debug_send_line( const mixpanel_mbedtls_ssl_context *ssl, int level,
                                     const char *file, int line,
                                     const char *str )
 {
@@ -69,14 +69,14 @@ static inline void debug_send_line( const mbedtls_ssl_context *ssl, int level,
      */
 #if defined(MBEDTLS_THREADING_C)
     char idstr[20 + DEBUG_BUF_SIZE]; /* 0x + 16 nibbles + ': ' */
-    mbedtls_snprintf( idstr, sizeof( idstr ), "%p: %s", ssl, str );
+    mixpanel_mbedtls_snprintf( idstr, sizeof( idstr ), "%p: %s", ssl, str );
     ssl->conf->f_dbg( ssl->conf->p_dbg, level, file, line, idstr );
 #else
     ssl->conf->f_dbg( ssl->conf->p_dbg, level, file, line, str );
 #endif
 }
 
-void mbedtls_debug_print_msg( const mbedtls_ssl_context *ssl, int level,
+void mixpanel_mbedtls_debug_print_msg( const mixpanel_mbedtls_ssl_context *ssl, int level,
                               const char *file, int line,
                               const char *format, ... )
 {
@@ -113,7 +113,7 @@ void mbedtls_debug_print_msg( const mbedtls_ssl_context *ssl, int level,
     debug_send_line( ssl, level, file, line, str );
 }
 
-void mbedtls_debug_print_ret( const mbedtls_ssl_context *ssl, int level,
+void mixpanel_mbedtls_debug_print_ret( const mixpanel_mbedtls_ssl_context *ssl, int level,
                       const char *file, int line,
                       const char *text, int ret )
 {
@@ -130,13 +130,13 @@ void mbedtls_debug_print_ret( const mbedtls_ssl_context *ssl, int level,
     if( ret == MBEDTLS_ERR_SSL_WANT_READ )
         return;
 
-    mbedtls_snprintf( str, sizeof( str ), "%s() returned %d (-0x%04x)\n",
+    mixpanel_mbedtls_snprintf( str, sizeof( str ), "%s() returned %d (-0x%04x)\n",
               text, ret, -ret );
 
     debug_send_line( ssl, level, file, line, str );
 }
 
-void mbedtls_debug_print_buf( const mbedtls_ssl_context *ssl, int level,
+void mixpanel_mbedtls_debug_print_buf( const mixpanel_mbedtls_ssl_context *ssl, int level,
                       const char *file, int line, const char *text,
                       const unsigned char *buf, size_t len )
 {
@@ -147,7 +147,7 @@ void mbedtls_debug_print_buf( const mbedtls_ssl_context *ssl, int level,
     if( ssl->conf == NULL || ssl->conf->f_dbg == NULL || level > debug_threshold )
         return;
 
-    mbedtls_snprintf( str + idx, sizeof( str ) - idx, "dumping '%s' (%u bytes)\n",
+    mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, "dumping '%s' (%u bytes)\n",
               text, (unsigned int) len );
 
     debug_send_line( ssl, level, file, line, str );
@@ -163,19 +163,19 @@ void mbedtls_debug_print_buf( const mbedtls_ssl_context *ssl, int level,
         {
             if( i > 0 )
             {
-                mbedtls_snprintf( str + idx, sizeof( str ) - idx, "  %s\n", txt );
+                mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, "  %s\n", txt );
                 debug_send_line( ssl, level, file, line, str );
 
                 idx = 0;
                 memset( txt, 0, sizeof( txt ) );
             }
 
-            idx += mbedtls_snprintf( str + idx, sizeof( str ) - idx, "%04x: ",
+            idx += mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, "%04x: ",
                              (unsigned int) i );
 
         }
 
-        idx += mbedtls_snprintf( str + idx, sizeof( str ) - idx, " %02x",
+        idx += mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, " %02x",
                          (unsigned int) buf[i] );
         txt[i % 16] = ( buf[i] > 31 && buf[i] < 127 ) ? buf[i] : '.' ;
     }
@@ -183,35 +183,35 @@ void mbedtls_debug_print_buf( const mbedtls_ssl_context *ssl, int level,
     if( len > 0 )
     {
         for( /* i = i */; i % 16 != 0; i++ )
-            idx += mbedtls_snprintf( str + idx, sizeof( str ) - idx, "   " );
+            idx += mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, "   " );
 
-        mbedtls_snprintf( str + idx, sizeof( str ) - idx, "  %s\n", txt );
+        mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, "  %s\n", txt );
         debug_send_line( ssl, level, file, line, str );
     }
 }
 
 #if defined(MBEDTLS_ECP_C)
-void mbedtls_debug_print_ecp( const mbedtls_ssl_context *ssl, int level,
+void mixpanel_mbedtls_debug_print_ecp( const mixpanel_mbedtls_ssl_context *ssl, int level,
                       const char *file, int line,
-                      const char *text, const mbedtls_ecp_point *X )
+                      const char *text, const mixpanel_mbedtls_ecp_point *X )
 {
     char str[DEBUG_BUF_SIZE];
 
     if( ssl->conf == NULL || ssl->conf->f_dbg == NULL || level > debug_threshold )
         return;
 
-    mbedtls_snprintf( str, sizeof( str ), "%s(X)", text );
-    mbedtls_debug_print_mpi( ssl, level, file, line, str, &X->X );
+    mixpanel_mbedtls_snprintf( str, sizeof( str ), "%s(X)", text );
+    mixpanel_mbedtls_debug_print_mpi( ssl, level, file, line, str, &X->X );
 
-    mbedtls_snprintf( str, sizeof( str ), "%s(Y)", text );
-    mbedtls_debug_print_mpi( ssl, level, file, line, str, &X->Y );
+    mixpanel_mbedtls_snprintf( str, sizeof( str ), "%s(Y)", text );
+    mixpanel_mbedtls_debug_print_mpi( ssl, level, file, line, str, &X->Y );
 }
 #endif /* MBEDTLS_ECP_C */
 
 #if defined(MBEDTLS_BIGNUM_C)
-void mbedtls_debug_print_mpi( const mbedtls_ssl_context *ssl, int level,
+void mixpanel_mbedtls_debug_print_mpi( const mixpanel_mbedtls_ssl_context *ssl, int level,
                       const char *file, int line,
-                      const char *text, const mbedtls_mpi *X )
+                      const char *text, const mixpanel_mbedtls_mpi *X )
 {
     char str[DEBUG_BUF_SIZE];
     int j, k, zeros = 1;
@@ -224,12 +224,12 @@ void mbedtls_debug_print_mpi( const mbedtls_ssl_context *ssl, int level,
         if( X->p[n] != 0 )
             break;
 
-    for( j = ( sizeof(mbedtls_mpi_uint) << 3 ) - 1; j >= 0; j-- )
+    for( j = ( sizeof(mixpanel_mbedtls_mpi_uint) << 3 ) - 1; j >= 0; j-- )
         if( ( ( X->p[n] >> j ) & 1 ) != 0 )
             break;
 
-    mbedtls_snprintf( str + idx, sizeof( str ) - idx, "value of '%s' (%d bits) is:\n",
-              text, (int) ( ( n * ( sizeof(mbedtls_mpi_uint) << 3 ) ) + j + 1 ) );
+    mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, "value of '%s' (%d bits) is:\n",
+              text, (int) ( ( n * ( sizeof(mixpanel_mbedtls_mpi_uint) << 3 ) ) + j + 1 ) );
 
     debug_send_line( ssl, level, file, line, str );
 
@@ -239,7 +239,7 @@ void mbedtls_debug_print_mpi( const mbedtls_ssl_context *ssl, int level,
         if( zeros && X->p[i - 1] == 0 )
             continue;
 
-        for( k = sizeof( mbedtls_mpi_uint ) - 1; k >= 0; k-- )
+        for( k = sizeof( mixpanel_mbedtls_mpi_uint ) - 1; k >= 0; k-- )
         {
             if( zeros && ( ( X->p[i - 1] >> ( k << 3 ) ) & 0xFF ) == 0 )
                 continue;
@@ -250,13 +250,13 @@ void mbedtls_debug_print_mpi( const mbedtls_ssl_context *ssl, int level,
             {
                 if( j > 0 )
                 {
-                    mbedtls_snprintf( str + idx, sizeof( str ) - idx, "\n" );
+                    mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, "\n" );
                     debug_send_line( ssl, level, file, line, str );
                     idx = 0;
                 }
             }
 
-            idx += mbedtls_snprintf( str + idx, sizeof( str ) - idx, " %02x", (unsigned int)
+            idx += mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, " %02x", (unsigned int)
                              ( X->p[i - 1] >> ( k << 3 ) ) & 0xFF );
 
             j++;
@@ -265,25 +265,25 @@ void mbedtls_debug_print_mpi( const mbedtls_ssl_context *ssl, int level,
     }
 
     if( zeros == 1 )
-        idx += mbedtls_snprintf( str + idx, sizeof( str ) - idx, " 00" );
+        idx += mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, " 00" );
 
-    mbedtls_snprintf( str + idx, sizeof( str ) - idx, "\n" );
+    mixpanel_mbedtls_snprintf( str + idx, sizeof( str ) - idx, "\n" );
     debug_send_line( ssl, level, file, line, str );
 }
 #endif /* MBEDTLS_BIGNUM_C */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
-static void debug_print_pk( const mbedtls_ssl_context *ssl, int level,
+static void debug_print_pk( const mixpanel_mbedtls_ssl_context *ssl, int level,
                             const char *file, int line,
-                            const char *text, const mbedtls_pk_context *pk )
+                            const char *text, const mixpanel_mbedtls_pk_context *pk )
 {
     size_t i;
-    mbedtls_pk_debug_item items[MBEDTLS_PK_DEBUG_MAX_ITEMS];
+    mixpanel_mbedtls_pk_debug_item items[MBEDTLS_PK_DEBUG_MAX_ITEMS];
     char name[16];
 
     memset( items, 0, sizeof( items ) );
 
-    if( mbedtls_pk_debug( pk, items ) != 0 )
+    if( mixpanel_mbedtls_pk_debug( pk, items ) != 0 )
     {
         debug_send_line( ssl, level, file, line,
                           "invalid PK context\n" );
@@ -295,15 +295,15 @@ static void debug_print_pk( const mbedtls_ssl_context *ssl, int level,
         if( items[i].type == MBEDTLS_PK_DEBUG_NONE )
             return;
 
-        mbedtls_snprintf( name, sizeof( name ), "%s%s", text, items[i].name );
+        mixpanel_mbedtls_snprintf( name, sizeof( name ), "%s%s", text, items[i].name );
         name[sizeof( name ) - 1] = '\0';
 
         if( items[i].type == MBEDTLS_PK_DEBUG_MPI )
-            mbedtls_debug_print_mpi( ssl, level, file, line, name, items[i].value );
+            mixpanel_mbedtls_debug_print_mpi( ssl, level, file, line, name, items[i].value );
         else
 #if defined(MBEDTLS_ECP_C)
         if( items[i].type == MBEDTLS_PK_DEBUG_ECP )
-            mbedtls_debug_print_ecp( ssl, level, file, line, name, items[i].value );
+            mixpanel_mbedtls_debug_print_ecp( ssl, level, file, line, name, items[i].value );
         else
 #endif
             debug_send_line( ssl, level, file, line,
@@ -311,7 +311,7 @@ static void debug_print_pk( const mbedtls_ssl_context *ssl, int level,
     }
 }
 
-static void debug_print_line_by_line( const mbedtls_ssl_context *ssl, int level,
+static void debug_print_line_by_line( const mixpanel_mbedtls_ssl_context *ssl, int level,
                                       const char *file, int line, const char *text )
 {
     char str[DEBUG_BUF_SIZE];
@@ -336,9 +336,9 @@ static void debug_print_line_by_line( const mbedtls_ssl_context *ssl, int level,
     }
 }
 
-void mbedtls_debug_print_crt( const mbedtls_ssl_context *ssl, int level,
+void mixpanel_mbedtls_debug_print_crt( const mixpanel_mbedtls_ssl_context *ssl, int level,
                       const char *file, int line,
-                      const char *text, const mbedtls_x509_crt *crt )
+                      const char *text, const mixpanel_mbedtls_x509_crt *crt )
 {
     char str[DEBUG_BUF_SIZE];
     int i = 0;
@@ -350,10 +350,10 @@ void mbedtls_debug_print_crt( const mbedtls_ssl_context *ssl, int level,
     {
         char buf[1024];
 
-        mbedtls_snprintf( str, sizeof( str ), "%s #%d:\n", text, ++i );
+        mixpanel_mbedtls_snprintf( str, sizeof( str ), "%s #%d:\n", text, ++i );
         debug_send_line( ssl, level, file, line, str );
 
-        mbedtls_x509_crt_info( buf, sizeof( buf ) - 1, "", crt );
+        mixpanel_mbedtls_x509_crt_info( buf, sizeof( buf ) - 1, "", crt );
         debug_print_line_by_line( ssl, level, file, line, buf );
 
         debug_print_pk( ssl, level, file, line, "crt->", &crt->pk );

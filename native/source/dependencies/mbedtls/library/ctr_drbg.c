@@ -45,24 +45,24 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf printf
+#define mixpanel_mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 /*
  * CTR_DRBG context initialization
  */
-void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx )
+void mixpanel_mbedtls_ctr_drbg_init( mixpanel_mbedtls_ctr_drbg_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_ctr_drbg_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_ctr_drbg_context ) );
 
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
+    mixpanel_mbedtls_mutex_init( &ctx->mutex );
 #endif
 }
 
@@ -70,8 +70,8 @@ void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx )
  * Non-public function wrapped by ctr_crbg_init(). Necessary to allow NIST
  * tests to succeed (which require known length fixed entropy)
  */
-int mbedtls_ctr_drbg_seed_entropy_len(
-                   mbedtls_ctr_drbg_context *ctx,
+int mixpanel_mbedtls_ctr_drbg_seed_entropy_len(
+                   mixpanel_mbedtls_ctr_drbg_context *ctx,
                    int (*f_entropy)(void *, unsigned char *, size_t),
                    void *p_entropy,
                    const unsigned char *custom,
@@ -83,7 +83,7 @@ int mbedtls_ctr_drbg_seed_entropy_len(
 
     memset( key, 0, MBEDTLS_CTR_DRBG_KEYSIZE );
 
-    mbedtls_aes_init( &ctx->aes_ctx );
+    mixpanel_mbedtls_aes_init( &ctx->aes_ctx );
 
     ctx->f_entropy = f_entropy;
     ctx->p_entropy = p_entropy;
@@ -94,47 +94,47 @@ int mbedtls_ctr_drbg_seed_entropy_len(
     /*
      * Initialize with an empty key
      */
-    mbedtls_aes_setkey_enc( &ctx->aes_ctx, key, MBEDTLS_CTR_DRBG_KEYBITS );
+    mixpanel_mbedtls_aes_setkey_enc( &ctx->aes_ctx, key, MBEDTLS_CTR_DRBG_KEYBITS );
 
-    if( ( ret = mbedtls_ctr_drbg_reseed( ctx, custom, len ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_ctr_drbg_reseed( ctx, custom, len ) ) != 0 )
         return( ret );
 
     return( 0 );
 }
 
-int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
+int mixpanel_mbedtls_ctr_drbg_seed( mixpanel_mbedtls_ctr_drbg_context *ctx,
                    int (*f_entropy)(void *, unsigned char *, size_t),
                    void *p_entropy,
                    const unsigned char *custom,
                    size_t len )
 {
-    return( mbedtls_ctr_drbg_seed_entropy_len( ctx, f_entropy, p_entropy, custom, len,
+    return( mixpanel_mbedtls_ctr_drbg_seed_entropy_len( ctx, f_entropy, p_entropy, custom, len,
                                        MBEDTLS_CTR_DRBG_ENTROPY_LEN ) );
 }
 
-void mbedtls_ctr_drbg_free( mbedtls_ctr_drbg_context *ctx )
+void mixpanel_mbedtls_ctr_drbg_free( mixpanel_mbedtls_ctr_drbg_context *ctx )
 {
     if( ctx == NULL )
         return;
 
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_free( &ctx->mutex );
+    mixpanel_mbedtls_mutex_free( &ctx->mutex );
 #endif
-    mbedtls_aes_free( &ctx->aes_ctx );
-    mbedtls_zeroize( ctx, sizeof( mbedtls_ctr_drbg_context ) );
+    mixpanel_mbedtls_aes_free( &ctx->aes_ctx );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_ctr_drbg_context ) );
 }
 
-void mbedtls_ctr_drbg_set_prediction_resistance( mbedtls_ctr_drbg_context *ctx, int resistance )
+void mixpanel_mbedtls_ctr_drbg_set_prediction_resistance( mixpanel_mbedtls_ctr_drbg_context *ctx, int resistance )
 {
     ctx->prediction_resistance = resistance;
 }
 
-void mbedtls_ctr_drbg_set_entropy_len( mbedtls_ctr_drbg_context *ctx, size_t len )
+void mixpanel_mbedtls_ctr_drbg_set_entropy_len( mixpanel_mbedtls_ctr_drbg_context *ctx, size_t len )
 {
     ctx->entropy_len = len;
 }
 
-void mbedtls_ctr_drbg_set_reseed_interval( mbedtls_ctr_drbg_context *ctx, int interval )
+void mixpanel_mbedtls_ctr_drbg_set_reseed_interval( mixpanel_mbedtls_ctr_drbg_context *ctx, int interval )
 {
     ctx->reseed_interval = interval;
 }
@@ -147,7 +147,7 @@ static int block_cipher_df( unsigned char *output,
     unsigned char key[MBEDTLS_CTR_DRBG_KEYSIZE];
     unsigned char chain[MBEDTLS_CTR_DRBG_BLOCKSIZE];
     unsigned char *p, *iv;
-    mbedtls_aes_context aes_ctx;
+    mixpanel_mbedtls_aes_context aes_ctx;
 
     int i, j;
     size_t buf_len, use_len;
@@ -156,7 +156,7 @@ static int block_cipher_df( unsigned char *output,
         return( MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG );
 
     memset( buf, 0, MBEDTLS_CTR_DRBG_MAX_SEED_INPUT + MBEDTLS_CTR_DRBG_BLOCKSIZE + 16 );
-    mbedtls_aes_init( &aes_ctx );
+    mixpanel_mbedtls_aes_init( &aes_ctx );
 
     /*
      * Construct IV (16 bytes) and S in buffer
@@ -180,7 +180,7 @@ static int block_cipher_df( unsigned char *output,
     for( i = 0; i < MBEDTLS_CTR_DRBG_KEYSIZE; i++ )
         key[i] = i;
 
-    mbedtls_aes_setkey_enc( &aes_ctx, key, MBEDTLS_CTR_DRBG_KEYBITS );
+    mixpanel_mbedtls_aes_setkey_enc( &aes_ctx, key, MBEDTLS_CTR_DRBG_KEYBITS );
 
     /*
      * Reduce data to MBEDTLS_CTR_DRBG_SEEDLEN bytes of data
@@ -199,7 +199,7 @@ static int block_cipher_df( unsigned char *output,
             use_len -= ( use_len >= MBEDTLS_CTR_DRBG_BLOCKSIZE ) ?
                        MBEDTLS_CTR_DRBG_BLOCKSIZE : use_len;
 
-            mbedtls_aes_crypt_ecb( &aes_ctx, MBEDTLS_AES_ENCRYPT, chain, chain );
+            mixpanel_mbedtls_aes_crypt_ecb( &aes_ctx, MBEDTLS_AES_ENCRYPT, chain, chain );
         }
 
         memcpy( tmp + j, chain, MBEDTLS_CTR_DRBG_BLOCKSIZE );
@@ -213,23 +213,23 @@ static int block_cipher_df( unsigned char *output,
     /*
      * Do final encryption with reduced data
      */
-    mbedtls_aes_setkey_enc( &aes_ctx, tmp, MBEDTLS_CTR_DRBG_KEYBITS );
+    mixpanel_mbedtls_aes_setkey_enc( &aes_ctx, tmp, MBEDTLS_CTR_DRBG_KEYBITS );
     iv = tmp + MBEDTLS_CTR_DRBG_KEYSIZE;
     p = output;
 
     for( j = 0; j < MBEDTLS_CTR_DRBG_SEEDLEN; j += MBEDTLS_CTR_DRBG_BLOCKSIZE )
     {
-        mbedtls_aes_crypt_ecb( &aes_ctx, MBEDTLS_AES_ENCRYPT, iv, iv );
+        mixpanel_mbedtls_aes_crypt_ecb( &aes_ctx, MBEDTLS_AES_ENCRYPT, iv, iv );
         memcpy( p, iv, MBEDTLS_CTR_DRBG_BLOCKSIZE );
         p += MBEDTLS_CTR_DRBG_BLOCKSIZE;
     }
 
-    mbedtls_aes_free( &aes_ctx );
+    mixpanel_mbedtls_aes_free( &aes_ctx );
 
     return( 0 );
 }
 
-static int ctr_drbg_update_internal( mbedtls_ctr_drbg_context *ctx,
+static int ctr_drbg_update_internal( mixpanel_mbedtls_ctr_drbg_context *ctx,
                               const unsigned char data[MBEDTLS_CTR_DRBG_SEEDLEN] )
 {
     unsigned char tmp[MBEDTLS_CTR_DRBG_SEEDLEN];
@@ -250,7 +250,7 @@ static int ctr_drbg_update_internal( mbedtls_ctr_drbg_context *ctx,
         /*
          * Crypt counter block
          */
-        mbedtls_aes_crypt_ecb( &ctx->aes_ctx, MBEDTLS_AES_ENCRYPT, ctx->counter, p );
+        mixpanel_mbedtls_aes_crypt_ecb( &ctx->aes_ctx, MBEDTLS_AES_ENCRYPT, ctx->counter, p );
 
         p += MBEDTLS_CTR_DRBG_BLOCKSIZE;
     }
@@ -261,13 +261,13 @@ static int ctr_drbg_update_internal( mbedtls_ctr_drbg_context *ctx,
     /*
      * Update key and counter
      */
-    mbedtls_aes_setkey_enc( &ctx->aes_ctx, tmp, MBEDTLS_CTR_DRBG_KEYBITS );
+    mixpanel_mbedtls_aes_setkey_enc( &ctx->aes_ctx, tmp, MBEDTLS_CTR_DRBG_KEYBITS );
     memcpy( ctx->counter, tmp + MBEDTLS_CTR_DRBG_KEYSIZE, MBEDTLS_CTR_DRBG_BLOCKSIZE );
 
     return( 0 );
 }
 
-void mbedtls_ctr_drbg_update( mbedtls_ctr_drbg_context *ctx,
+void mixpanel_mbedtls_ctr_drbg_update( mixpanel_mbedtls_ctr_drbg_context *ctx,
                       const unsigned char *additional, size_t add_len )
 {
     unsigned char add_input[MBEDTLS_CTR_DRBG_SEEDLEN];
@@ -284,7 +284,7 @@ void mbedtls_ctr_drbg_update( mbedtls_ctr_drbg_context *ctx,
     }
 }
 
-int mbedtls_ctr_drbg_reseed( mbedtls_ctr_drbg_context *ctx,
+int mixpanel_mbedtls_ctr_drbg_reseed( mixpanel_mbedtls_ctr_drbg_context *ctx,
                      const unsigned char *additional, size_t len )
 {
     unsigned char seed[MBEDTLS_CTR_DRBG_MAX_SEED_INPUT];
@@ -329,12 +329,12 @@ int mbedtls_ctr_drbg_reseed( mbedtls_ctr_drbg_context *ctx,
     return( 0 );
 }
 
-int mbedtls_ctr_drbg_random_with_add( void *p_rng,
+int mixpanel_mbedtls_ctr_drbg_random_with_add( void *p_rng,
                               unsigned char *output, size_t output_len,
                               const unsigned char *additional, size_t add_len )
 {
     int ret = 0;
-    mbedtls_ctr_drbg_context *ctx = (mbedtls_ctr_drbg_context *) p_rng;
+    mixpanel_mbedtls_ctr_drbg_context *ctx = (mixpanel_mbedtls_ctr_drbg_context *) p_rng;
     unsigned char add_input[MBEDTLS_CTR_DRBG_SEEDLEN];
     unsigned char *p = output;
     unsigned char tmp[MBEDTLS_CTR_DRBG_BLOCKSIZE];
@@ -352,7 +352,7 @@ int mbedtls_ctr_drbg_random_with_add( void *p_rng,
     if( ctx->reseed_counter > ctx->reseed_interval ||
         ctx->prediction_resistance )
     {
-        if( ( ret = mbedtls_ctr_drbg_reseed( ctx, additional, add_len ) ) != 0 )
+        if( ( ret = mixpanel_mbedtls_ctr_drbg_reseed( ctx, additional, add_len ) ) != 0 )
             return( ret );
 
         add_len = 0;
@@ -376,7 +376,7 @@ int mbedtls_ctr_drbg_random_with_add( void *p_rng,
         /*
          * Crypt counter block
          */
-        mbedtls_aes_crypt_ecb( &ctx->aes_ctx, MBEDTLS_AES_ENCRYPT, ctx->counter, tmp );
+        mixpanel_mbedtls_aes_crypt_ecb( &ctx->aes_ctx, MBEDTLS_AES_ENCRYPT, ctx->counter, tmp );
 
         use_len = ( output_len > MBEDTLS_CTR_DRBG_BLOCKSIZE ) ? MBEDTLS_CTR_DRBG_BLOCKSIZE :
                                                        output_len;
@@ -395,20 +395,20 @@ int mbedtls_ctr_drbg_random_with_add( void *p_rng,
     return( 0 );
 }
 
-int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output, size_t output_len )
+int mixpanel_mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output, size_t output_len )
 {
     int ret;
-    mbedtls_ctr_drbg_context *ctx = (mbedtls_ctr_drbg_context *) p_rng;
+    mixpanel_mbedtls_ctr_drbg_context *ctx = (mixpanel_mbedtls_ctr_drbg_context *) p_rng;
 
 #if defined(MBEDTLS_THREADING_C)
-    if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
-    ret = mbedtls_ctr_drbg_random_with_add( ctx, output, output_len, NULL, 0 );
+    ret = mixpanel_mbedtls_ctr_drbg_random_with_add( ctx, output, output_len, NULL, 0 );
 
 #if defined(MBEDTLS_THREADING_C)
-    if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
+    if( mixpanel_mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
@@ -416,7 +416,7 @@ int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output, size_t output_l
 }
 
 #if defined(MBEDTLS_FS_IO)
-int mbedtls_ctr_drbg_write_seed_file( mbedtls_ctr_drbg_context *ctx, const char *path )
+int mixpanel_mbedtls_ctr_drbg_write_seed_file( mixpanel_mbedtls_ctr_drbg_context *ctx, const char *path )
 {
     int ret = MBEDTLS_ERR_CTR_DRBG_FILE_IO_ERROR;
     FILE *f;
@@ -425,7 +425,7 @@ int mbedtls_ctr_drbg_write_seed_file( mbedtls_ctr_drbg_context *ctx, const char 
     if( ( f = fopen( path, "wb" ) ) == NULL )
         return( MBEDTLS_ERR_CTR_DRBG_FILE_IO_ERROR );
 
-    if( ( ret = mbedtls_ctr_drbg_random( ctx, buf, MBEDTLS_CTR_DRBG_MAX_INPUT ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_ctr_drbg_random( ctx, buf, MBEDTLS_CTR_DRBG_MAX_INPUT ) ) != 0 )
         goto exit;
 
     if( fwrite( buf, 1, MBEDTLS_CTR_DRBG_MAX_INPUT, f ) != MBEDTLS_CTR_DRBG_MAX_INPUT )
@@ -441,7 +441,7 @@ exit:
     return( ret );
 }
 
-int mbedtls_ctr_drbg_update_seed_file( mbedtls_ctr_drbg_context *ctx, const char *path )
+int mixpanel_mbedtls_ctr_drbg_update_seed_file( mixpanel_mbedtls_ctr_drbg_context *ctx, const char *path )
 {
     FILE *f;
     size_t n;
@@ -468,9 +468,9 @@ int mbedtls_ctr_drbg_update_seed_file( mbedtls_ctr_drbg_context *ctx, const char
 
     fclose( f );
 
-    mbedtls_ctr_drbg_update( ctx, buf, n );
+    mixpanel_mbedtls_ctr_drbg_update( ctx, buf, n );
 
-    return( mbedtls_ctr_drbg_write_seed_file( ctx, path ) );
+    return( mixpanel_mbedtls_ctr_drbg_write_seed_file( ctx, path ) );
 }
 #endif /* MBEDTLS_FS_IO */
 
@@ -529,62 +529,62 @@ static int ctr_drbg_self_test_entropy( void *data, unsigned char *buf,
 #define CHK( c )    if( (c) != 0 )                          \
                     {                                       \
                         if( verbose != 0 )                  \
-                            mbedtls_printf( "failed\n" );  \
+                            mixpanel_mbedtls_printf( "failed\n" );  \
                         return( 1 );                        \
                     }
 
 /*
  * Checkup routine
  */
-int mbedtls_ctr_drbg_self_test( int verbose )
+int mixpanel_mbedtls_ctr_drbg_self_test( int verbose )
 {
-    mbedtls_ctr_drbg_context ctx;
+    mixpanel_mbedtls_ctr_drbg_context ctx;
     unsigned char buf[16];
 
-    mbedtls_ctr_drbg_init( &ctx );
+    mixpanel_mbedtls_ctr_drbg_init( &ctx );
 
     /*
      * Based on a NIST CTR_DRBG test vector (PR = True)
      */
     if( verbose != 0 )
-        mbedtls_printf( "  CTR_DRBG (PR = TRUE) : " );
+        mixpanel_mbedtls_printf( "  CTR_DRBG (PR = TRUE) : " );
 
     test_offset = 0;
-    CHK( mbedtls_ctr_drbg_seed_entropy_len( &ctx, ctr_drbg_self_test_entropy,
+    CHK( mixpanel_mbedtls_ctr_drbg_seed_entropy_len( &ctx, ctr_drbg_self_test_entropy,
                                 (void *) entropy_source_pr, nonce_pers_pr, 16, 32 ) );
-    mbedtls_ctr_drbg_set_prediction_resistance( &ctx, MBEDTLS_CTR_DRBG_PR_ON );
-    CHK( mbedtls_ctr_drbg_random( &ctx, buf, MBEDTLS_CTR_DRBG_BLOCKSIZE ) );
-    CHK( mbedtls_ctr_drbg_random( &ctx, buf, MBEDTLS_CTR_DRBG_BLOCKSIZE ) );
+    mixpanel_mbedtls_ctr_drbg_set_prediction_resistance( &ctx, MBEDTLS_CTR_DRBG_PR_ON );
+    CHK( mixpanel_mbedtls_ctr_drbg_random( &ctx, buf, MBEDTLS_CTR_DRBG_BLOCKSIZE ) );
+    CHK( mixpanel_mbedtls_ctr_drbg_random( &ctx, buf, MBEDTLS_CTR_DRBG_BLOCKSIZE ) );
     CHK( memcmp( buf, result_pr, MBEDTLS_CTR_DRBG_BLOCKSIZE ) );
 
-    mbedtls_ctr_drbg_free( &ctx );
+    mixpanel_mbedtls_ctr_drbg_free( &ctx );
 
     if( verbose != 0 )
-        mbedtls_printf( "passed\n" );
+        mixpanel_mbedtls_printf( "passed\n" );
 
     /*
      * Based on a NIST CTR_DRBG test vector (PR = FALSE)
      */
     if( verbose != 0 )
-        mbedtls_printf( "  CTR_DRBG (PR = FALSE): " );
+        mixpanel_mbedtls_printf( "  CTR_DRBG (PR = FALSE): " );
 
-    mbedtls_ctr_drbg_init( &ctx );
+    mixpanel_mbedtls_ctr_drbg_init( &ctx );
 
     test_offset = 0;
-    CHK( mbedtls_ctr_drbg_seed_entropy_len( &ctx, ctr_drbg_self_test_entropy,
+    CHK( mixpanel_mbedtls_ctr_drbg_seed_entropy_len( &ctx, ctr_drbg_self_test_entropy,
                             (void *) entropy_source_nopr, nonce_pers_nopr, 16, 32 ) );
-    CHK( mbedtls_ctr_drbg_random( &ctx, buf, 16 ) );
-    CHK( mbedtls_ctr_drbg_reseed( &ctx, NULL, 0 ) );
-    CHK( mbedtls_ctr_drbg_random( &ctx, buf, 16 ) );
+    CHK( mixpanel_mbedtls_ctr_drbg_random( &ctx, buf, 16 ) );
+    CHK( mixpanel_mbedtls_ctr_drbg_reseed( &ctx, NULL, 0 ) );
+    CHK( mixpanel_mbedtls_ctr_drbg_random( &ctx, buf, 16 ) );
     CHK( memcmp( buf, result_nopr, 16 ) );
 
-    mbedtls_ctr_drbg_free( &ctx );
+    mixpanel_mbedtls_ctr_drbg_free( &ctx );
 
     if( verbose != 0 )
-        mbedtls_printf( "passed\n" );
+        mixpanel_mbedtls_printf( "passed\n" );
 
     if( verbose != 0 )
-            mbedtls_printf( "\n" );
+            mixpanel_mbedtls_printf( "\n" );
 
     return( 0 );
 }

@@ -41,34 +41,34 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf printf
+#define mixpanel_mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_ARC4_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
-void mbedtls_arc4_init( mbedtls_arc4_context *ctx )
+void mixpanel_mbedtls_arc4_init( mixpanel_mbedtls_arc4_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_arc4_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_arc4_context ) );
 }
 
-void mbedtls_arc4_free( mbedtls_arc4_context *ctx )
+void mixpanel_mbedtls_arc4_free( mixpanel_mbedtls_arc4_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_arc4_context ) );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_arc4_context ) );
 }
 
 /*
  * ARC4 key schedule
  */
-void mbedtls_arc4_setup( mbedtls_arc4_context *ctx, const unsigned char *key,
+void mixpanel_mbedtls_arc4_setup( mixpanel_mbedtls_arc4_context *ctx, const unsigned char *key,
                  unsigned int keylen )
 {
     int i, j, a;
@@ -98,7 +98,7 @@ void mbedtls_arc4_setup( mbedtls_arc4_context *ctx, const unsigned char *key,
 /*
  * ARC4 cipher function
  */
-int mbedtls_arc4_crypt( mbedtls_arc4_context *ctx, size_t length, const unsigned char *input,
+int mixpanel_mbedtls_arc4_crypt( mixpanel_mbedtls_arc4_context *ctx, size_t length, const unsigned char *input,
                 unsigned char *output )
 {
     int x, y, a, b;
@@ -159,43 +159,43 @@ static const unsigned char arc4_test_ct[3][8] =
 /*
  * Checkup routine
  */
-int mbedtls_arc4_self_test( int verbose )
+int mixpanel_mbedtls_arc4_self_test( int verbose )
 {
     int i, ret = 0;
     unsigned char ibuf[8];
     unsigned char obuf[8];
-    mbedtls_arc4_context ctx;
+    mixpanel_mbedtls_arc4_context ctx;
 
-    mbedtls_arc4_init( &ctx );
+    mixpanel_mbedtls_arc4_init( &ctx );
 
     for( i = 0; i < 3; i++ )
     {
         if( verbose != 0 )
-            mbedtls_printf( "  ARC4 test #%d: ", i + 1 );
+            mixpanel_mbedtls_printf( "  ARC4 test #%d: ", i + 1 );
 
         memcpy( ibuf, arc4_test_pt[i], 8 );
 
-        mbedtls_arc4_setup( &ctx, arc4_test_key[i], 8 );
-        mbedtls_arc4_crypt( &ctx, 8, ibuf, obuf );
+        mixpanel_mbedtls_arc4_setup( &ctx, arc4_test_key[i], 8 );
+        mixpanel_mbedtls_arc4_crypt( &ctx, 8, ibuf, obuf );
 
         if( memcmp( obuf, arc4_test_ct[i], 8 ) != 0 )
         {
             if( verbose != 0 )
-                mbedtls_printf( "failed\n" );
+                mixpanel_mbedtls_printf( "failed\n" );
 
             ret = 1;
             goto exit;
         }
 
         if( verbose != 0 )
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 
 exit:
-    mbedtls_arc4_free( &ctx );
+    mixpanel_mbedtls_arc4_free( &ctx );
 
     return( ret );
 }
