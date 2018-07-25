@@ -36,18 +36,18 @@ extern "C" {
  * \brief          CCM context structure
  */
 typedef struct {
-    mbedtls_cipher_context_t cipher_ctx;    /*!< cipher context used */
+    mixpanel_mbedtls_cipher_context_t cipher_ctx;    /*!< cipher context used */
 }
-mbedtls_ccm_context;
+mixpanel_mbedtls_ccm_context;
 
 /**
  * \brief           Initialize CCM context (just makes references valid)
- *                  Makes the context ready for mbedtls_ccm_setkey() or
- *                  mbedtls_ccm_free().
+ *                  Makes the context ready for mixpanel_mbedtls_ccm_setkey() or
+ *                  mixpanel_mbedtls_ccm_free().
  *
  * \param ctx       CCM context to initialize
  */
-void mbedtls_ccm_init( mbedtls_ccm_context *ctx );
+void mixpanel_mbedtls_ccm_init( mixpanel_mbedtls_ccm_context *ctx );
 
 /**
  * \brief           CCM initialization (encryption and decryption)
@@ -59,8 +59,8 @@ void mbedtls_ccm_init( mbedtls_ccm_context *ctx );
  *
  * \return          0 if successful, or a cipher specific error code
  */
-int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
-                        mbedtls_cipher_id_t cipher,
+int mixpanel_mbedtls_ccm_setkey( mixpanel_mbedtls_ccm_context *ctx,
+                        mixpanel_mbedtls_cipher_id_t cipher,
                         const unsigned char *key,
                         unsigned int keybits );
 
@@ -69,7 +69,7 @@ int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
  *
  * \param ctx       CCM context to free
  */
-void mbedtls_ccm_free( mbedtls_ccm_context *ctx );
+void mixpanel_mbedtls_ccm_free( mixpanel_mbedtls_ccm_context *ctx );
 
 /**
  * \brief           CCM buffer encryption
@@ -96,7 +96,7 @@ void mbedtls_ccm_free( mbedtls_ccm_context *ctx );
  *
  * \return          0 if successful
  */
-int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
+int mixpanel_mbedtls_ccm_encrypt_and_tag( mixpanel_mbedtls_ccm_context *ctx, size_t length,
                          const unsigned char *iv, size_t iv_len,
                          const unsigned char *add, size_t add_len,
                          const unsigned char *input, unsigned char *output,
@@ -119,7 +119,7 @@ int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
  * \return         0 if successful and authenticated,
  *                 MBEDTLS_ERR_CCM_AUTH_FAILED if tag does not match
  */
-int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
+int mixpanel_mbedtls_ccm_auth_decrypt( mixpanel_mbedtls_ccm_context *ctx, size_t length,
                       const unsigned char *iv, size_t iv_len,
                       const unsigned char *add, size_t add_len,
                       const unsigned char *input, unsigned char *output,
@@ -131,7 +131,7 @@ int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
  *
  * \return         0 if successful, or 1 if the test failed
  */
-int mbedtls_ccm_self_test( int verbose );
+int mixpanel_mbedtls_ccm_self_test( int verbose );
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
 
 #ifdef __cplusplus

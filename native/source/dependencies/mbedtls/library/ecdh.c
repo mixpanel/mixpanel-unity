@@ -39,45 +39,45 @@
 #include <string.h>
 
 /*
- * Generate public key: simple wrapper around mbedtls_ecp_gen_keypair
+ * Generate public key: simple wrapper around mixpanel_mbedtls_ecp_gen_keypair
  */
-int mbedtls_ecdh_gen_public( mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp_point *Q,
+int mixpanel_mbedtls_ecdh_gen_public( mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_mpi *d, mixpanel_mbedtls_ecp_point *Q,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
-    return mbedtls_ecp_gen_keypair( grp, d, Q, f_rng, p_rng );
+    return mixpanel_mbedtls_ecp_gen_keypair( grp, d, Q, f_rng, p_rng );
 }
 
 /*
  * Compute shared secret (SEC1 3.3.1)
  */
-int mbedtls_ecdh_compute_shared( mbedtls_ecp_group *grp, mbedtls_mpi *z,
-                         const mbedtls_ecp_point *Q, const mbedtls_mpi *d,
+int mixpanel_mbedtls_ecdh_compute_shared( mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_mpi *z,
+                         const mixpanel_mbedtls_ecp_point *Q, const mixpanel_mbedtls_mpi *d,
                          int (*f_rng)(void *, unsigned char *, size_t),
                          void *p_rng )
 {
     int ret;
-    mbedtls_ecp_point P;
+    mixpanel_mbedtls_ecp_point P;
 
-    mbedtls_ecp_point_init( &P );
+    mixpanel_mbedtls_ecp_point_init( &P );
 
     /*
      * Make sure Q is a valid pubkey before using it
      */
-    MBEDTLS_MPI_CHK( mbedtls_ecp_check_pubkey( grp, Q ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_ecp_check_pubkey( grp, Q ) );
 
-    MBEDTLS_MPI_CHK( mbedtls_ecp_mul( grp, &P, d, Q, f_rng, p_rng ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_ecp_mul( grp, &P, d, Q, f_rng, p_rng ) );
 
-    if( mbedtls_ecp_is_zero( &P ) )
+    if( mixpanel_mbedtls_ecp_is_zero( &P ) )
     {
         ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
         goto cleanup;
     }
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_copy( z, &P.X ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_copy( z, &P.X ) );
 
 cleanup:
-    mbedtls_ecp_point_free( &P );
+    mixpanel_mbedtls_ecp_point_free( &P );
 
     return( ret );
 }
@@ -85,27 +85,27 @@ cleanup:
 /*
  * Initialize context
  */
-void mbedtls_ecdh_init( mbedtls_ecdh_context *ctx )
+void mixpanel_mbedtls_ecdh_init( mixpanel_mbedtls_ecdh_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_ecdh_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_ecdh_context ) );
 }
 
 /*
  * Free context
  */
-void mbedtls_ecdh_free( mbedtls_ecdh_context *ctx )
+void mixpanel_mbedtls_ecdh_free( mixpanel_mbedtls_ecdh_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    mbedtls_ecp_group_free( &ctx->grp );
-    mbedtls_ecp_point_free( &ctx->Q   );
-    mbedtls_ecp_point_free( &ctx->Qp  );
-    mbedtls_ecp_point_free( &ctx->Vi  );
-    mbedtls_ecp_point_free( &ctx->Vf  );
-    mbedtls_mpi_free( &ctx->d  );
-    mbedtls_mpi_free( &ctx->z  );
-    mbedtls_mpi_free( &ctx->_d );
+    mixpanel_mbedtls_ecp_group_free( &ctx->grp );
+    mixpanel_mbedtls_ecp_point_free( &ctx->Q   );
+    mixpanel_mbedtls_ecp_point_free( &ctx->Qp  );
+    mixpanel_mbedtls_ecp_point_free( &ctx->Vi  );
+    mixpanel_mbedtls_ecp_point_free( &ctx->Vf  );
+    mixpanel_mbedtls_mpi_free( &ctx->d  );
+    mixpanel_mbedtls_mpi_free( &ctx->z  );
+    mixpanel_mbedtls_mpi_free( &ctx->_d );
 }
 
 /*
@@ -115,7 +115,7 @@ void mbedtls_ecdh_free( mbedtls_ecdh_context *ctx )
  *          ECPoint         public;
  *      } ServerECDHParams;
  */
-int mbedtls_ecdh_make_params( mbedtls_ecdh_context *ctx, size_t *olen,
+int mixpanel_mbedtls_ecdh_make_params( mixpanel_mbedtls_ecdh_context *ctx, size_t *olen,
                       unsigned char *buf, size_t blen,
                       int (*f_rng)(void *, unsigned char *, size_t),
                       void *p_rng )
@@ -126,18 +126,18 @@ int mbedtls_ecdh_make_params( mbedtls_ecdh_context *ctx, size_t *olen,
     if( ctx == NULL || ctx->grp.pbits == 0 )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    if( ( ret = mbedtls_ecdh_gen_public( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng ) )
+    if( ( ret = mixpanel_mbedtls_ecdh_gen_public( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng ) )
                 != 0 )
         return( ret );
 
-    if( ( ret = mbedtls_ecp_tls_write_group( &ctx->grp, &grp_len, buf, blen ) )
+    if( ( ret = mixpanel_mbedtls_ecp_tls_write_group( &ctx->grp, &grp_len, buf, blen ) )
                 != 0 )
         return( ret );
 
     buf += grp_len;
     blen -= grp_len;
 
-    if( ( ret = mbedtls_ecp_tls_write_point( &ctx->grp, &ctx->Q, ctx->point_format,
+    if( ( ret = mixpanel_mbedtls_ecp_tls_write_point( &ctx->grp, &ctx->Q, ctx->point_format,
                                      &pt_len, buf, blen ) ) != 0 )
         return( ret );
 
@@ -152,15 +152,15 @@ int mbedtls_ecdh_make_params( mbedtls_ecdh_context *ctx, size_t *olen,
  *          ECPoint         public;
  *      } ServerECDHParams;
  */
-int mbedtls_ecdh_read_params( mbedtls_ecdh_context *ctx,
+int mixpanel_mbedtls_ecdh_read_params( mixpanel_mbedtls_ecdh_context *ctx,
                       const unsigned char **buf, const unsigned char *end )
 {
     int ret;
 
-    if( ( ret = mbedtls_ecp_tls_read_group( &ctx->grp, buf, end - *buf ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_ecp_tls_read_group( &ctx->grp, buf, end - *buf ) ) != 0 )
         return( ret );
 
-    if( ( ret = mbedtls_ecp_tls_read_point( &ctx->grp, &ctx->Qp, buf, end - *buf ) )
+    if( ( ret = mixpanel_mbedtls_ecp_tls_read_point( &ctx->grp, &ctx->Qp, buf, end - *buf ) )
                 != 0 )
         return( ret );
 
@@ -170,24 +170,24 @@ int mbedtls_ecdh_read_params( mbedtls_ecdh_context *ctx,
 /*
  * Get parameters from a keypair
  */
-int mbedtls_ecdh_get_params( mbedtls_ecdh_context *ctx, const mbedtls_ecp_keypair *key,
-                     mbedtls_ecdh_side side )
+int mixpanel_mbedtls_ecdh_get_params( mixpanel_mbedtls_ecdh_context *ctx, const mixpanel_mbedtls_ecp_keypair *key,
+                     mixpanel_mbedtls_ecdh_side side )
 {
     int ret;
 
-    if( ( ret = mbedtls_ecp_group_copy( &ctx->grp, &key->grp ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_ecp_group_copy( &ctx->grp, &key->grp ) ) != 0 )
         return( ret );
 
     /* If it's not our key, just import the public part as Qp */
     if( side == MBEDTLS_ECDH_THEIRS )
-        return( mbedtls_ecp_copy( &ctx->Qp, &key->Q ) );
+        return( mixpanel_mbedtls_ecp_copy( &ctx->Qp, &key->Q ) );
 
     /* Our key: import public (as Q) and private parts */
     if( side != MBEDTLS_ECDH_OURS )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    if( ( ret = mbedtls_ecp_copy( &ctx->Q, &key->Q ) ) != 0 ||
-        ( ret = mbedtls_mpi_copy( &ctx->d, &key->d ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_ecp_copy( &ctx->Q, &key->Q ) ) != 0 ||
+        ( ret = mixpanel_mbedtls_mpi_copy( &ctx->d, &key->d ) ) != 0 )
         return( ret );
 
     return( 0 );
@@ -196,7 +196,7 @@ int mbedtls_ecdh_get_params( mbedtls_ecdh_context *ctx, const mbedtls_ecp_keypai
 /*
  * Setup and export the client public value
  */
-int mbedtls_ecdh_make_public( mbedtls_ecdh_context *ctx, size_t *olen,
+int mixpanel_mbedtls_ecdh_make_public( mixpanel_mbedtls_ecdh_context *ctx, size_t *olen,
                       unsigned char *buf, size_t blen,
                       int (*f_rng)(void *, unsigned char *, size_t),
                       void *p_rng )
@@ -206,18 +206,18 @@ int mbedtls_ecdh_make_public( mbedtls_ecdh_context *ctx, size_t *olen,
     if( ctx == NULL || ctx->grp.pbits == 0 )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    if( ( ret = mbedtls_ecdh_gen_public( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng ) )
+    if( ( ret = mixpanel_mbedtls_ecdh_gen_public( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng ) )
                 != 0 )
         return( ret );
 
-    return mbedtls_ecp_tls_write_point( &ctx->grp, &ctx->Q, ctx->point_format,
+    return mixpanel_mbedtls_ecp_tls_write_point( &ctx->grp, &ctx->Q, ctx->point_format,
                                 olen, buf, blen );
 }
 
 /*
  * Parse and import the client's public value
  */
-int mbedtls_ecdh_read_public( mbedtls_ecdh_context *ctx,
+int mixpanel_mbedtls_ecdh_read_public( mixpanel_mbedtls_ecdh_context *ctx,
                       const unsigned char *buf, size_t blen )
 {
     int ret;
@@ -226,7 +226,7 @@ int mbedtls_ecdh_read_public( mbedtls_ecdh_context *ctx,
     if( ctx == NULL )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    if( ( ret = mbedtls_ecp_tls_read_point( &ctx->grp, &ctx->Qp, &p, blen ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_ecp_tls_read_point( &ctx->grp, &ctx->Qp, &p, blen ) ) != 0 )
         return( ret );
 
     if( (size_t)( p - buf ) != blen )
@@ -238,7 +238,7 @@ int mbedtls_ecdh_read_public( mbedtls_ecdh_context *ctx,
 /*
  * Derive and export the shared secret
  */
-int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
+int mixpanel_mbedtls_ecdh_calc_secret( mixpanel_mbedtls_ecdh_context *ctx, size_t *olen,
                       unsigned char *buf, size_t blen,
                       int (*f_rng)(void *, unsigned char *, size_t),
                       void *p_rng )
@@ -248,17 +248,17 @@ int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
     if( ctx == NULL )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    if( ( ret = mbedtls_ecdh_compute_shared( &ctx->grp, &ctx->z, &ctx->Qp, &ctx->d,
+    if( ( ret = mixpanel_mbedtls_ecdh_compute_shared( &ctx->grp, &ctx->z, &ctx->Qp, &ctx->d,
                                      f_rng, p_rng ) ) != 0 )
     {
         return( ret );
     }
 
-    if( mbedtls_mpi_size( &ctx->z ) > blen )
+    if( mixpanel_mbedtls_mpi_size( &ctx->z ) > blen )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
     *olen = ctx->grp.pbits / 8 + ( ( ctx->grp.pbits % 8 ) != 0 );
-    return mbedtls_mpi_write_binary( &ctx->z, buf, *olen );
+    return mixpanel_mbedtls_mpi_write_binary( &ctx->z, buf, *olen );
 }
 
 #endif /* MBEDTLS_ECDH_C */

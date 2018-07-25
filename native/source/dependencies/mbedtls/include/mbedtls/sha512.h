@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_sha512.h
+ * \file mixpanel_mbedtls_sha512.h
  *
  * \brief SHA-384 and SHA-512 cryptographic hash function
  *
@@ -50,21 +50,21 @@ typedef struct
     unsigned char buffer[128];  /*!< data block being processed */
     int is384;                  /*!< 0 => SHA-512, else SHA-384 */
 }
-mbedtls_sha512_context;
+mixpanel_mbedtls_sha512_context;
 
 /**
  * \brief          Initialize SHA-512 context
  *
  * \param ctx      SHA-512 context to be initialized
  */
-void mbedtls_sha512_init( mbedtls_sha512_context *ctx );
+void mixpanel_mbedtls_sha512_init( mixpanel_mbedtls_sha512_context *ctx );
 
 /**
  * \brief          Clear SHA-512 context
  *
  * \param ctx      SHA-512 context to be cleared
  */
-void mbedtls_sha512_free( mbedtls_sha512_context *ctx );
+void mixpanel_mbedtls_sha512_free( mixpanel_mbedtls_sha512_context *ctx );
 
 /**
  * \brief          Clone (the state of) a SHA-512 context
@@ -72,8 +72,8 @@ void mbedtls_sha512_free( mbedtls_sha512_context *ctx );
  * \param dst      The destination context
  * \param src      The context to be cloned
  */
-void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
-                           const mbedtls_sha512_context *src );
+void mixpanel_mbedtls_sha512_clone( mixpanel_mbedtls_sha512_context *dst,
+                           const mixpanel_mbedtls_sha512_context *src );
 
 /**
  * \brief          SHA-512 context setup
@@ -81,7 +81,7 @@ void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
  * \param ctx      context to be initialized
  * \param is384    0 = use SHA512, 1 = use SHA384
  */
-void mbedtls_sha512_starts( mbedtls_sha512_context *ctx, int is384 );
+void mixpanel_mbedtls_sha512_starts( mixpanel_mbedtls_sha512_context *ctx, int is384 );
 
 /**
  * \brief          SHA-512 process buffer
@@ -90,7 +90,7 @@ void mbedtls_sha512_starts( mbedtls_sha512_context *ctx, int is384 );
  * \param input    buffer holding the  data
  * \param ilen     length of the input data
  */
-void mbedtls_sha512_update( mbedtls_sha512_context *ctx, const unsigned char *input,
+void mixpanel_mbedtls_sha512_update( mixpanel_mbedtls_sha512_context *ctx, const unsigned char *input,
                     size_t ilen );
 
 /**
@@ -99,7 +99,7 @@ void mbedtls_sha512_update( mbedtls_sha512_context *ctx, const unsigned char *in
  * \param ctx      SHA-512 context
  * \param output   SHA-384/512 checksum result
  */
-void mbedtls_sha512_finish( mbedtls_sha512_context *ctx, unsigned char output[64] );
+void mixpanel_mbedtls_sha512_finish( mixpanel_mbedtls_sha512_context *ctx, unsigned char output[64] );
 
 #ifdef __cplusplus
 }
@@ -121,7 +121,7 @@ extern "C" {
  * \param output   SHA-384/512 checksum result
  * \param is384    0 = use SHA512, 1 = use SHA384
  */
-void mbedtls_sha512( const unsigned char *input, size_t ilen,
+void mixpanel_mbedtls_sha512( const unsigned char *input, size_t ilen,
              unsigned char output[64], int is384 );
 
 /**
@@ -129,13 +129,13 @@ void mbedtls_sha512( const unsigned char *input, size_t ilen,
  *
  * \return         0 if successful, or 1 if the test failed
  */
-int mbedtls_sha512_self_test( int verbose );
+int mixpanel_mbedtls_sha512_self_test( int verbose );
 
 /* Internal use */
-void mbedtls_sha512_process( mbedtls_sha512_context *ctx, const unsigned char data[128] );
+void mixpanel_mbedtls_sha512_process( mixpanel_mbedtls_sha512_context *ctx, const unsigned char data[128] );
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* mbedtls_sha512.h */
+#endif /* mixpanel_mbedtls_sha512.h */

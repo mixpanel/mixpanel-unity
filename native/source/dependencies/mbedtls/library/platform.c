@@ -50,21 +50,21 @@ static void platform_free_uninit( void *ptr )
 #define MBEDTLS_PLATFORM_STD_FREE     platform_free_uninit
 #endif /* !MBEDTLS_PLATFORM_STD_FREE */
 
-void * (*mbedtls_calloc)( size_t, size_t ) = MBEDTLS_PLATFORM_STD_CALLOC;
-void (*mbedtls_free)( void * )     = MBEDTLS_PLATFORM_STD_FREE;
+void * (*mixpanel_mbedtls_calloc)( size_t, size_t ) = MBEDTLS_PLATFORM_STD_CALLOC;
+void (*mixpanel_mbedtls_free)( void * )     = MBEDTLS_PLATFORM_STD_FREE;
 
-int mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
+int mixpanel_mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
                               void (*free_func)( void * ) )
 {
-    mbedtls_calloc = calloc_func;
-    mbedtls_free = free_func;
+    mixpanel_mbedtls_calloc = calloc_func;
+    mixpanel_mbedtls_free = free_func;
     return( 0 );
 }
 #endif /* MBEDTLS_PLATFORM_MEMORY */
 
 #if defined(_WIN32)
 #include <stdarg.h>
-int mbedtls_platform_win32_snprintf( char *s, size_t n, const char *fmt, ... )
+int mixpanel_mbedtls_platform_win32_snprintf( char *s, size_t n, const char *fmt, ... )
 {
     int ret;
     va_list argp;
@@ -107,15 +107,15 @@ static int platform_snprintf_uninit( char * s, size_t n,
 #define MBEDTLS_PLATFORM_STD_SNPRINTF    platform_snprintf_uninit
 #endif /* !MBEDTLS_PLATFORM_STD_SNPRINTF */
 
-int (*mbedtls_snprintf)( char * s, size_t n,
+int (*mixpanel_mbedtls_snprintf)( char * s, size_t n,
                           const char * format,
                           ... ) = MBEDTLS_PLATFORM_STD_SNPRINTF;
 
-int mbedtls_platform_set_snprintf( int (*snprintf_func)( char * s, size_t n,
+int mixpanel_mbedtls_platform_set_snprintf( int (*snprintf_func)( char * s, size_t n,
                                                  const char * format,
                                                  ... ) )
 {
-    mbedtls_snprintf = snprintf_func;
+    mixpanel_mbedtls_snprintf = snprintf_func;
     return( 0 );
 }
 #endif /* MBEDTLS_PLATFORM_SNPRINTF_ALT */
@@ -134,11 +134,11 @@ static int platform_printf_uninit( const char *format, ... )
 #define MBEDTLS_PLATFORM_STD_PRINTF    platform_printf_uninit
 #endif /* !MBEDTLS_PLATFORM_STD_PRINTF */
 
-int (*mbedtls_printf)( const char *, ... ) = MBEDTLS_PLATFORM_STD_PRINTF;
+int (*mixpanel_mbedtls_printf)( const char *, ... ) = MBEDTLS_PLATFORM_STD_PRINTF;
 
-int mbedtls_platform_set_printf( int (*printf_func)( const char *, ... ) )
+int mixpanel_mbedtls_platform_set_printf( int (*printf_func)( const char *, ... ) )
 {
-    mbedtls_printf = printf_func;
+    mixpanel_mbedtls_printf = printf_func;
     return( 0 );
 }
 #endif /* MBEDTLS_PLATFORM_PRINTF_ALT */
@@ -158,12 +158,12 @@ static int platform_fprintf_uninit( FILE *stream, const char *format, ... )
 #define MBEDTLS_PLATFORM_STD_FPRINTF   platform_fprintf_uninit
 #endif /* !MBEDTLS_PLATFORM_STD_FPRINTF */
 
-int (*mbedtls_fprintf)( FILE *, const char *, ... ) =
+int (*mixpanel_mbedtls_fprintf)( FILE *, const char *, ... ) =
                                         MBEDTLS_PLATFORM_STD_FPRINTF;
 
-int mbedtls_platform_set_fprintf( int (*fprintf_func)( FILE *, const char *, ... ) )
+int mixpanel_mbedtls_platform_set_fprintf( int (*fprintf_func)( FILE *, const char *, ... ) )
 {
-    mbedtls_fprintf = fprintf_func;
+    mixpanel_mbedtls_fprintf = fprintf_func;
     return( 0 );
 }
 #endif /* MBEDTLS_PLATFORM_FPRINTF_ALT */
@@ -181,11 +181,11 @@ static void platform_exit_uninit( int status )
 #define MBEDTLS_PLATFORM_STD_EXIT   platform_exit_uninit
 #endif /* !MBEDTLS_PLATFORM_STD_EXIT */
 
-void (*mbedtls_exit)( int status ) = MBEDTLS_PLATFORM_STD_EXIT;
+void (*mixpanel_mbedtls_exit)( int status ) = MBEDTLS_PLATFORM_STD_EXIT;
 
-int mbedtls_platform_set_exit( void (*exit_func)( int status ) )
+int mixpanel_mbedtls_platform_set_exit( void (*exit_func)( int status ) )
 {
-    mbedtls_exit = exit_func;
+    mixpanel_mbedtls_exit = exit_func;
     return( 0 );
 }
 #endif /* MBEDTLS_PLATFORM_EXIT_ALT */

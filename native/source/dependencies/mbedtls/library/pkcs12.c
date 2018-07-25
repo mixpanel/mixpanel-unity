@@ -48,12 +48,12 @@
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
-static int pkcs12_parse_pbe_params( mbedtls_asn1_buf *params,
-                                    mbedtls_asn1_buf *salt, int *iterations )
+static int pkcs12_parse_pbe_params( mixpanel_mbedtls_asn1_buf *params,
+                                    mixpanel_mbedtls_asn1_buf *salt, int *iterations )
 {
     int ret;
     unsigned char **p = &params->p;
@@ -70,13 +70,13 @@ static int pkcs12_parse_pbe_params( mbedtls_asn1_buf *params,
         return( MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT +
                 MBEDTLS_ERR_ASN1_UNEXPECTED_TAG );
 
-    if( ( ret = mbedtls_asn1_get_tag( p, end, &salt->len, MBEDTLS_ASN1_OCTET_STRING ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_asn1_get_tag( p, end, &salt->len, MBEDTLS_ASN1_OCTET_STRING ) ) != 0 )
         return( MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT + ret );
 
     salt->p = *p;
     *p += salt->len;
 
-    if( ( ret = mbedtls_asn1_get_int( p, end, iterations ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_asn1_get_int( p, end, iterations ) ) != 0 )
         return( MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT + ret );
 
     if( *p != end )
@@ -86,17 +86,17 @@ static int pkcs12_parse_pbe_params( mbedtls_asn1_buf *params,
     return( 0 );
 }
 
-static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_type_t md_type,
+static int pkcs12_pbe_derive_key_iv( mixpanel_mbedtls_asn1_buf *pbe_params, mixpanel_mbedtls_md_type_t md_type,
                                      const unsigned char *pwd,  size_t pwdlen,
                                      unsigned char *key, size_t keylen,
                                      unsigned char *iv,  size_t ivlen )
 {
     int ret, iterations;
-    mbedtls_asn1_buf salt;
+    mixpanel_mbedtls_asn1_buf salt;
     size_t i;
     unsigned char unipwd[258];
 
-    memset( &salt, 0, sizeof(mbedtls_asn1_buf) );
+    memset( &salt, 0, sizeof(mixpanel_mbedtls_asn1_buf) );
     memset( &unipwd, 0, sizeof(unipwd) );
 
     if( ( ret = pkcs12_parse_pbe_params( pbe_params, &salt,
@@ -106,7 +106,7 @@ static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_ty
     for( i = 0; i < pwdlen; i++ )
         unipwd[i * 2 + 1] = pwd[i];
 
-    if( ( ret = mbedtls_pkcs12_derivation( key, keylen, unipwd, pwdlen * 2 + 2,
+    if( ( ret = mixpanel_mbedtls_pkcs12_derivation( key, keylen, unipwd, pwdlen * 2 + 2,
                                    salt.p, salt.len, md_type,
                                    MBEDTLS_PKCS12_DERIVE_KEY, iterations ) ) != 0 )
     {
@@ -116,7 +116,7 @@ static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_ty
     if( iv == NULL || ivlen == 0 )
         return( 0 );
 
-    if( ( ret = mbedtls_pkcs12_derivation( iv, ivlen, unipwd, pwdlen * 2 + 2,
+    if( ( ret = mixpanel_mbedtls_pkcs12_derivation( iv, ivlen, unipwd, pwdlen * 2 + 2,
                                    salt.p, salt.len, md_type,
                                    MBEDTLS_PKCS12_DERIVE_IV, iterations ) ) != 0 )
     {
@@ -125,7 +125,7 @@ static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_ty
     return( 0 );
 }
 
-int mbedtls_pkcs12_pbe_sha1_rc4_128( mbedtls_asn1_buf *pbe_params, int mode,
+int mixpanel_mbedtls_pkcs12_pbe_sha1_rc4_128( mixpanel_mbedtls_asn1_buf *pbe_params, int mode,
                              const unsigned char *pwd,  size_t pwdlen,
                              const unsigned char *data, size_t len,
                              unsigned char *output )
@@ -142,10 +142,10 @@ int mbedtls_pkcs12_pbe_sha1_rc4_128( mbedtls_asn1_buf *pbe_params, int mode,
 #else
     int ret;
     unsigned char key[16];
-    mbedtls_arc4_context ctx;
+    mixpanel_mbedtls_arc4_context ctx;
     ((void) mode);
 
-    mbedtls_arc4_init( &ctx );
+    mixpanel_mbedtls_arc4_init( &ctx );
 
     if( ( ret = pkcs12_pbe_derive_key_iv( pbe_params, MBEDTLS_MD_SHA1,
                                           pwd, pwdlen,
@@ -154,20 +154,20 @@ int mbedtls_pkcs12_pbe_sha1_rc4_128( mbedtls_asn1_buf *pbe_params, int mode,
         return( ret );
     }
 
-    mbedtls_arc4_setup( &ctx, key, 16 );
-    if( ( ret = mbedtls_arc4_crypt( &ctx, len, data, output ) ) != 0 )
+    mixpanel_mbedtls_arc4_setup( &ctx, key, 16 );
+    if( ( ret = mixpanel_mbedtls_arc4_crypt( &ctx, len, data, output ) ) != 0 )
         goto exit;
 
 exit:
-    mbedtls_zeroize( key, sizeof( key ) );
-    mbedtls_arc4_free( &ctx );
+    mixpanel_mbedtls_zeroize( key, sizeof( key ) );
+    mixpanel_mbedtls_arc4_free( &ctx );
 
     return( ret );
 #endif /* MBEDTLS_ARC4_C */
 }
 
-int mbedtls_pkcs12_pbe( mbedtls_asn1_buf *pbe_params, int mode,
-                mbedtls_cipher_type_t cipher_type, mbedtls_md_type_t md_type,
+int mixpanel_mbedtls_pkcs12_pbe( mixpanel_mbedtls_asn1_buf *pbe_params, int mode,
+                mixpanel_mbedtls_cipher_type_t cipher_type, mixpanel_mbedtls_md_type_t md_type,
                 const unsigned char *pwd,  size_t pwdlen,
                 const unsigned char *data, size_t len,
                 unsigned char *output )
@@ -175,11 +175,11 @@ int mbedtls_pkcs12_pbe( mbedtls_asn1_buf *pbe_params, int mode,
     int ret, keylen = 0;
     unsigned char key[32];
     unsigned char iv[16];
-    const mbedtls_cipher_info_t *cipher_info;
-    mbedtls_cipher_context_t cipher_ctx;
+    const mixpanel_mbedtls_cipher_info_t *cipher_info;
+    mixpanel_mbedtls_cipher_context_t cipher_ctx;
     size_t olen = 0;
 
-    cipher_info = mbedtls_cipher_info_from_type( cipher_type );
+    cipher_info = mixpanel_mbedtls_cipher_info_from_type( cipher_type );
     if( cipher_info == NULL )
         return( MBEDTLS_ERR_PKCS12_FEATURE_UNAVAILABLE );
 
@@ -192,33 +192,33 @@ int mbedtls_pkcs12_pbe( mbedtls_asn1_buf *pbe_params, int mode,
         return( ret );
     }
 
-    mbedtls_cipher_init( &cipher_ctx );
+    mixpanel_mbedtls_cipher_init( &cipher_ctx );
 
-    if( ( ret = mbedtls_cipher_setup( &cipher_ctx, cipher_info ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_setup( &cipher_ctx, cipher_info ) ) != 0 )
         goto exit;
 
-    if( ( ret = mbedtls_cipher_setkey( &cipher_ctx, key, 8 * keylen, (mbedtls_operation_t) mode ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_setkey( &cipher_ctx, key, 8 * keylen, (mixpanel_mbedtls_operation_t) mode ) ) != 0 )
         goto exit;
 
-    if( ( ret = mbedtls_cipher_set_iv( &cipher_ctx, iv, cipher_info->iv_size ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_set_iv( &cipher_ctx, iv, cipher_info->iv_size ) ) != 0 )
         goto exit;
 
-    if( ( ret = mbedtls_cipher_reset( &cipher_ctx ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_reset( &cipher_ctx ) ) != 0 )
         goto exit;
 
-    if( ( ret = mbedtls_cipher_update( &cipher_ctx, data, len,
+    if( ( ret = mixpanel_mbedtls_cipher_update( &cipher_ctx, data, len,
                                 output, &olen ) ) != 0 )
     {
         goto exit;
     }
 
-    if( ( ret = mbedtls_cipher_finish( &cipher_ctx, output + olen, &olen ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_finish( &cipher_ctx, output + olen, &olen ) ) != 0 )
         ret = MBEDTLS_ERR_PKCS12_PASSWORD_MISMATCH;
 
 exit:
-    mbedtls_zeroize( key, sizeof( key ) );
-    mbedtls_zeroize( iv,  sizeof( iv  ) );
-    mbedtls_cipher_free( &cipher_ctx );
+    mixpanel_mbedtls_zeroize( key, sizeof( key ) );
+    mixpanel_mbedtls_zeroize( iv,  sizeof( iv  ) );
+    mixpanel_mbedtls_cipher_free( &cipher_ctx );
 
     return( ret );
 }
@@ -238,10 +238,10 @@ static void pkcs12_fill_buffer( unsigned char *data, size_t data_len,
     }
 }
 
-int mbedtls_pkcs12_derivation( unsigned char *data, size_t datalen,
+int mixpanel_mbedtls_pkcs12_derivation( unsigned char *data, size_t datalen,
                        const unsigned char *pwd, size_t pwdlen,
                        const unsigned char *salt, size_t saltlen,
-                       mbedtls_md_type_t md_type, int id, int iterations )
+                       mixpanel_mbedtls_md_type_t md_type, int id, int iterations )
 {
     int ret;
     unsigned int j;
@@ -254,22 +254,22 @@ int mbedtls_pkcs12_derivation( unsigned char *data, size_t datalen,
 
     size_t hlen, use_len, v, i;
 
-    const mbedtls_md_info_t *md_info;
-    mbedtls_md_context_t md_ctx;
+    const mixpanel_mbedtls_md_info_t *md_info;
+    mixpanel_mbedtls_md_context_t md_ctx;
 
     // This version only allows max of 64 bytes of password or salt
     if( datalen > 128 || pwdlen > 64 || saltlen > 64 )
         return( MBEDTLS_ERR_PKCS12_BAD_INPUT_DATA );
 
-    md_info = mbedtls_md_info_from_type( md_type );
+    md_info = mixpanel_mbedtls_md_info_from_type( md_type );
     if( md_info == NULL )
         return( MBEDTLS_ERR_PKCS12_FEATURE_UNAVAILABLE );
 
-    mbedtls_md_init( &md_ctx );
+    mixpanel_mbedtls_md_init( &md_ctx );
 
-    if( ( ret = mbedtls_md_setup( &md_ctx, md_info, 0 ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_md_setup( &md_ctx, md_info, 0 ) ) != 0 )
         return( ret );
-    hlen = mbedtls_md_get_size( md_info );
+    hlen = mixpanel_mbedtls_md_get_size( md_info );
 
     if( hlen <= 32 )
         v = 64;
@@ -285,25 +285,25 @@ int mbedtls_pkcs12_derivation( unsigned char *data, size_t datalen,
     while( datalen > 0 )
     {
         // Calculate hash( diversifier || salt_block || pwd_block )
-        if( ( ret = mbedtls_md_starts( &md_ctx ) ) != 0 )
+        if( ( ret = mixpanel_mbedtls_md_starts( &md_ctx ) ) != 0 )
             goto exit;
 
-        if( ( ret = mbedtls_md_update( &md_ctx, diversifier, v ) ) != 0 )
+        if( ( ret = mixpanel_mbedtls_md_update( &md_ctx, diversifier, v ) ) != 0 )
             goto exit;
 
-        if( ( ret = mbedtls_md_update( &md_ctx, salt_block, v ) ) != 0 )
+        if( ( ret = mixpanel_mbedtls_md_update( &md_ctx, salt_block, v ) ) != 0 )
             goto exit;
 
-        if( ( ret = mbedtls_md_update( &md_ctx, pwd_block, v ) ) != 0 )
+        if( ( ret = mixpanel_mbedtls_md_update( &md_ctx, pwd_block, v ) ) != 0 )
             goto exit;
 
-        if( ( ret = mbedtls_md_finish( &md_ctx, hash_output ) ) != 0 )
+        if( ( ret = mixpanel_mbedtls_md_finish( &md_ctx, hash_output ) ) != 0 )
             goto exit;
 
         // Perform remaining ( iterations - 1 ) recursive hash calculations
         for( i = 1; i < (size_t) iterations; i++ )
         {
-            if( ( ret = mbedtls_md( md_info, hash_output, hlen, hash_output ) ) != 0 )
+            if( ( ret = mixpanel_mbedtls_md( md_info, hash_output, hlen, hash_output ) ) != 0 )
                 goto exit;
         }
 
@@ -345,12 +345,12 @@ int mbedtls_pkcs12_derivation( unsigned char *data, size_t datalen,
     ret = 0;
 
 exit:
-    mbedtls_zeroize( salt_block, sizeof( salt_block ) );
-    mbedtls_zeroize( pwd_block, sizeof( pwd_block ) );
-    mbedtls_zeroize( hash_block, sizeof( hash_block ) );
-    mbedtls_zeroize( hash_output, sizeof( hash_output ) );
+    mixpanel_mbedtls_zeroize( salt_block, sizeof( salt_block ) );
+    mixpanel_mbedtls_zeroize( pwd_block, sizeof( pwd_block ) );
+    mixpanel_mbedtls_zeroize( hash_block, sizeof( hash_block ) );
+    mixpanel_mbedtls_zeroize( hash_output, sizeof( hash_output ) );
 
-    mbedtls_md_free( &md_ctx );
+    mixpanel_mbedtls_md_free( &md_ctx );
 
     return( ret );
 }

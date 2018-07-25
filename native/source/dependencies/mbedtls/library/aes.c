@@ -48,14 +48,14 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf printf
+#define mixpanel_mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_AES_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
@@ -464,24 +464,24 @@ static void aes_gen_tables( void )
 
 #endif /* MBEDTLS_AES_ROM_TABLES */
 
-void mbedtls_aes_init( mbedtls_aes_context *ctx )
+void mixpanel_mbedtls_aes_init( mixpanel_mbedtls_aes_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_aes_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_aes_context ) );
 }
 
-void mbedtls_aes_free( mbedtls_aes_context *ctx )
+void mixpanel_mbedtls_aes_free( mixpanel_mbedtls_aes_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_aes_context ) );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_aes_context ) );
 }
 
 /*
  * AES key schedule (encryption)
  */
 #if !defined(MBEDTLS_AES_SETKEY_ENC_ALT)
-int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
+int mixpanel_mbedtls_aes_setkey_enc( mixpanel_mbedtls_aes_context *ctx, const unsigned char *key,
                     unsigned int keybits )
 {
     unsigned int i;
@@ -506,7 +506,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
 
 #if defined(MBEDTLS_PADLOCK_C) && defined(MBEDTLS_PADLOCK_ALIGN16)
     if( aes_padlock_ace == -1 )
-        aes_padlock_ace = mbedtls_padlock_has_support( MBEDTLS_PADLOCK_ACE );
+        aes_padlock_ace = mixpanel_mbedtls_padlock_has_support( MBEDTLS_PADLOCK_ACE );
 
     if( aes_padlock_ace )
         ctx->rk = RK = MBEDTLS_PADLOCK_ALIGN16( ctx->buf );
@@ -515,8 +515,8 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
     ctx->rk = RK = ctx->buf;
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
-        return( mbedtls_aesni_setkey_enc( (unsigned char *) ctx->rk, key, keybits ) );
+    if( mixpanel_mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
+        return( mixpanel_mbedtls_aesni_setkey_enc( (unsigned char *) ctx->rk, key, keybits ) );
 #endif
 
     for( i = 0; i < ( keybits >> 5 ); i++ )
@@ -595,19 +595,19 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
  * AES key schedule (decryption)
  */
 #if !defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
+int mixpanel_mbedtls_aes_setkey_dec( mixpanel_mbedtls_aes_context *ctx, const unsigned char *key,
                     unsigned int keybits )
 {
     int i, j, ret;
-    mbedtls_aes_context cty;
+    mixpanel_mbedtls_aes_context cty;
     uint32_t *RK;
     uint32_t *SK;
 
-    mbedtls_aes_init( &cty );
+    mixpanel_mbedtls_aes_init( &cty );
 
 #if defined(MBEDTLS_PADLOCK_C) && defined(MBEDTLS_PADLOCK_ALIGN16)
     if( aes_padlock_ace == -1 )
-        aes_padlock_ace = mbedtls_padlock_has_support( MBEDTLS_PADLOCK_ACE );
+        aes_padlock_ace = mixpanel_mbedtls_padlock_has_support( MBEDTLS_PADLOCK_ACE );
 
     if( aes_padlock_ace )
         ctx->rk = RK = MBEDTLS_PADLOCK_ALIGN16( ctx->buf );
@@ -616,15 +616,15 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
     ctx->rk = RK = ctx->buf;
 
     /* Also checks keybits */
-    if( ( ret = mbedtls_aes_setkey_enc( &cty, key, keybits ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_aes_setkey_enc( &cty, key, keybits ) ) != 0 )
         goto exit;
 
     ctx->nr = cty.nr;
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
+    if( mixpanel_mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
     {
-        mbedtls_aesni_inverse_key( (unsigned char *) ctx->rk,
+        mixpanel_mbedtls_aesni_inverse_key( (unsigned char *) ctx->rk,
                            (const unsigned char *) cty.rk, ctx->nr );
         goto exit;
     }
@@ -654,7 +654,7 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
     *RK++ = *SK++;
 
 exit:
-    mbedtls_aes_free( &cty );
+    mixpanel_mbedtls_aes_free( &cty );
 
     return( ret );
 }
@@ -710,7 +710,7 @@ exit:
  * AES-ECB block encryption
  */
 #if !defined(MBEDTLS_AES_ENCRYPT_ALT)
-void mbedtls_aes_encrypt( mbedtls_aes_context *ctx,
+void mixpanel_mbedtls_aes_encrypt( mixpanel_mbedtls_aes_context *ctx,
                           const unsigned char input[16],
                           unsigned char output[16] )
 {
@@ -767,7 +767,7 @@ void mbedtls_aes_encrypt( mbedtls_aes_context *ctx,
  * AES-ECB block decryption
  */
 #if !defined(MBEDTLS_AES_DECRYPT_ALT)
-void mbedtls_aes_decrypt( mbedtls_aes_context *ctx,
+void mixpanel_mbedtls_aes_decrypt( mixpanel_mbedtls_aes_context *ctx,
                           const unsigned char input[16],
                           unsigned char output[16] )
 {
@@ -823,20 +823,20 @@ void mbedtls_aes_decrypt( mbedtls_aes_context *ctx,
 /*
  * AES-ECB block encryption/decryption
  */
-int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
+int mixpanel_mbedtls_aes_crypt_ecb( mixpanel_mbedtls_aes_context *ctx,
                     int mode,
                     const unsigned char input[16],
                     unsigned char output[16] )
 {
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
-        return( mbedtls_aesni_crypt_ecb( ctx, mode, input, output ) );
+    if( mixpanel_mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
+        return( mixpanel_mbedtls_aesni_crypt_ecb( ctx, mode, input, output ) );
 #endif
 
 #if defined(MBEDTLS_PADLOCK_C) && defined(MBEDTLS_HAVE_X86)
     if( aes_padlock_ace )
     {
-        if( mbedtls_padlock_xcryptecb( ctx, mode, input, output ) == 0 )
+        if( mixpanel_mbedtls_padlock_xcryptecb( ctx, mode, input, output ) == 0 )
             return( 0 );
 
         // If padlock data misaligned, we just fall back to
@@ -846,9 +846,9 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
 #endif
 
     if( mode == MBEDTLS_AES_ENCRYPT )
-        mbedtls_aes_encrypt( ctx, input, output );
+        mixpanel_mbedtls_aes_encrypt( ctx, input, output );
     else
-        mbedtls_aes_decrypt( ctx, input, output );
+        mixpanel_mbedtls_aes_decrypt( ctx, input, output );
 
     return( 0 );
 }
@@ -857,7 +857,7 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
 /*
  * AES-CBC buffer encryption/decryption
  */
-int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
+int mixpanel_mbedtls_aes_crypt_cbc( mixpanel_mbedtls_aes_context *ctx,
                     int mode,
                     size_t length,
                     unsigned char iv[16],
@@ -873,7 +873,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
 #if defined(MBEDTLS_PADLOCK_C) && defined(MBEDTLS_HAVE_X86)
     if( aes_padlock_ace )
     {
-        if( mbedtls_padlock_xcryptcbc( ctx, mode, length, iv, input, output ) == 0 )
+        if( mixpanel_mbedtls_padlock_xcryptcbc( ctx, mode, length, iv, input, output ) == 0 )
             return( 0 );
 
         // If padlock data misaligned, we just fall back to
@@ -887,7 +887,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
         while( length > 0 )
         {
             memcpy( temp, input, 16 );
-            mbedtls_aes_crypt_ecb( ctx, mode, input, output );
+            mixpanel_mbedtls_aes_crypt_ecb( ctx, mode, input, output );
 
             for( i = 0; i < 16; i++ )
                 output[i] = (unsigned char)( output[i] ^ iv[i] );
@@ -906,7 +906,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
             for( i = 0; i < 16; i++ )
                 output[i] = (unsigned char)( input[i] ^ iv[i] );
 
-            mbedtls_aes_crypt_ecb( ctx, mode, output, output );
+            mixpanel_mbedtls_aes_crypt_ecb( ctx, mode, output, output );
             memcpy( iv, output, 16 );
 
             input  += 16;
@@ -923,7 +923,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
 /*
  * AES-CFB128 buffer encryption/decryption
  */
-int mbedtls_aes_crypt_cfb128( mbedtls_aes_context *ctx,
+int mixpanel_mbedtls_aes_crypt_cfb128( mixpanel_mbedtls_aes_context *ctx,
                        int mode,
                        size_t length,
                        size_t *iv_off,
@@ -939,7 +939,7 @@ int mbedtls_aes_crypt_cfb128( mbedtls_aes_context *ctx,
         while( length-- )
         {
             if( n == 0 )
-                mbedtls_aes_crypt_ecb( ctx, MBEDTLS_AES_ENCRYPT, iv, iv );
+                mixpanel_mbedtls_aes_crypt_ecb( ctx, MBEDTLS_AES_ENCRYPT, iv, iv );
 
             c = *input++;
             *output++ = (unsigned char)( c ^ iv[n] );
@@ -953,7 +953,7 @@ int mbedtls_aes_crypt_cfb128( mbedtls_aes_context *ctx,
         while( length-- )
         {
             if( n == 0 )
-                mbedtls_aes_crypt_ecb( ctx, MBEDTLS_AES_ENCRYPT, iv, iv );
+                mixpanel_mbedtls_aes_crypt_ecb( ctx, MBEDTLS_AES_ENCRYPT, iv, iv );
 
             iv[n] = *output++ = (unsigned char)( iv[n] ^ *input++ );
 
@@ -969,7 +969,7 @@ int mbedtls_aes_crypt_cfb128( mbedtls_aes_context *ctx,
 /*
  * AES-CFB8 buffer encryption/decryption
  */
-int mbedtls_aes_crypt_cfb8( mbedtls_aes_context *ctx,
+int mixpanel_mbedtls_aes_crypt_cfb8( mixpanel_mbedtls_aes_context *ctx,
                        int mode,
                        size_t length,
                        unsigned char iv[16],
@@ -982,7 +982,7 @@ int mbedtls_aes_crypt_cfb8( mbedtls_aes_context *ctx,
     while( length-- )
     {
         memcpy( ov, iv, 16 );
-        mbedtls_aes_crypt_ecb( ctx, MBEDTLS_AES_ENCRYPT, iv, iv );
+        mixpanel_mbedtls_aes_crypt_ecb( ctx, MBEDTLS_AES_ENCRYPT, iv, iv );
 
         if( mode == MBEDTLS_AES_DECRYPT )
             ov[16] = *input;
@@ -1003,7 +1003,7 @@ int mbedtls_aes_crypt_cfb8( mbedtls_aes_context *ctx,
 /*
  * AES-CTR buffer encryption/decryption
  */
-int mbedtls_aes_crypt_ctr( mbedtls_aes_context *ctx,
+int mixpanel_mbedtls_aes_crypt_ctr( mixpanel_mbedtls_aes_context *ctx,
                        size_t length,
                        size_t *nc_off,
                        unsigned char nonce_counter[16],
@@ -1017,7 +1017,7 @@ int mbedtls_aes_crypt_ctr( mbedtls_aes_context *ctx,
     while( length-- )
     {
         if( n == 0 ) {
-            mbedtls_aes_crypt_ecb( ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block );
+            mixpanel_mbedtls_aes_crypt_ecb( ctx, MBEDTLS_AES_ENCRYPT, nonce_counter, stream_block );
 
             for( i = 16; i > 0; i-- )
                 if( ++nonce_counter[i - 1] != 0 )
@@ -1217,7 +1217,7 @@ static const int aes_test_ctr_len[3] =
 /*
  * Checkup routine
  */
-int mbedtls_aes_self_test( int verbose )
+int mixpanel_mbedtls_aes_self_test( int verbose )
 {
     int ret = 0, i, j, u, v;
     unsigned char key[32];
@@ -1234,10 +1234,10 @@ int mbedtls_aes_self_test( int verbose )
     unsigned char nonce_counter[16];
     unsigned char stream_block[16];
 #endif
-    mbedtls_aes_context ctx;
+    mixpanel_mbedtls_aes_context ctx;
 
     memset( key, 0, 32 );
-    mbedtls_aes_init( &ctx );
+    mixpanel_mbedtls_aes_init( &ctx );
 
     /*
      * ECB mode
@@ -1248,22 +1248,22 @@ int mbedtls_aes_self_test( int verbose )
         v = i  & 1;
 
         if( verbose != 0 )
-            mbedtls_printf( "  AES-ECB-%3d (%s): ", 128 + u * 64,
+            mixpanel_mbedtls_printf( "  AES-ECB-%3d (%s): ", 128 + u * 64,
                              ( v == MBEDTLS_AES_DECRYPT ) ? "dec" : "enc" );
 
         memset( buf, 0, 16 );
 
         if( v == MBEDTLS_AES_DECRYPT )
         {
-            mbedtls_aes_setkey_dec( &ctx, key, 128 + u * 64 );
+            mixpanel_mbedtls_aes_setkey_dec( &ctx, key, 128 + u * 64 );
 
             for( j = 0; j < 10000; j++ )
-                mbedtls_aes_crypt_ecb( &ctx, v, buf, buf );
+                mixpanel_mbedtls_aes_crypt_ecb( &ctx, v, buf, buf );
 
             if( memcmp( buf, aes_test_ecb_dec[u], 16 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 ret = 1;
                 goto exit;
@@ -1271,15 +1271,15 @@ int mbedtls_aes_self_test( int verbose )
         }
         else
         {
-            mbedtls_aes_setkey_enc( &ctx, key, 128 + u * 64 );
+            mixpanel_mbedtls_aes_setkey_enc( &ctx, key, 128 + u * 64 );
 
             for( j = 0; j < 10000; j++ )
-                mbedtls_aes_crypt_ecb( &ctx, v, buf, buf );
+                mixpanel_mbedtls_aes_crypt_ecb( &ctx, v, buf, buf );
 
             if( memcmp( buf, aes_test_ecb_enc[u], 16 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 ret = 1;
                 goto exit;
@@ -1287,11 +1287,11 @@ int mbedtls_aes_self_test( int verbose )
         }
 
         if( verbose != 0 )
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
     /*
@@ -1303,7 +1303,7 @@ int mbedtls_aes_self_test( int verbose )
         v = i  & 1;
 
         if( verbose != 0 )
-            mbedtls_printf( "  AES-CBC-%3d (%s): ", 128 + u * 64,
+            mixpanel_mbedtls_printf( "  AES-CBC-%3d (%s): ", 128 + u * 64,
                              ( v == MBEDTLS_AES_DECRYPT ) ? "dec" : "enc" );
 
         memset( iv , 0, 16 );
@@ -1312,15 +1312,15 @@ int mbedtls_aes_self_test( int verbose )
 
         if( v == MBEDTLS_AES_DECRYPT )
         {
-            mbedtls_aes_setkey_dec( &ctx, key, 128 + u * 64 );
+            mixpanel_mbedtls_aes_setkey_dec( &ctx, key, 128 + u * 64 );
 
             for( j = 0; j < 10000; j++ )
-                mbedtls_aes_crypt_cbc( &ctx, v, 16, iv, buf, buf );
+                mixpanel_mbedtls_aes_crypt_cbc( &ctx, v, 16, iv, buf, buf );
 
             if( memcmp( buf, aes_test_cbc_dec[u], 16 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 ret = 1;
                 goto exit;
@@ -1328,13 +1328,13 @@ int mbedtls_aes_self_test( int verbose )
         }
         else
         {
-            mbedtls_aes_setkey_enc( &ctx, key, 128 + u * 64 );
+            mixpanel_mbedtls_aes_setkey_enc( &ctx, key, 128 + u * 64 );
 
             for( j = 0; j < 10000; j++ )
             {
                 unsigned char tmp[16];
 
-                mbedtls_aes_crypt_cbc( &ctx, v, 16, iv, buf, buf );
+                mixpanel_mbedtls_aes_crypt_cbc( &ctx, v, 16, iv, buf, buf );
 
                 memcpy( tmp, prv, 16 );
                 memcpy( prv, buf, 16 );
@@ -1344,7 +1344,7 @@ int mbedtls_aes_self_test( int verbose )
             if( memcmp( prv, aes_test_cbc_enc[u], 16 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 ret = 1;
                 goto exit;
@@ -1352,11 +1352,11 @@ int mbedtls_aes_self_test( int verbose )
         }
 
         if( verbose != 0 )
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
 
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
@@ -1369,24 +1369,24 @@ int mbedtls_aes_self_test( int verbose )
         v = i  & 1;
 
         if( verbose != 0 )
-            mbedtls_printf( "  AES-CFB128-%3d (%s): ", 128 + u * 64,
+            mixpanel_mbedtls_printf( "  AES-CFB128-%3d (%s): ", 128 + u * 64,
                              ( v == MBEDTLS_AES_DECRYPT ) ? "dec" : "enc" );
 
         memcpy( iv,  aes_test_cfb128_iv, 16 );
         memcpy( key, aes_test_cfb128_key[u], 16 + u * 8 );
 
         offset = 0;
-        mbedtls_aes_setkey_enc( &ctx, key, 128 + u * 64 );
+        mixpanel_mbedtls_aes_setkey_enc( &ctx, key, 128 + u * 64 );
 
         if( v == MBEDTLS_AES_DECRYPT )
         {
             memcpy( buf, aes_test_cfb128_ct[u], 64 );
-            mbedtls_aes_crypt_cfb128( &ctx, v, 64, &offset, iv, buf, buf );
+            mixpanel_mbedtls_aes_crypt_cfb128( &ctx, v, 64, &offset, iv, buf, buf );
 
             if( memcmp( buf, aes_test_cfb128_pt, 64 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 ret = 1;
                 goto exit;
@@ -1395,12 +1395,12 @@ int mbedtls_aes_self_test( int verbose )
         else
         {
             memcpy( buf, aes_test_cfb128_pt, 64 );
-            mbedtls_aes_crypt_cfb128( &ctx, v, 64, &offset, iv, buf, buf );
+            mixpanel_mbedtls_aes_crypt_cfb128( &ctx, v, 64, &offset, iv, buf, buf );
 
             if( memcmp( buf, aes_test_cfb128_ct[u], 64 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 ret = 1;
                 goto exit;
@@ -1408,11 +1408,11 @@ int mbedtls_aes_self_test( int verbose )
         }
 
         if( verbose != 0 )
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 #endif /* MBEDTLS_CIPHER_MODE_CFB */
 
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
@@ -1425,27 +1425,27 @@ int mbedtls_aes_self_test( int verbose )
         v = i  & 1;
 
         if( verbose != 0 )
-            mbedtls_printf( "  AES-CTR-128 (%s): ",
+            mixpanel_mbedtls_printf( "  AES-CTR-128 (%s): ",
                              ( v == MBEDTLS_AES_DECRYPT ) ? "dec" : "enc" );
 
         memcpy( nonce_counter, aes_test_ctr_nonce_counter[u], 16 );
         memcpy( key, aes_test_ctr_key[u], 16 );
 
         offset = 0;
-        mbedtls_aes_setkey_enc( &ctx, key, 128 );
+        mixpanel_mbedtls_aes_setkey_enc( &ctx, key, 128 );
 
         if( v == MBEDTLS_AES_DECRYPT )
         {
             len = aes_test_ctr_len[u];
             memcpy( buf, aes_test_ctr_ct[u], len );
 
-            mbedtls_aes_crypt_ctr( &ctx, len, &offset, nonce_counter, stream_block,
+            mixpanel_mbedtls_aes_crypt_ctr( &ctx, len, &offset, nonce_counter, stream_block,
                            buf, buf );
 
             if( memcmp( buf, aes_test_ctr_pt[u], len ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 ret = 1;
                 goto exit;
@@ -1456,13 +1456,13 @@ int mbedtls_aes_self_test( int verbose )
             len = aes_test_ctr_len[u];
             memcpy( buf, aes_test_ctr_pt[u], len );
 
-            mbedtls_aes_crypt_ctr( &ctx, len, &offset, nonce_counter, stream_block,
+            mixpanel_mbedtls_aes_crypt_ctr( &ctx, len, &offset, nonce_counter, stream_block,
                            buf, buf );
 
             if( memcmp( buf, aes_test_ctr_ct[u], len ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 ret = 1;
                 goto exit;
@@ -1470,17 +1470,17 @@ int mbedtls_aes_self_test( int verbose )
         }
 
         if( verbose != 0 )
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 #endif /* MBEDTLS_CIPHER_MODE_CTR */
 
     ret = 0;
 
 exit:
-    mbedtls_aes_free( &ctx );
+    mixpanel_mbedtls_aes_free( &ctx );
 
     return( ret );
 }

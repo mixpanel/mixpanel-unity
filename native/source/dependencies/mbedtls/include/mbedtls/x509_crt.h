@@ -1,5 +1,5 @@
 /**
- * \file mbedtls_x509_crt.h
+ * \file mixpanel_mbedtls_x509_crt.h
  *
  * \brief X.509 certificate parsing and writing
  *
@@ -49,30 +49,30 @@ extern "C" {
 /**
  * Container for an X.509 certificate. The certificate may be chained.
  */
-typedef struct mbedtls_x509_crt
+typedef struct mixpanel_mbedtls_x509_crt
 {
-    mbedtls_x509_buf raw;               /**< The raw certificate data (DER). */
-    mbedtls_x509_buf tbs;               /**< The raw certificate body (DER). The part that is To Be Signed. */
+    mixpanel_mbedtls_x509_buf raw;               /**< The raw certificate data (DER). */
+    mixpanel_mbedtls_x509_buf tbs;               /**< The raw certificate body (DER). The part that is To Be Signed. */
 
     int version;                /**< The X.509 version. (1=v1, 2=v2, 3=v3) */
-    mbedtls_x509_buf serial;            /**< Unique id for certificate issued by a specific CA. */
-    mbedtls_x509_buf sig_oid;           /**< Signature algorithm, e.g. sha1RSA */
+    mixpanel_mbedtls_x509_buf serial;            /**< Unique id for certificate issued by a specific CA. */
+    mixpanel_mbedtls_x509_buf sig_oid;           /**< Signature algorithm, e.g. sha1RSA */
 
-    mbedtls_x509_buf issuer_raw;        /**< The raw issuer data (DER). Used for quick comparison. */
-    mbedtls_x509_buf subject_raw;       /**< The raw subject data (DER). Used for quick comparison. */
+    mixpanel_mbedtls_x509_buf issuer_raw;        /**< The raw issuer data (DER). Used for quick comparison. */
+    mixpanel_mbedtls_x509_buf subject_raw;       /**< The raw subject data (DER). Used for quick comparison. */
 
-    mbedtls_x509_name issuer;           /**< The parsed issuer data (named information object). */
-    mbedtls_x509_name subject;          /**< The parsed subject data (named information object). */
+    mixpanel_mbedtls_x509_name issuer;           /**< The parsed issuer data (named information object). */
+    mixpanel_mbedtls_x509_name subject;          /**< The parsed subject data (named information object). */
 
-    mbedtls_x509_time valid_from;       /**< Start time of certificate validity. */
-    mbedtls_x509_time valid_to;         /**< End time of certificate validity. */
+    mixpanel_mbedtls_x509_time valid_from;       /**< Start time of certificate validity. */
+    mixpanel_mbedtls_x509_time valid_to;         /**< End time of certificate validity. */
 
-    mbedtls_pk_context pk;              /**< Container for the public key context. */
+    mixpanel_mbedtls_pk_context pk;              /**< Container for the public key context. */
 
-    mbedtls_x509_buf issuer_id;         /**< Optional X.509 v2/v3 issuer unique identifier. */
-    mbedtls_x509_buf subject_id;        /**< Optional X.509 v2/v3 subject unique identifier. */
-    mbedtls_x509_buf v3_ext;            /**< Optional X.509 v3 extensions.  */
-    mbedtls_x509_sequence subject_alt_names;    /**< Optional list of Subject Alternative Names (Only dNSName supported). */
+    mixpanel_mbedtls_x509_buf issuer_id;         /**< Optional X.509 v2/v3 issuer unique identifier. */
+    mixpanel_mbedtls_x509_buf subject_id;        /**< Optional X.509 v2/v3 subject unique identifier. */
+    mixpanel_mbedtls_x509_buf v3_ext;            /**< Optional X.509 v3 extensions.  */
+    mixpanel_mbedtls_x509_sequence subject_alt_names;    /**< Optional list of Subject Alternative Names (Only dNSName supported). */
 
     int ext_types;              /**< Bit string containing detected and parsed extensions */
     int ca_istrue;              /**< Optional Basic Constraint extension value: 1 if this certificate belongs to a CA, 0 otherwise. */
@@ -80,18 +80,18 @@ typedef struct mbedtls_x509_crt
 
     unsigned int key_usage;     /**< Optional key usage extension value: See the values in x509.h */
 
-    mbedtls_x509_sequence ext_key_usage; /**< Optional list of extended key usage OIDs. */
+    mixpanel_mbedtls_x509_sequence ext_key_usage; /**< Optional list of extended key usage OIDs. */
 
     unsigned char ns_cert_type; /**< Optional Netscape certificate type extension value: See the values in x509.h */
 
-    mbedtls_x509_buf sig;               /**< Signature: hash of the tbs part signed with the private key. */
-    mbedtls_md_type_t sig_md;           /**< Internal representation of the MD algorithm of the signature algorithm, e.g. MBEDTLS_MD_SHA256 */
-    mbedtls_pk_type_t sig_pk;           /**< Internal representation of the Public Key algorithm of the signature algorithm, e.g. MBEDTLS_PK_RSA */
-    void *sig_opts;             /**< Signature options to be passed to mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
+    mixpanel_mbedtls_x509_buf sig;               /**< Signature: hash of the tbs part signed with the private key. */
+    mixpanel_mbedtls_md_type_t sig_md;           /**< Internal representation of the MD algorithm of the signature algorithm, e.g. MBEDTLS_MD_SHA256 */
+    mixpanel_mbedtls_pk_type_t sig_pk;           /**< Internal representation of the Public Key algorithm of the signature algorithm, e.g. MBEDTLS_PK_RSA */
+    void *sig_opts;             /**< Signature options to be passed to mixpanel_mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
 
-    struct mbedtls_x509_crt *next;     /**< Next certificate in the CA-chain. */
+    struct mixpanel_mbedtls_x509_crt *next;     /**< Next certificate in the CA-chain. */
 }
-mbedtls_x509_crt;
+mixpanel_mbedtls_x509_crt;
 
 /**
  * Build flag from an algorithm/curve identifier (pk, md, ecp)
@@ -111,7 +111,7 @@ typedef struct
     uint32_t allowed_curves;    /**< Elliptic curves for ECDSA  */
     uint32_t rsa_min_bitlen;    /**< Minimum size for RSA keys  */
 }
-mbedtls_x509_crt_profile;
+mixpanel_mbedtls_x509_crt_profile;
 
 #define MBEDTLS_X509_CRT_VERSION_1              0
 #define MBEDTLS_X509_CRT_VERSION_2              1
@@ -123,38 +123,38 @@ mbedtls_x509_crt_profile;
 /**
  * Container for writing a certificate (CRT)
  */
-typedef struct mbedtls_x509write_cert
+typedef struct mixpanel_mbedtls_x509write_cert
 {
     int version;
-    mbedtls_mpi serial;
-    mbedtls_pk_context *subject_key;
-    mbedtls_pk_context *issuer_key;
-    mbedtls_asn1_named_data *subject;
-    mbedtls_asn1_named_data *issuer;
-    mbedtls_md_type_t md_alg;
+    mixpanel_mbedtls_mpi serial;
+    mixpanel_mbedtls_pk_context *subject_key;
+    mixpanel_mbedtls_pk_context *issuer_key;
+    mixpanel_mbedtls_asn1_named_data *subject;
+    mixpanel_mbedtls_asn1_named_data *issuer;
+    mixpanel_mbedtls_md_type_t md_alg;
     char not_before[MBEDTLS_X509_RFC5280_UTC_TIME_LEN + 1];
     char not_after[MBEDTLS_X509_RFC5280_UTC_TIME_LEN + 1];
-    mbedtls_asn1_named_data *extensions;
+    mixpanel_mbedtls_asn1_named_data *extensions;
 }
-mbedtls_x509write_cert;
+mixpanel_mbedtls_x509write_cert;
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 /**
  * Default security profile. Should provide a good balance between security
  * and compatibility with current deployments.
  */
-extern const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_default;
+extern const mixpanel_mbedtls_x509_crt_profile mixpanel_mbedtls_x509_crt_profile_default;
 
 /**
  * Expected next default profile. Recommended for new deployments.
  * Currently targets a 128-bit security level, except for RSA-2048.
  */
-extern const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_next;
+extern const mixpanel_mbedtls_x509_crt_profile mixpanel_mbedtls_x509_crt_profile_next;
 
 /**
  * NSA Suite B profile.
  */
-extern const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_suiteb;
+extern const mixpanel_mbedtls_x509_crt_profile mixpanel_mbedtls_x509_crt_profile_suiteb;
 
 /**
  * \brief          Parse a single DER formatted certificate and add it
@@ -166,7 +166,7 @@ extern const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_suiteb;
  *
  * \return         0 if successful, or a specific X509 or PEM error code
  */
-int mbedtls_x509_crt_parse_der( mbedtls_x509_crt *chain, const unsigned char *buf,
+int mixpanel_mbedtls_x509_crt_parse_der( mixpanel_mbedtls_x509_crt *chain, const unsigned char *buf,
                         size_t buflen );
 
 /**
@@ -184,7 +184,7 @@ int mbedtls_x509_crt_parse_der( mbedtls_x509_crt *chain, const unsigned char *bu
  * \return         0 if all certificates parsed successfully, a positive number
  *                 if partly successful or a specific X509 or PEM error code
  */
-int mbedtls_x509_crt_parse( mbedtls_x509_crt *chain, const unsigned char *buf, size_t buflen );
+int mixpanel_mbedtls_x509_crt_parse( mixpanel_mbedtls_x509_crt *chain, const unsigned char *buf, size_t buflen );
 
 #if defined(MBEDTLS_FS_IO)
 /**
@@ -200,7 +200,7 @@ int mbedtls_x509_crt_parse( mbedtls_x509_crt *chain, const unsigned char *buf, s
  * \return         0 if all certificates parsed successfully, a positive number
  *                 if partly successful or a specific X509 or PEM error code
  */
-int mbedtls_x509_crt_parse_file( mbedtls_x509_crt *chain, const char *path );
+int mixpanel_mbedtls_x509_crt_parse_file( mixpanel_mbedtls_x509_crt *chain, const char *path );
 
 /**
  * \brief          Load one or more certificate files from a path and add them
@@ -215,7 +215,7 @@ int mbedtls_x509_crt_parse_file( mbedtls_x509_crt *chain, const char *path );
  * \return         0 if all certificates parsed successfully, a positive number
  *                 if partly successful or a specific X509 or PEM error code
  */
-int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path );
+int mixpanel_mbedtls_x509_crt_parse_path( mixpanel_mbedtls_x509_crt *chain, const char *path );
 #endif /* MBEDTLS_FS_IO */
 
 /**
@@ -230,8 +230,8 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path );
  * \return         The length of the string written (not including the
  *                 terminated nul byte), or a negative error code.
  */
-int mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
-                   const mbedtls_x509_crt *crt );
+int mixpanel_mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
+                   const mixpanel_mbedtls_x509_crt *crt );
 
 /**
  * \brief          Returns an informational string about the
@@ -240,12 +240,12 @@ int mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
  * \param buf      Buffer to write to
  * \param size     Maximum size of buffer
  * \param prefix   A line prefix
- * \param flags    Verification flags created by mbedtls_x509_crt_verify()
+ * \param flags    Verification flags created by mixpanel_mbedtls_x509_crt_verify()
  *
  * \return         The length of the string written (not including the
  *                 terminated nul byte), or a negative error code.
  */
-int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
+int mixpanel_mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
                           uint32_t flags );
 
 /**
@@ -256,7 +256,7 @@ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
  *                 the verification callback is called for each
  *                 certificate in the chain (from the trust-ca down to the
  *                 presented crt). The parameters for the callback are:
- *                 (void *parameter, mbedtls_x509_crt *crt, int certificate_depth,
+ *                 (void *parameter, mixpanel_mbedtls_x509_crt *crt, int certificate_depth,
  *                 int *flags). With the flags representing current flags for
  *                 that specific certificate and the certificate depth from
  *                 the bottom (Peer cert depth = 0).
@@ -266,9 +266,9 @@ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
  *                 return 0 for anything but a fatal error.
  *
  * \note           In case verification failed, the results can be displayed
- *                 using \c mbedtls_x509_crt_verify_info()
+ *                 using \c mixpanel_mbedtls_x509_crt_verify_info()
  *
- * \note           Same as \c mbedtls_x509_crt_verify_with_profile() with the
+ * \note           Same as \c mixpanel_mbedtls_x509_crt_verify_with_profile() with the
  *                 default security profile.
  *
  * \param crt      a certificate to be verified
@@ -287,17 +287,17 @@ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
  *                 or another error in case of a fatal error encountered
  *                 during the verification process.
  */
-int mbedtls_x509_crt_verify( mbedtls_x509_crt *crt,
-                     mbedtls_x509_crt *trust_ca,
-                     mbedtls_x509_crl *ca_crl,
+int mixpanel_mbedtls_x509_crt_verify( mixpanel_mbedtls_x509_crt *crt,
+                     mixpanel_mbedtls_x509_crt *trust_ca,
+                     mixpanel_mbedtls_x509_crl *ca_crl,
                      const char *cn, uint32_t *flags,
-                     int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
+                     int (*f_vrfy)(void *, mixpanel_mbedtls_x509_crt *, int, uint32_t *),
                      void *p_vrfy );
 
 /**
  * \brief          Verify the certificate signature according to profile
  *
- * \note           Same as \c mbedtls_x509_crt_verify(), but with explicit
+ * \note           Same as \c mixpanel_mbedtls_x509_crt_verify(), but with explicit
  *                 security profile.
  *
  * \note           The restrictions on keys (RSA minimum size, allowed curves
@@ -321,12 +321,12 @@ int mbedtls_x509_crt_verify( mbedtls_x509_crt *crt,
  *                 or another error in case of a fatal error encountered
  *                 during the verification process.
  */
-int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
-                     mbedtls_x509_crt *trust_ca,
-                     mbedtls_x509_crl *ca_crl,
-                     const mbedtls_x509_crt_profile *profile,
+int mixpanel_mbedtls_x509_crt_verify_with_profile( mixpanel_mbedtls_x509_crt *crt,
+                     mixpanel_mbedtls_x509_crt *trust_ca,
+                     mixpanel_mbedtls_x509_crl *ca_crl,
+                     const mixpanel_mbedtls_x509_crt_profile *profile,
                      const char *cn, uint32_t *flags,
-                     int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
+                     int (*f_vrfy)(void *, mixpanel_mbedtls_x509_crt *, int, uint32_t *),
                      void *p_vrfy );
 
 #if defined(MBEDTLS_X509_CHECK_KEY_USAGE)
@@ -349,9 +349,9 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
  *
  * \note           You should only call this function on leaf certificates, on
  *                 (intermediate) CAs the keyUsage extension is automatically
- *                 checked by \c mbedtls_x509_crt_verify().
+ *                 checked by \c mixpanel_mbedtls_x509_crt_verify().
  */
-int mbedtls_x509_crt_check_key_usage( const mbedtls_x509_crt *crt,
+int mixpanel_mbedtls_x509_crt_check_key_usage( const mixpanel_mbedtls_x509_crt *crt,
                                       unsigned int usage );
 #endif /* MBEDTLS_X509_CHECK_KEY_USAGE) */
 
@@ -368,7 +368,7 @@ int mbedtls_x509_crt_check_key_usage( const mbedtls_x509_crt *crt,
  *
  * \note           Usually only makes sense on leaf certificates.
  */
-int mbedtls_x509_crt_check_extended_key_usage( const mbedtls_x509_crt *crt,
+int mixpanel_mbedtls_x509_crt_check_extended_key_usage( const mixpanel_mbedtls_x509_crt *crt,
                                        const char *usage_oid,
                                        size_t usage_len );
 #endif /* MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE) */
@@ -383,7 +383,7 @@ int mbedtls_x509_crt_check_extended_key_usage( const mbedtls_x509_crt *crt,
  * \return         1 if the certificate is revoked, 0 otherwise
  *
  */
-int mbedtls_x509_crt_is_revoked( const mbedtls_x509_crt *crt, const mbedtls_x509_crl *crl );
+int mixpanel_mbedtls_x509_crt_is_revoked( const mixpanel_mbedtls_x509_crt *crt, const mixpanel_mbedtls_x509_crl *crl );
 #endif /* MBEDTLS_X509_CRL_PARSE_C */
 
 /**
@@ -391,14 +391,14 @@ int mbedtls_x509_crt_is_revoked( const mbedtls_x509_crt *crt, const mbedtls_x509
  *
  * \param crt      Certificate chain to initialize
  */
-void mbedtls_x509_crt_init( mbedtls_x509_crt *crt );
+void mixpanel_mbedtls_x509_crt_init( mixpanel_mbedtls_x509_crt *crt );
 
 /**
  * \brief          Unallocate all certificate data
  *
  * \param crt      Certificate chain to free
  */
-void mbedtls_x509_crt_free( mbedtls_x509_crt *crt );
+void mixpanel_mbedtls_x509_crt_free( mixpanel_mbedtls_x509_crt *crt );
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
 /* \} name */
@@ -410,7 +410,7 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt );
  *
  * \param ctx       CRT context to initialize
  */
-void mbedtls_x509write_crt_init( mbedtls_x509write_cert *ctx );
+void mixpanel_mbedtls_x509write_crt_init( mixpanel_mbedtls_x509write_cert *ctx );
 
 /**
  * \brief           Set the verion for a Certificate
@@ -420,7 +420,7 @@ void mbedtls_x509write_crt_init( mbedtls_x509write_cert *ctx );
  * \param version   version to set (MBEDTLS_X509_CRT_VERSION_1, MBEDTLS_X509_CRT_VERSION_2 or
  *                                  MBEDTLS_X509_CRT_VERSION_3)
  */
-void mbedtls_x509write_crt_set_version( mbedtls_x509write_cert *ctx, int version );
+void mixpanel_mbedtls_x509write_crt_set_version( mixpanel_mbedtls_x509write_cert *ctx, int version );
 
 /**
  * \brief           Set the serial number for a Certificate.
@@ -430,7 +430,7 @@ void mbedtls_x509write_crt_set_version( mbedtls_x509write_cert *ctx, int version
  *
  * \return          0 if successful
  */
-int mbedtls_x509write_crt_set_serial( mbedtls_x509write_cert *ctx, const mbedtls_mpi *serial );
+int mixpanel_mbedtls_x509write_crt_set_serial( mixpanel_mbedtls_x509write_cert *ctx, const mixpanel_mbedtls_mpi *serial );
 
 /**
  * \brief           Set the validity period for a Certificate
@@ -446,7 +446,7 @@ int mbedtls_x509write_crt_set_serial( mbedtls_x509write_cert *ctx, const mbedtls
  * \return          0 if timestamp was parsed successfully, or
  *                  a specific error code
  */
-int mbedtls_x509write_crt_set_validity( mbedtls_x509write_cert *ctx, const char *not_before,
+int mixpanel_mbedtls_x509write_crt_set_validity( mixpanel_mbedtls_x509write_cert *ctx, const char *not_before,
                                 const char *not_after );
 
 /**
@@ -461,7 +461,7 @@ int mbedtls_x509write_crt_set_validity( mbedtls_x509write_cert *ctx, const char 
  * \return          0 if issuer name was parsed successfully, or
  *                  a specific error code
  */
-int mbedtls_x509write_crt_set_issuer_name( mbedtls_x509write_cert *ctx,
+int mixpanel_mbedtls_x509write_crt_set_issuer_name( mixpanel_mbedtls_x509write_cert *ctx,
                                    const char *issuer_name );
 
 /**
@@ -476,7 +476,7 @@ int mbedtls_x509write_crt_set_issuer_name( mbedtls_x509write_cert *ctx,
  * \return          0 if subject name was parsed successfully, or
  *                  a specific error code
  */
-int mbedtls_x509write_crt_set_subject_name( mbedtls_x509write_cert *ctx,
+int mixpanel_mbedtls_x509write_crt_set_subject_name( mixpanel_mbedtls_x509write_cert *ctx,
                                     const char *subject_name );
 
 /**
@@ -485,7 +485,7 @@ int mbedtls_x509write_crt_set_subject_name( mbedtls_x509write_cert *ctx,
  * \param ctx       CRT context to use
  * \param key       public key to include
  */
-void mbedtls_x509write_crt_set_subject_key( mbedtls_x509write_cert *ctx, mbedtls_pk_context *key );
+void mixpanel_mbedtls_x509write_crt_set_subject_key( mixpanel_mbedtls_x509write_cert *ctx, mixpanel_mbedtls_pk_context *key );
 
 /**
  * \brief           Set the issuer key used for signing the certificate
@@ -493,7 +493,7 @@ void mbedtls_x509write_crt_set_subject_key( mbedtls_x509write_cert *ctx, mbedtls
  * \param ctx       CRT context to use
  * \param key       private key to sign with
  */
-void mbedtls_x509write_crt_set_issuer_key( mbedtls_x509write_cert *ctx, mbedtls_pk_context *key );
+void mixpanel_mbedtls_x509write_crt_set_issuer_key( mixpanel_mbedtls_x509write_cert *ctx, mixpanel_mbedtls_pk_context *key );
 
 /**
  * \brief           Set the MD algorithm to use for the signature
@@ -502,7 +502,7 @@ void mbedtls_x509write_crt_set_issuer_key( mbedtls_x509write_cert *ctx, mbedtls_
  * \param ctx       CRT context to use
  * \param md_alg    MD algorithm to use
  */
-void mbedtls_x509write_crt_set_md_alg( mbedtls_x509write_cert *ctx, mbedtls_md_type_t md_alg );
+void mixpanel_mbedtls_x509write_crt_set_md_alg( mixpanel_mbedtls_x509write_cert *ctx, mixpanel_mbedtls_md_type_t md_alg );
 
 /**
  * \brief           Generic function to add to or replace an extension in the
@@ -517,7 +517,7 @@ void mbedtls_x509write_crt_set_md_alg( mbedtls_x509write_cert *ctx, mbedtls_md_t
  *
  * \return          0 if successful, or a MBEDTLS_ERR_X509_ALLOC_FAILED
  */
-int mbedtls_x509write_crt_set_extension( mbedtls_x509write_cert *ctx,
+int mixpanel_mbedtls_x509write_crt_set_extension( mixpanel_mbedtls_x509write_cert *ctx,
                                  const char *oid, size_t oid_len,
                                  int critical,
                                  const unsigned char *val, size_t val_len );
@@ -533,31 +533,31 @@ int mbedtls_x509write_crt_set_extension( mbedtls_x509write_cert *ctx,
  *
  * \return          0 if successful, or a MBEDTLS_ERR_X509_ALLOC_FAILED
  */
-int mbedtls_x509write_crt_set_basic_constraints( mbedtls_x509write_cert *ctx,
+int mixpanel_mbedtls_x509write_crt_set_basic_constraints( mixpanel_mbedtls_x509write_cert *ctx,
                                          int is_ca, int max_pathlen );
 
 #if defined(MBEDTLS_SHA1_C)
 /**
  * \brief           Set the subjectKeyIdentifier extension for a CRT
- *                  Requires that mbedtls_x509write_crt_set_subject_key() has been
+ *                  Requires that mixpanel_mbedtls_x509write_crt_set_subject_key() has been
  *                  called before
  *
  * \param ctx       CRT context to use
  *
  * \return          0 if successful, or a MBEDTLS_ERR_X509_ALLOC_FAILED
  */
-int mbedtls_x509write_crt_set_subject_key_identifier( mbedtls_x509write_cert *ctx );
+int mixpanel_mbedtls_x509write_crt_set_subject_key_identifier( mixpanel_mbedtls_x509write_cert *ctx );
 
 /**
  * \brief           Set the authorityKeyIdentifier extension for a CRT
- *                  Requires that mbedtls_x509write_crt_set_issuer_key() has been
+ *                  Requires that mixpanel_mbedtls_x509write_crt_set_issuer_key() has been
  *                  called before
  *
  * \param ctx       CRT context to use
  *
  * \return          0 if successful, or a MBEDTLS_ERR_X509_ALLOC_FAILED
  */
-int mbedtls_x509write_crt_set_authority_key_identifier( mbedtls_x509write_cert *ctx );
+int mixpanel_mbedtls_x509write_crt_set_authority_key_identifier( mixpanel_mbedtls_x509write_cert *ctx );
 #endif /* MBEDTLS_SHA1_C */
 
 /**
@@ -569,7 +569,7 @@ int mbedtls_x509write_crt_set_authority_key_identifier( mbedtls_x509write_cert *
  *
  * \return          0 if successful, or MBEDTLS_ERR_X509_ALLOC_FAILED
  */
-int mbedtls_x509write_crt_set_key_usage( mbedtls_x509write_cert *ctx,
+int mixpanel_mbedtls_x509write_crt_set_key_usage( mixpanel_mbedtls_x509write_cert *ctx,
                                          unsigned int key_usage );
 
 /**
@@ -581,7 +581,7 @@ int mbedtls_x509write_crt_set_key_usage( mbedtls_x509write_cert *ctx,
  *
  * \return          0 if successful, or MBEDTLS_ERR_X509_ALLOC_FAILED
  */
-int mbedtls_x509write_crt_set_ns_cert_type( mbedtls_x509write_cert *ctx,
+int mixpanel_mbedtls_x509write_crt_set_ns_cert_type( mixpanel_mbedtls_x509write_cert *ctx,
                                     unsigned char ns_cert_type );
 
 /**
@@ -589,7 +589,7 @@ int mbedtls_x509write_crt_set_ns_cert_type( mbedtls_x509write_cert *ctx,
  *
  * \param ctx       CRT context to free
  */
-void mbedtls_x509write_crt_free( mbedtls_x509write_cert *ctx );
+void mixpanel_mbedtls_x509write_crt_free( mixpanel_mbedtls_x509write_cert *ctx );
 
 /**
  * \brief           Write a built up certificate to a X509 DER structure
@@ -611,7 +611,7 @@ void mbedtls_x509write_crt_free( mbedtls_x509write_cert *ctx );
  *                  for countermeasures against timing attacks).
  *                  ECDSA signatures always require a non-NULL f_rng.
  */
-int mbedtls_x509write_crt_der( mbedtls_x509write_cert *ctx, unsigned char *buf, size_t size,
+int mixpanel_mbedtls_x509write_crt_der( mixpanel_mbedtls_x509write_cert *ctx, unsigned char *buf, size_t size,
                        int (*f_rng)(void *, unsigned char *, size_t),
                        void *p_rng );
 
@@ -632,7 +632,7 @@ int mbedtls_x509write_crt_der( mbedtls_x509write_cert *ctx, unsigned char *buf, 
  *                  for countermeasures against timing attacks).
  *                  ECDSA signatures always require a non-NULL f_rng.
  */
-int mbedtls_x509write_crt_pem( mbedtls_x509write_cert *ctx, unsigned char *buf, size_t size,
+int mixpanel_mbedtls_x509write_crt_pem( mixpanel_mbedtls_x509write_cert *ctx, unsigned char *buf, size_t size,
                        int (*f_rng)(void *, unsigned char *, size_t),
                        void *p_rng );
 #endif /* MBEDTLS_PEM_WRITE_C */
@@ -642,4 +642,4 @@ int mbedtls_x509write_crt_pem( mbedtls_x509write_cert *ctx, unsigned char *buf, 
 }
 #endif
 
-#endif /* mbedtls_x509_crt.h */
+#endif /* mixpanel_mbedtls_x509_crt.h */

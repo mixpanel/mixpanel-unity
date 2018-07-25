@@ -42,14 +42,14 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf printf
+#define mixpanel_mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_CAMELLIA_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
@@ -323,23 +323,23 @@ static void camellia_feistel( const uint32_t x[2], const uint32_t k[2],
     z[1] ^= I0;
 }
 
-void mbedtls_camellia_init( mbedtls_camellia_context *ctx )
+void mixpanel_mbedtls_camellia_init( mixpanel_mbedtls_camellia_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_camellia_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_camellia_context ) );
 }
 
-void mbedtls_camellia_free( mbedtls_camellia_context *ctx )
+void mixpanel_mbedtls_camellia_free( mixpanel_mbedtls_camellia_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_camellia_context ) );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_camellia_context ) );
 }
 
 /*
  * Camellia key schedule (encryption)
  */
-int mbedtls_camellia_setkey_enc( mbedtls_camellia_context *ctx, const unsigned char *key,
+int mixpanel_mbedtls_camellia_setkey_enc( mixpanel_mbedtls_camellia_context *ctx, const unsigned char *key,
                          unsigned int keybits )
 {
     int idx;
@@ -444,19 +444,19 @@ int mbedtls_camellia_setkey_enc( mbedtls_camellia_context *ctx, const unsigned c
 /*
  * Camellia key schedule (decryption)
  */
-int mbedtls_camellia_setkey_dec( mbedtls_camellia_context *ctx, const unsigned char *key,
+int mixpanel_mbedtls_camellia_setkey_dec( mixpanel_mbedtls_camellia_context *ctx, const unsigned char *key,
                          unsigned int keybits )
 {
     int idx, ret;
     size_t i;
-    mbedtls_camellia_context cty;
+    mixpanel_mbedtls_camellia_context cty;
     uint32_t *RK;
     uint32_t *SK;
 
-    mbedtls_camellia_init( &cty );
+    mixpanel_mbedtls_camellia_init( &cty );
 
     /* Also checks keybits */
-    if( ( ret = mbedtls_camellia_setkey_enc( &cty, key, keybits ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_camellia_setkey_enc( &cty, key, keybits ) ) != 0 )
         goto exit;
 
     ctx->nr = cty.nr;
@@ -484,7 +484,7 @@ int mbedtls_camellia_setkey_dec( mbedtls_camellia_context *ctx, const unsigned c
     *RK++ = *SK++;
 
 exit:
-    mbedtls_camellia_free( &cty );
+    mixpanel_mbedtls_camellia_free( &cty );
 
     return( ret );
 }
@@ -492,7 +492,7 @@ exit:
 /*
  * Camellia-ECB block encryption/decryption
  */
-int mbedtls_camellia_crypt_ecb( mbedtls_camellia_context *ctx,
+int mixpanel_mbedtls_camellia_crypt_ecb( mixpanel_mbedtls_camellia_context *ctx,
                     int mode,
                     const unsigned char input[16],
                     unsigned char output[16] )
@@ -555,7 +555,7 @@ int mbedtls_camellia_crypt_ecb( mbedtls_camellia_context *ctx,
 /*
  * Camellia-CBC buffer encryption/decryption
  */
-int mbedtls_camellia_crypt_cbc( mbedtls_camellia_context *ctx,
+int mixpanel_mbedtls_camellia_crypt_cbc( mixpanel_mbedtls_camellia_context *ctx,
                     int mode,
                     size_t length,
                     unsigned char iv[16],
@@ -573,7 +573,7 @@ int mbedtls_camellia_crypt_cbc( mbedtls_camellia_context *ctx,
         while( length > 0 )
         {
             memcpy( temp, input, 16 );
-            mbedtls_camellia_crypt_ecb( ctx, mode, input, output );
+            mixpanel_mbedtls_camellia_crypt_ecb( ctx, mode, input, output );
 
             for( i = 0; i < 16; i++ )
                 output[i] = (unsigned char)( output[i] ^ iv[i] );
@@ -592,7 +592,7 @@ int mbedtls_camellia_crypt_cbc( mbedtls_camellia_context *ctx,
             for( i = 0; i < 16; i++ )
                 output[i] = (unsigned char)( input[i] ^ iv[i] );
 
-            mbedtls_camellia_crypt_ecb( ctx, mode, output, output );
+            mixpanel_mbedtls_camellia_crypt_ecb( ctx, mode, output, output );
             memcpy( iv, output, 16 );
 
             input  += 16;
@@ -609,7 +609,7 @@ int mbedtls_camellia_crypt_cbc( mbedtls_camellia_context *ctx,
 /*
  * Camellia-CFB128 buffer encryption/decryption
  */
-int mbedtls_camellia_crypt_cfb128( mbedtls_camellia_context *ctx,
+int mixpanel_mbedtls_camellia_crypt_cfb128( mixpanel_mbedtls_camellia_context *ctx,
                        int mode,
                        size_t length,
                        size_t *iv_off,
@@ -625,7 +625,7 @@ int mbedtls_camellia_crypt_cfb128( mbedtls_camellia_context *ctx,
         while( length-- )
         {
             if( n == 0 )
-                mbedtls_camellia_crypt_ecb( ctx, MBEDTLS_CAMELLIA_ENCRYPT, iv, iv );
+                mixpanel_mbedtls_camellia_crypt_ecb( ctx, MBEDTLS_CAMELLIA_ENCRYPT, iv, iv );
 
             c = *input++;
             *output++ = (unsigned char)( c ^ iv[n] );
@@ -639,7 +639,7 @@ int mbedtls_camellia_crypt_cfb128( mbedtls_camellia_context *ctx,
         while( length-- )
         {
             if( n == 0 )
-                mbedtls_camellia_crypt_ecb( ctx, MBEDTLS_CAMELLIA_ENCRYPT, iv, iv );
+                mixpanel_mbedtls_camellia_crypt_ecb( ctx, MBEDTLS_CAMELLIA_ENCRYPT, iv, iv );
 
             iv[n] = *output++ = (unsigned char)( iv[n] ^ *input++ );
 
@@ -657,7 +657,7 @@ int mbedtls_camellia_crypt_cfb128( mbedtls_camellia_context *ctx,
 /*
  * Camellia-CTR buffer encryption/decryption
  */
-int mbedtls_camellia_crypt_ctr( mbedtls_camellia_context *ctx,
+int mixpanel_mbedtls_camellia_crypt_ctr( mixpanel_mbedtls_camellia_context *ctx,
                        size_t length,
                        size_t *nc_off,
                        unsigned char nonce_counter[16],
@@ -671,7 +671,7 @@ int mbedtls_camellia_crypt_ctr( mbedtls_camellia_context *ctx,
     while( length-- )
     {
         if( n == 0 ) {
-            mbedtls_camellia_crypt_ecb( ctx, MBEDTLS_CAMELLIA_ENCRYPT, nonce_counter,
+            mixpanel_mbedtls_camellia_crypt_ecb( ctx, MBEDTLS_CAMELLIA_ENCRYPT, nonce_counter,
                                 stream_block );
 
             for( i = 16; i > 0; i-- )
@@ -891,7 +891,7 @@ static const int camellia_test_ctr_len[3] =
 /*
  * Checkup routine
  */
-int mbedtls_camellia_self_test( int verbose )
+int mixpanel_mbedtls_camellia_self_test( int verbose )
 {
     int i, j, u, v;
     unsigned char key[32];
@@ -907,7 +907,7 @@ int mbedtls_camellia_self_test( int verbose )
     unsigned char stream_block[16];
 #endif
 
-    mbedtls_camellia_context ctx;
+    mixpanel_mbedtls_camellia_context ctx;
 
     memset( key, 0, 32 );
 
@@ -916,39 +916,39 @@ int mbedtls_camellia_self_test( int verbose )
     v = j & 1;
 
     if( verbose != 0 )
-        mbedtls_printf( "  CAMELLIA-ECB-%3d (%s): ", 128 + u * 64,
+        mixpanel_mbedtls_printf( "  CAMELLIA-ECB-%3d (%s): ", 128 + u * 64,
                          (v == MBEDTLS_CAMELLIA_DECRYPT) ? "dec" : "enc");
 
     for( i = 0; i < CAMELLIA_TESTS_ECB; i++ ) {
         memcpy( key, camellia_test_ecb_key[u][i], 16 + 8 * u );
 
         if( v == MBEDTLS_CAMELLIA_DECRYPT ) {
-            mbedtls_camellia_setkey_dec( &ctx, key, 128 + u * 64 );
+            mixpanel_mbedtls_camellia_setkey_dec( &ctx, key, 128 + u * 64 );
             memcpy( src, camellia_test_ecb_cipher[u][i], 16 );
             memcpy( dst, camellia_test_ecb_plain[i], 16 );
         } else { /* MBEDTLS_CAMELLIA_ENCRYPT */
-            mbedtls_camellia_setkey_enc( &ctx, key, 128 + u * 64 );
+            mixpanel_mbedtls_camellia_setkey_enc( &ctx, key, 128 + u * 64 );
             memcpy( src, camellia_test_ecb_plain[i], 16 );
             memcpy( dst, camellia_test_ecb_cipher[u][i], 16 );
         }
 
-        mbedtls_camellia_crypt_ecb( &ctx, v, src, buf );
+        mixpanel_mbedtls_camellia_crypt_ecb( &ctx, v, src, buf );
 
         if( memcmp( buf, dst, 16 ) != 0 )
         {
             if( verbose != 0 )
-                mbedtls_printf( "failed\n" );
+                mixpanel_mbedtls_printf( "failed\n" );
 
             return( 1 );
         }
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "passed\n" );
+        mixpanel_mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
     /*
@@ -960,7 +960,7 @@ int mbedtls_camellia_self_test( int verbose )
         v = j  & 1;
 
         if( verbose != 0 )
-            mbedtls_printf( "  CAMELLIA-CBC-%3d (%s): ", 128 + u * 64,
+            mixpanel_mbedtls_printf( "  CAMELLIA-CBC-%3d (%s): ", 128 + u * 64,
                              ( v == MBEDTLS_CAMELLIA_DECRYPT ) ? "dec" : "enc" );
 
     memcpy( src, camellia_test_cbc_iv, 16 );
@@ -968,9 +968,9 @@ int mbedtls_camellia_self_test( int verbose )
     memcpy( key, camellia_test_cbc_key[u], 16 + 8 * u );
 
     if( v == MBEDTLS_CAMELLIA_DECRYPT ) {
-        mbedtls_camellia_setkey_dec( &ctx, key, 128 + u * 64 );
+        mixpanel_mbedtls_camellia_setkey_dec( &ctx, key, 128 + u * 64 );
     } else {
-        mbedtls_camellia_setkey_enc( &ctx, key, 128 + u * 64 );
+        mixpanel_mbedtls_camellia_setkey_enc( &ctx, key, 128 + u * 64 );
     }
 
     for( i = 0; i < CAMELLIA_TESTS_CBC; i++ ) {
@@ -985,24 +985,24 @@ int mbedtls_camellia_self_test( int verbose )
             memcpy( dst, camellia_test_cbc_cipher[u][i], 16 );
         }
 
-        mbedtls_camellia_crypt_cbc( &ctx, v, 16, iv, src, buf );
+        mixpanel_mbedtls_camellia_crypt_cbc( &ctx, v, 16, iv, src, buf );
 
         if( memcmp( buf, dst, 16 ) != 0 )
         {
             if( verbose != 0 )
-                mbedtls_printf( "failed\n" );
+                mixpanel_mbedtls_printf( "failed\n" );
 
             return( 1 );
         }
     }
 
         if( verbose != 0 )
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
     }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
     /*
@@ -1014,27 +1014,27 @@ int mbedtls_camellia_self_test( int verbose )
         v = i  & 1;
 
         if( verbose != 0 )
-            mbedtls_printf( "  CAMELLIA-CTR-128 (%s): ",
+            mixpanel_mbedtls_printf( "  CAMELLIA-CTR-128 (%s): ",
                              ( v == MBEDTLS_CAMELLIA_DECRYPT ) ? "dec" : "enc" );
 
         memcpy( nonce_counter, camellia_test_ctr_nonce_counter[u], 16 );
         memcpy( key, camellia_test_ctr_key[u], 16 );
 
         offset = 0;
-        mbedtls_camellia_setkey_enc( &ctx, key, 128 );
+        mixpanel_mbedtls_camellia_setkey_enc( &ctx, key, 128 );
 
         if( v == MBEDTLS_CAMELLIA_DECRYPT )
         {
             len = camellia_test_ctr_len[u];
             memcpy( buf, camellia_test_ctr_ct[u], len );
 
-            mbedtls_camellia_crypt_ctr( &ctx, len, &offset, nonce_counter, stream_block,
+            mixpanel_mbedtls_camellia_crypt_ctr( &ctx, len, &offset, nonce_counter, stream_block,
                                 buf, buf );
 
             if( memcmp( buf, camellia_test_ctr_pt[u], len ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 return( 1 );
             }
@@ -1044,24 +1044,24 @@ int mbedtls_camellia_self_test( int verbose )
             len = camellia_test_ctr_len[u];
             memcpy( buf, camellia_test_ctr_pt[u], len );
 
-            mbedtls_camellia_crypt_ctr( &ctx, len, &offset, nonce_counter, stream_block,
+            mixpanel_mbedtls_camellia_crypt_ctr( &ctx, len, &offset, nonce_counter, stream_block,
                                 buf, buf );
 
             if( memcmp( buf, camellia_test_ctr_ct[u], len ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 return( 1 );
             }
         }
 
         if( verbose != 0 )
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 #endif /* MBEDTLS_CIPHER_MODE_CTR */
 
     return( 0 );

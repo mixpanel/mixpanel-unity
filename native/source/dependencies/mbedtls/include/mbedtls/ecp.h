@@ -48,7 +48,7 @@ extern "C" {
  *
  * \warning This library does not support validation of arbitrary domain
  * parameters. Therefore, only well-known domain parameters from trusted
- * sources should be used. See mbedtls_ecp_group_load().
+ * sources should be used. See mixpanel_mbedtls_ecp_group_load().
  */
 typedef enum
 {
@@ -65,7 +65,7 @@ typedef enum
     MBEDTLS_ECP_DP_SECP192K1,      /*!< 192-bits "Koblitz" curve */
     MBEDTLS_ECP_DP_SECP224K1,      /*!< 224-bits "Koblitz" curve */
     MBEDTLS_ECP_DP_SECP256K1,      /*!< 256-bits "Koblitz" curve */
-} mbedtls_ecp_group_id;
+} mixpanel_mbedtls_ecp_group_id;
 
 /**
  * Number of supported curves (plus one for NONE).
@@ -79,11 +79,11 @@ typedef enum
  */
 typedef struct
 {
-    mbedtls_ecp_group_id grp_id;    /*!< Internal identifier        */
+    mixpanel_mbedtls_ecp_group_id grp_id;    /*!< Internal identifier        */
     uint16_t tls_id;                /*!< TLS NamedCurve identifier  */
     uint16_t bit_size;              /*!< Curve size in bits         */
     const char *name;               /*!< Human-friendly name        */
-} mbedtls_ecp_curve_info;
+} mixpanel_mbedtls_ecp_curve_info;
 
 /**
  * \brief           ECP point structure (jacobian coordinates)
@@ -96,11 +96,11 @@ typedef struct
  */
 typedef struct
 {
-    mbedtls_mpi X;          /*!<  the point's X coordinate  */
-    mbedtls_mpi Y;          /*!<  the point's Y coordinate  */
-    mbedtls_mpi Z;          /*!<  the point's Z coordinate  */
+    mixpanel_mbedtls_mpi X;          /*!<  the point's X coordinate  */
+    mixpanel_mbedtls_mpi Y;          /*!<  the point's Y coordinate  */
+    mixpanel_mbedtls_mpi Z;          /*!<  the point's Z coordinate  */
 }
-mbedtls_ecp_point;
+mixpanel_mbedtls_ecp_point;
 
 /**
  * \brief           ECP group structure
@@ -113,14 +113,14 @@ mbedtls_ecp_point;
  * cardinal is denoted by N.
  *
  * In the case of Short Weierstrass curves, our code requires that N is an odd
- * prime. (Use odd in mbedtls_ecp_mul() and prime in mbedtls_ecdsa_sign() for blinding.)
+ * prime. (Use odd in mixpanel_mbedtls_ecp_mul() and prime in mixpanel_mbedtls_ecdsa_sign() for blinding.)
  *
  * In the case of Montgomery curves, we don't store A but (A + 2) / 4 which is
  * the quantity actually used in the formulas. Also, nbits is not the size of N
  * but the required size for private keys.
  *
  * If modp is NULL, reduction modulo P is done using a generic algorithm.
- * Otherwise, it must point to a function that takes an mbedtls_mpi in the range
+ * Otherwise, it must point to a function that takes an mixpanel_mbedtls_mpi in the range
  * 0..2^(2*pbits)-1 and transforms it in-place in an integer of little more
  * than pbits, so that the integer may be efficiently brought in the 0..P-1
  * range by a few additions or substractions. It must return 0 on success and
@@ -128,38 +128,38 @@ mbedtls_ecp_point;
  */
 typedef struct
 {
-    mbedtls_ecp_group_id id;    /*!<  internal group identifier                     */
-    mbedtls_mpi P;              /*!<  prime modulus of the base field               */
-    mbedtls_mpi A;              /*!<  1. A in the equation, or 2. (A + 2) / 4       */
-    mbedtls_mpi B;              /*!<  1. B in the equation, or 2. unused            */
-    mbedtls_ecp_point G;        /*!<  generator of the (sub)group used              */
-    mbedtls_mpi N;              /*!<  1. the order of G, or 2. unused               */
+    mixpanel_mbedtls_ecp_group_id id;    /*!<  internal group identifier                     */
+    mixpanel_mbedtls_mpi P;              /*!<  prime modulus of the base field               */
+    mixpanel_mbedtls_mpi A;              /*!<  1. A in the equation, or 2. (A + 2) / 4       */
+    mixpanel_mbedtls_mpi B;              /*!<  1. B in the equation, or 2. unused            */
+    mixpanel_mbedtls_ecp_point G;        /*!<  generator of the (sub)group used              */
+    mixpanel_mbedtls_mpi N;              /*!<  1. the order of G, or 2. unused               */
     size_t pbits;       /*!<  number of bits in P                           */
     size_t nbits;       /*!<  number of bits in 1. P, or 2. private keys    */
     unsigned int h;     /*!<  internal: 1 if the constants are static       */
-    int (*modp)(mbedtls_mpi *); /*!<  function for fast reduction mod P             */
-    int (*t_pre)(mbedtls_ecp_point *, void *);  /*!< unused                         */
-    int (*t_post)(mbedtls_ecp_point *, void *); /*!< unused                         */
+    int (*modp)(mixpanel_mbedtls_mpi *); /*!<  function for fast reduction mod P             */
+    int (*t_pre)(mixpanel_mbedtls_ecp_point *, void *);  /*!< unused                         */
+    int (*t_post)(mixpanel_mbedtls_ecp_point *, void *); /*!< unused                         */
     void *t_data;                       /*!< unused                         */
-    mbedtls_ecp_point *T;       /*!<  pre-computed points for ecp_mul_comb()        */
+    mixpanel_mbedtls_ecp_point *T;       /*!<  pre-computed points for ecp_mul_comb()        */
     size_t T_size;      /*!<  number for pre-computed points                */
 }
-mbedtls_ecp_group;
+mixpanel_mbedtls_ecp_group;
 
 /**
  * \brief           ECP key pair structure
  *
  * A generic key pair that could be used for ECDSA, fixed ECDH, etc.
  *
- * \note Members purposefully in the same order as struc mbedtls_ecdsa_context.
+ * \note Members purposefully in the same order as struc mixpanel_mbedtls_ecdsa_context.
  */
 typedef struct
 {
-    mbedtls_ecp_group grp;      /*!<  Elliptic curve and base point     */
-    mbedtls_mpi d;              /*!<  our secret value                  */
-    mbedtls_ecp_point Q;        /*!<  our public value                  */
+    mixpanel_mbedtls_ecp_group grp;      /*!<  Elliptic curve and base point     */
+    mixpanel_mbedtls_mpi d;              /*!<  our secret value                  */
+    mixpanel_mbedtls_ecp_point Q;        /*!<  our public value                  */
 }
-mbedtls_ecp_keypair;
+mixpanel_mbedtls_ecp_keypair;
 
 /**
  * \name SECTION: Module settings
@@ -237,7 +237,7 @@ mbedtls_ecp_keypair;
  *
  * \return          A statically allocated array, the last entry is 0.
  */
-const mbedtls_ecp_curve_info *mbedtls_ecp_curve_list( void );
+const mixpanel_mbedtls_ecp_curve_info *mixpanel_mbedtls_ecp_curve_list( void );
 
 /**
  * \brief           Get the list of supported curves in order of preferrence
@@ -246,7 +246,7 @@ const mbedtls_ecp_curve_info *mbedtls_ecp_curve_list( void );
  * \return          A statically allocated array,
  *                  terminated with MBEDTLS_ECP_DP_NONE.
  */
-const mbedtls_ecp_group_id *mbedtls_ecp_grp_id_list( void );
+const mixpanel_mbedtls_ecp_group_id *mixpanel_mbedtls_ecp_grp_id_list( void );
 
 /**
  * \brief           Get curve information from an internal group identifier
@@ -255,7 +255,7 @@ const mbedtls_ecp_group_id *mbedtls_ecp_grp_id_list( void );
  *
  * \return          The associated curve information or NULL
  */
-const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_grp_id( mbedtls_ecp_group_id grp_id );
+const mixpanel_mbedtls_ecp_curve_info *mixpanel_mbedtls_ecp_curve_info_from_grp_id( mixpanel_mbedtls_ecp_group_id grp_id );
 
 /**
  * \brief           Get curve information from a TLS NamedCurve value
@@ -264,7 +264,7 @@ const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_grp_id( mbedtls_ecp_gr
  *
  * \return          The associated curve information or NULL
  */
-const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_tls_id( uint16_t tls_id );
+const mixpanel_mbedtls_ecp_curve_info *mixpanel_mbedtls_ecp_curve_info_from_tls_id( uint16_t tls_id );
 
 /**
  * \brief           Get curve information from a human-readable name
@@ -273,37 +273,37 @@ const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_tls_id( uint16_t tls_i
  *
  * \return          The associated curve information or NULL
  */
-const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_name( const char *name );
+const mixpanel_mbedtls_ecp_curve_info *mixpanel_mbedtls_ecp_curve_info_from_name( const char *name );
 
 /**
  * \brief           Initialize a point (as zero)
  */
-void mbedtls_ecp_point_init( mbedtls_ecp_point *pt );
+void mixpanel_mbedtls_ecp_point_init( mixpanel_mbedtls_ecp_point *pt );
 
 /**
  * \brief           Initialize a group (to something meaningless)
  */
-void mbedtls_ecp_group_init( mbedtls_ecp_group *grp );
+void mixpanel_mbedtls_ecp_group_init( mixpanel_mbedtls_ecp_group *grp );
 
 /**
  * \brief           Initialize a key pair (as an invalid one)
  */
-void mbedtls_ecp_keypair_init( mbedtls_ecp_keypair *key );
+void mixpanel_mbedtls_ecp_keypair_init( mixpanel_mbedtls_ecp_keypair *key );
 
 /**
  * \brief           Free the components of a point
  */
-void mbedtls_ecp_point_free( mbedtls_ecp_point *pt );
+void mixpanel_mbedtls_ecp_point_free( mixpanel_mbedtls_ecp_point *pt );
 
 /**
  * \brief           Free the components of an ECP group
  */
-void mbedtls_ecp_group_free( mbedtls_ecp_group *grp );
+void mixpanel_mbedtls_ecp_group_free( mixpanel_mbedtls_ecp_group *grp );
 
 /**
  * \brief           Free the components of a key pair
  */
-void mbedtls_ecp_keypair_free( mbedtls_ecp_keypair *key );
+void mixpanel_mbedtls_ecp_keypair_free( mixpanel_mbedtls_ecp_keypair *key );
 
 /**
  * \brief           Copy the contents of point Q into P
@@ -314,7 +314,7 @@ void mbedtls_ecp_keypair_free( mbedtls_ecp_keypair *key );
  * \return          0 if successful,
  *                  MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
  */
-int mbedtls_ecp_copy( mbedtls_ecp_point *P, const mbedtls_ecp_point *Q );
+int mixpanel_mbedtls_ecp_copy( mixpanel_mbedtls_ecp_point *P, const mixpanel_mbedtls_ecp_point *Q );
 
 /**
  * \brief           Copy the contents of a group object
@@ -325,7 +325,7 @@ int mbedtls_ecp_copy( mbedtls_ecp_point *P, const mbedtls_ecp_point *Q );
  * \return          0 if successful,
  *                  MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
  */
-int mbedtls_ecp_group_copy( mbedtls_ecp_group *dst, const mbedtls_ecp_group *src );
+int mixpanel_mbedtls_ecp_group_copy( mixpanel_mbedtls_ecp_group *dst, const mixpanel_mbedtls_ecp_group *src );
 
 /**
  * \brief           Set a point to zero
@@ -335,7 +335,7 @@ int mbedtls_ecp_group_copy( mbedtls_ecp_group *dst, const mbedtls_ecp_group *src
  * \return          0 if successful,
  *                  MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
  */
-int mbedtls_ecp_set_zero( mbedtls_ecp_point *pt );
+int mixpanel_mbedtls_ecp_set_zero( mixpanel_mbedtls_ecp_point *pt );
 
 /**
  * \brief           Tell if a point is zero
@@ -344,7 +344,7 @@ int mbedtls_ecp_set_zero( mbedtls_ecp_point *pt );
  *
  * \return          1 if point is zero, 0 otherwise
  */
-int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt );
+int mixpanel_mbedtls_ecp_is_zero( mixpanel_mbedtls_ecp_point *pt );
 
 /**
  * \brief           Import a non-zero point from two ASCII strings
@@ -356,7 +356,7 @@ int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt );
  *
  * \return          0 if successful, or a MBEDTLS_ERR_MPI_XXX error code
  */
-int mbedtls_ecp_point_read_string( mbedtls_ecp_point *P, int radix,
+int mixpanel_mbedtls_ecp_point_read_string( mixpanel_mbedtls_ecp_point *P, int radix,
                            const char *x, const char *y );
 
 /**
@@ -373,7 +373,7 @@ int mbedtls_ecp_point_read_string( mbedtls_ecp_point *P, int radix,
  *                  or MBEDTLS_ERR_ECP_BAD_INPUT_DATA
  *                  or MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL
  */
-int mbedtls_ecp_point_write_binary( const mbedtls_ecp_group *grp, const mbedtls_ecp_point *P,
+int mixpanel_mbedtls_ecp_point_write_binary( const mixpanel_mbedtls_ecp_group *grp, const mixpanel_mbedtls_ecp_point *P,
                             int format, size_t *olen,
                             unsigned char *buf, size_t buflen );
 
@@ -392,10 +392,10 @@ int mbedtls_ecp_point_write_binary( const mbedtls_ecp_group *grp, const mbedtls_
  *                  is not implemented.
  *
  * \note            This function does NOT check that the point actually
- *                  belongs to the given group, see mbedtls_ecp_check_pubkey() for
+ *                  belongs to the given group, see mixpanel_mbedtls_ecp_check_pubkey() for
  *                  that.
  */
-int mbedtls_ecp_point_read_binary( const mbedtls_ecp_group *grp, mbedtls_ecp_point *P,
+int mixpanel_mbedtls_ecp_point_read_binary( const mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_ecp_point *P,
                            const unsigned char *buf, size_t ilen );
 
 /**
@@ -412,7 +412,7 @@ int mbedtls_ecp_point_read_binary( const mbedtls_ecp_group *grp, mbedtls_ecp_poi
  *                  MBEDTLS_ERR_MPI_XXX if initialization failed
  *                  MBEDTLS_ERR_ECP_BAD_INPUT_DATA if input is invalid
  */
-int mbedtls_ecp_tls_read_point( const mbedtls_ecp_group *grp, mbedtls_ecp_point *pt,
+int mixpanel_mbedtls_ecp_tls_read_point( const mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_ecp_point *pt,
                         const unsigned char **buf, size_t len );
 
 /**
@@ -429,7 +429,7 @@ int mbedtls_ecp_tls_read_point( const mbedtls_ecp_group *grp, mbedtls_ecp_point 
  *                  or MBEDTLS_ERR_ECP_BAD_INPUT_DATA
  *                  or MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL
  */
-int mbedtls_ecp_tls_write_point( const mbedtls_ecp_group *grp, const mbedtls_ecp_point *pt,
+int mixpanel_mbedtls_ecp_tls_write_point( const mixpanel_mbedtls_ecp_group *grp, const mixpanel_mbedtls_ecp_point *pt,
                          int format, size_t *olen,
                          unsigned char *buf, size_t blen );
 
@@ -446,7 +446,7 @@ int mbedtls_ecp_tls_write_point( const mbedtls_ecp_group *grp, const mbedtls_ecp
  * \note            Index should be a value of RFC 4492's enum NamedCurve,
  *                  usually in the form of a MBEDTLS_ECP_DP_XXX macro.
  */
-int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id index );
+int mixpanel_mbedtls_ecp_group_load( mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_ecp_group_id index );
 
 /**
  * \brief           Set a group from a TLS ECParameters record
@@ -461,7 +461,7 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id index )
  *                  MBEDTLS_ERR_MPI_XXX if initialization failed
  *                  MBEDTLS_ERR_ECP_BAD_INPUT_DATA if input is invalid
  */
-int mbedtls_ecp_tls_read_group( mbedtls_ecp_group *grp, const unsigned char **buf, size_t len );
+int mixpanel_mbedtls_ecp_tls_read_group( mixpanel_mbedtls_ecp_group *grp, const unsigned char **buf, size_t len );
 
 /**
  * \brief           Write the TLS ECParameters record for a group
@@ -474,7 +474,7 @@ int mbedtls_ecp_tls_read_group( mbedtls_ecp_group *grp, const unsigned char **bu
  * \return          0 if successful,
  *                  or MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL
  */
-int mbedtls_ecp_tls_write_group( const mbedtls_ecp_group *grp, size_t *olen,
+int mixpanel_mbedtls_ecp_tls_write_group( const mixpanel_mbedtls_ecp_group *grp, size_t *olen,
                          unsigned char *buf, size_t blen );
 
 /**
@@ -503,8 +503,8 @@ int mbedtls_ecp_tls_write_group( const mbedtls_ecp_group *grp, size_t *olen,
  *                  or P is not a valid pubkey,
  *                  MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
  */
-int mbedtls_ecp_mul( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
-             const mbedtls_mpi *m, const mbedtls_ecp_point *P,
+int mixpanel_mbedtls_ecp_mul( mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_ecp_point *R,
+             const mixpanel_mbedtls_mpi *m, const mixpanel_mbedtls_ecp_point *P,
              int (*f_rng)(void *, unsigned char *, size_t), void *p_rng );
 
 /**
@@ -512,7 +512,7 @@ int mbedtls_ecp_mul( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
  *                  R = m * P + n * Q
  *                  (Not thread-safe to use same group in multiple threads)
  *
- * \note            In contrast to mbedtls_ecp_mul(), this function does not guarantee
+ * \note            In contrast to mixpanel_mbedtls_ecp_mul(), this function does not guarantee
  *                  a constant execution flow and timing.
  *
  * \param grp       ECP group
@@ -527,9 +527,9 @@ int mbedtls_ecp_mul( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
  *                  or P or Q is not a valid pubkey,
  *                  MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
  */
-int mbedtls_ecp_muladd( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
-             const mbedtls_mpi *m, const mbedtls_ecp_point *P,
-             const mbedtls_mpi *n, const mbedtls_ecp_point *Q );
+int mixpanel_mbedtls_ecp_muladd( mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_ecp_point *R,
+             const mixpanel_mbedtls_mpi *m, const mixpanel_mbedtls_ecp_point *P,
+             const mixpanel_mbedtls_mpi *n, const mixpanel_mbedtls_ecp_point *Q );
 
 /**
  * \brief           Check that a point is a valid public key on this curve
@@ -548,14 +548,14 @@ int mbedtls_ecp_muladd( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
  *                  particular, it is useless for the NIST groups which all
  *                  have a cofactor of 1.
  *
- * \note            Uses bare components rather than an mbedtls_ecp_keypair structure
+ * \note            Uses bare components rather than an mixpanel_mbedtls_ecp_keypair structure
  *                  in order to ease use with other structures such as
- *                  mbedtls_ecdh_context of mbedtls_ecdsa_context.
+ *                  mixpanel_mbedtls_ecdh_context of mixpanel_mbedtls_ecdsa_context.
  */
-int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp, const mbedtls_ecp_point *pt );
+int mixpanel_mbedtls_ecp_check_pubkey( const mixpanel_mbedtls_ecp_group *grp, const mixpanel_mbedtls_ecp_point *pt );
 
 /**
- * \brief           Check that an mbedtls_mpi is a valid private key for this curve
+ * \brief           Check that an mixpanel_mbedtls_mpi is a valid private key for this curve
  *
  * \param grp       Group used
  * \param d         Integer to check
@@ -563,11 +563,11 @@ int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp, const mbedtls_ecp_po
  * \return          0 if point is a valid private key,
  *                  MBEDTLS_ERR_ECP_INVALID_KEY otherwise.
  *
- * \note            Uses bare components rather than an mbedtls_ecp_keypair structure
+ * \note            Uses bare components rather than an mixpanel_mbedtls_ecp_keypair structure
  *                  in order to ease use with other structures such as
- *                  mbedtls_ecdh_context of mbedtls_ecdsa_context.
+ *                  mixpanel_mbedtls_ecdh_context of mixpanel_mbedtls_ecdsa_context.
  */
-int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *d );
+int mixpanel_mbedtls_ecp_check_privkey( const mixpanel_mbedtls_ecp_group *grp, const mixpanel_mbedtls_mpi *d );
 
 /**
  * \brief           Generate a keypair
@@ -581,11 +581,11 @@ int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *
  * \return          0 if successful,
  *                  or a MBEDTLS_ERR_ECP_XXX or MBEDTLS_MPI_XXX error code
  *
- * \note            Uses bare components rather than an mbedtls_ecp_keypair structure
+ * \note            Uses bare components rather than an mixpanel_mbedtls_ecp_keypair structure
  *                  in order to ease use with other structures such as
- *                  mbedtls_ecdh_context of mbedtls_ecdsa_context.
+ *                  mixpanel_mbedtls_ecdh_context of mixpanel_mbedtls_ecdsa_context.
  */
-int mbedtls_ecp_gen_keypair( mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp_point *Q,
+int mixpanel_mbedtls_ecp_gen_keypair( mixpanel_mbedtls_ecp_group *grp, mixpanel_mbedtls_mpi *d, mixpanel_mbedtls_ecp_point *Q,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng );
 
@@ -600,7 +600,7 @@ int mbedtls_ecp_gen_keypair( mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp
  * \return          0 if successful,
  *                  or a MBEDTLS_ERR_ECP_XXX or MBEDTLS_MPI_XXX error code
  */
-int mbedtls_ecp_gen_key( mbedtls_ecp_group_id grp_id, mbedtls_ecp_keypair *key,
+int mixpanel_mbedtls_ecp_gen_key( mixpanel_mbedtls_ecp_group_id grp_id, mixpanel_mbedtls_ecp_keypair *key,
                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng );
 
 /**
@@ -613,7 +613,7 @@ int mbedtls_ecp_gen_key( mbedtls_ecp_group_id grp_id, mbedtls_ecp_keypair *key,
  *                  MBEDTLS_ERR_ECP_BAD_INPUT_DATA, or
  *                  a MBEDTLS_ERR_ECP_XXX or MBEDTLS_ERR_MPI_XXX code.
  */
-int mbedtls_ecp_check_pub_priv( const mbedtls_ecp_keypair *pub, const mbedtls_ecp_keypair *prv );
+int mixpanel_mbedtls_ecp_check_pub_priv( const mixpanel_mbedtls_ecp_keypair *pub, const mixpanel_mbedtls_ecp_keypair *prv );
 
 #if defined(MBEDTLS_SELF_TEST)
 /**
@@ -621,7 +621,7 @@ int mbedtls_ecp_check_pub_priv( const mbedtls_ecp_keypair *pub, const mbedtls_ec
  *
  * \return         0 if successful, or 1 if a test failed
  */
-int mbedtls_ecp_self_test( int verbose );
+int mixpanel_mbedtls_ecp_self_test( int verbose );
 #endif
 
 #ifdef __cplusplus

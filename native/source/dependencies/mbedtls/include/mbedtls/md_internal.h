@@ -43,10 +43,10 @@ extern "C" {
  * Message digest information.
  * Allows message digest functions to be called in a generic way.
  */
-struct mbedtls_md_info_t
+struct mixpanel_mbedtls_md_info_t
 {
     /** Digest identifier */
-    mbedtls_md_type_t type;
+    mixpanel_mbedtls_md_type_t type;
 
     /** Name of the message digest */
     const char * name;
@@ -84,27 +84,27 @@ struct mbedtls_md_info_t
 };
 
 #if defined(MBEDTLS_MD2_C)
-extern const mbedtls_md_info_t mbedtls_md2_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_md2_info;
 #endif
 #if defined(MBEDTLS_MD4_C)
-extern const mbedtls_md_info_t mbedtls_md4_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_md4_info;
 #endif
 #if defined(MBEDTLS_MD5_C)
-extern const mbedtls_md_info_t mbedtls_md5_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_md5_info;
 #endif
 #if defined(MBEDTLS_RIPEMD160_C)
-extern const mbedtls_md_info_t mbedtls_ripemd160_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_ripemd160_info;
 #endif
 #if defined(MBEDTLS_SHA1_C)
-extern const mbedtls_md_info_t mbedtls_sha1_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_sha1_info;
 #endif
 #if defined(MBEDTLS_SHA256_C)
-extern const mbedtls_md_info_t mbedtls_sha224_info;
-extern const mbedtls_md_info_t mbedtls_sha256_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_sha224_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_sha256_info;
 #endif
 #if defined(MBEDTLS_SHA512_C)
-extern const mbedtls_md_info_t mbedtls_sha384_info;
-extern const mbedtls_md_info_t mbedtls_sha512_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_sha384_info;
+extern const mixpanel_mbedtls_md_info_t mixpanel_mbedtls_sha512_info;
 #endif
 
 #ifdef __cplusplus

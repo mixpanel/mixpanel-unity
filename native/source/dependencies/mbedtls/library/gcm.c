@@ -50,7 +50,7 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf printf
+#define mixpanel_mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
 
@@ -78,16 +78,16 @@
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 /*
  * Initialize a context
  */
-void mbedtls_gcm_init( mbedtls_gcm_context *ctx )
+void mixpanel_mbedtls_gcm_init( mixpanel_mbedtls_gcm_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_gcm_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_gcm_context ) );
 }
 
 /*
@@ -98,7 +98,7 @@ void mbedtls_gcm_init( mbedtls_gcm_context *ctx )
  * is the high-order bit of HH corresponds to P^0 and the low-order bit of HL
  * corresponds to P^127.
  */
-static int gcm_gen_table( mbedtls_gcm_context *ctx )
+static int gcm_gen_table( mixpanel_mbedtls_gcm_context *ctx )
 {
     int ret, i, j;
     uint64_t hi, lo;
@@ -107,7 +107,7 @@ static int gcm_gen_table( mbedtls_gcm_context *ctx )
     size_t olen = 0;
 
     memset( h, 0, 16 );
-    if( ( ret = mbedtls_cipher_update( &ctx->cipher_ctx, h, 16, h, &olen ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_update( &ctx->cipher_ctx, h, 16, h, &olen ) ) != 0 )
         return( ret );
 
     /* pack h as two 64-bits ints, big-endian */
@@ -125,7 +125,7 @@ static int gcm_gen_table( mbedtls_gcm_context *ctx )
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
     /* With CLMUL support, we need only h, not the rest of the table */
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_CLMUL ) )
+    if( mixpanel_mbedtls_aesni_has_support( MBEDTLS_AESNI_CLMUL ) )
         return( 0 );
 #endif
 
@@ -158,27 +158,27 @@ static int gcm_gen_table( mbedtls_gcm_context *ctx )
     return( 0 );
 }
 
-int mbedtls_gcm_setkey( mbedtls_gcm_context *ctx,
-                        mbedtls_cipher_id_t cipher,
+int mixpanel_mbedtls_gcm_setkey( mixpanel_mbedtls_gcm_context *ctx,
+                        mixpanel_mbedtls_cipher_id_t cipher,
                         const unsigned char *key,
                         unsigned int keybits )
 {
     int ret;
-    const mbedtls_cipher_info_t *cipher_info;
+    const mixpanel_mbedtls_cipher_info_t *cipher_info;
 
-    cipher_info = mbedtls_cipher_info_from_values( cipher, keybits, MBEDTLS_MODE_ECB );
+    cipher_info = mixpanel_mbedtls_cipher_info_from_values( cipher, keybits, MBEDTLS_MODE_ECB );
     if( cipher_info == NULL )
         return( MBEDTLS_ERR_GCM_BAD_INPUT );
 
     if( cipher_info->block_size != 16 )
         return( MBEDTLS_ERR_GCM_BAD_INPUT );
 
-    mbedtls_cipher_free( &ctx->cipher_ctx );
+    mixpanel_mbedtls_cipher_free( &ctx->cipher_ctx );
 
-    if( ( ret = mbedtls_cipher_setup( &ctx->cipher_ctx, cipher_info ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_cipher_setup( &ctx->cipher_ctx, cipher_info ) ) != 0 )
         return( ret );
 
-    if( ( ret = mbedtls_cipher_setkey( &ctx->cipher_ctx, key, keybits,
+    if( ( ret = mixpanel_mbedtls_cipher_setkey( &ctx->cipher_ctx, key, keybits,
                                MBEDTLS_ENCRYPT ) ) != 0 )
     {
         return( ret );
@@ -207,7 +207,7 @@ static const uint64_t last4[16] =
  * Sets output to x times H using the precomputed tables.
  * x and output are seen as elements of GF(2^128) as in [MGV].
  */
-static void gcm_mult( mbedtls_gcm_context *ctx, const unsigned char x[16],
+static void gcm_mult( mixpanel_mbedtls_gcm_context *ctx, const unsigned char x[16],
                       unsigned char output[16] )
 {
     int i = 0;
@@ -215,7 +215,7 @@ static void gcm_mult( mbedtls_gcm_context *ctx, const unsigned char x[16],
     uint64_t zh, zl;
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_CLMUL ) ) {
+    if( mixpanel_mbedtls_aesni_has_support( MBEDTLS_AESNI_CLMUL ) ) {
         unsigned char h[16];
 
         PUT_UINT32_BE( ctx->HH[8] >> 32, h,  0 );
@@ -223,7 +223,7 @@ static void gcm_mult( mbedtls_gcm_context *ctx, const unsigned char x[16],
         PUT_UINT32_BE( ctx->HL[8] >> 32, h,  8 );
         PUT_UINT32_BE( ctx->HL[8],       h, 12 );
 
-        mbedtls_aesni_gcm_mult( output, x, h );
+        mixpanel_mbedtls_aesni_gcm_mult( output, x, h );
         return;
     }
 #endif /* MBEDTLS_AESNI_C && MBEDTLS_HAVE_X86_64 */
@@ -263,7 +263,7 @@ static void gcm_mult( mbedtls_gcm_context *ctx, const unsigned char x[16],
     PUT_UINT32_BE( zl, output, 12 );
 }
 
-int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
+int mixpanel_mbedtls_gcm_starts( mixpanel_mbedtls_gcm_context *ctx,
                 int mode,
                 const unsigned char *iv,
                 size_t iv_len,
@@ -320,7 +320,7 @@ int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
         gcm_mult( ctx, ctx->y, ctx->y );
     }
 
-    if( ( ret = mbedtls_cipher_update( &ctx->cipher_ctx, ctx->y, 16, ctx->base_ectr,
+    if( ( ret = mixpanel_mbedtls_cipher_update( &ctx->cipher_ctx, ctx->y, 16, ctx->base_ectr,
                              &olen ) ) != 0 )
     {
         return( ret );
@@ -344,7 +344,7 @@ int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
     return( 0 );
 }
 
-int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
+int mixpanel_mbedtls_gcm_update( mixpanel_mbedtls_gcm_context *ctx,
                 size_t length,
                 const unsigned char *input,
                 unsigned char *output )
@@ -378,7 +378,7 @@ int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
             if( ++ctx->y[i - 1] != 0 )
                 break;
 
-        if( ( ret = mbedtls_cipher_update( &ctx->cipher_ctx, ctx->y, 16, ectr,
+        if( ( ret = mixpanel_mbedtls_cipher_update( &ctx->cipher_ctx, ctx->y, 16, ectr,
                                    &olen ) ) != 0 )
         {
             return( ret );
@@ -403,7 +403,7 @@ int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
     return( 0 );
 }
 
-int mbedtls_gcm_finish( mbedtls_gcm_context *ctx,
+int mixpanel_mbedtls_gcm_finish( mixpanel_mbedtls_gcm_context *ctx,
                 unsigned char *tag,
                 size_t tag_len )
 {
@@ -439,7 +439,7 @@ int mbedtls_gcm_finish( mbedtls_gcm_context *ctx,
     return( 0 );
 }
 
-int mbedtls_gcm_crypt_and_tag( mbedtls_gcm_context *ctx,
+int mixpanel_mbedtls_gcm_crypt_and_tag( mixpanel_mbedtls_gcm_context *ctx,
                        int mode,
                        size_t length,
                        const unsigned char *iv,
@@ -453,19 +453,19 @@ int mbedtls_gcm_crypt_and_tag( mbedtls_gcm_context *ctx,
 {
     int ret;
 
-    if( ( ret = mbedtls_gcm_starts( ctx, mode, iv, iv_len, add, add_len ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_gcm_starts( ctx, mode, iv, iv_len, add, add_len ) ) != 0 )
         return( ret );
 
-    if( ( ret = mbedtls_gcm_update( ctx, length, input, output ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_gcm_update( ctx, length, input, output ) ) != 0 )
         return( ret );
 
-    if( ( ret = mbedtls_gcm_finish( ctx, tag, tag_len ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_gcm_finish( ctx, tag, tag_len ) ) != 0 )
         return( ret );
 
     return( 0 );
 }
 
-int mbedtls_gcm_auth_decrypt( mbedtls_gcm_context *ctx,
+int mixpanel_mbedtls_gcm_auth_decrypt( mixpanel_mbedtls_gcm_context *ctx,
                       size_t length,
                       const unsigned char *iv,
                       size_t iv_len,
@@ -481,7 +481,7 @@ int mbedtls_gcm_auth_decrypt( mbedtls_gcm_context *ctx,
     size_t i;
     int diff;
 
-    if( ( ret = mbedtls_gcm_crypt_and_tag( ctx, MBEDTLS_GCM_DECRYPT, length,
+    if( ( ret = mixpanel_mbedtls_gcm_crypt_and_tag( ctx, MBEDTLS_GCM_DECRYPT, length,
                                    iv, iv_len, add, add_len,
                                    input, output, tag_len, check_tag ) ) != 0 )
     {
@@ -494,17 +494,17 @@ int mbedtls_gcm_auth_decrypt( mbedtls_gcm_context *ctx,
 
     if( diff != 0 )
     {
-        mbedtls_zeroize( output, length );
+        mixpanel_mbedtls_zeroize( output, length );
         return( MBEDTLS_ERR_GCM_AUTH_FAILED );
     }
 
     return( 0 );
 }
 
-void mbedtls_gcm_free( mbedtls_gcm_context *ctx )
+void mixpanel_mbedtls_gcm_free( mixpanel_mbedtls_gcm_context *ctx )
 {
-    mbedtls_cipher_free( &ctx->cipher_ctx );
-    mbedtls_zeroize( ctx, sizeof( mbedtls_gcm_context ) );
+    mixpanel_mbedtls_cipher_free( &ctx->cipher_ctx );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_gcm_context ) );
 }
 
 #if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
@@ -735,15 +735,15 @@ static const unsigned char tag[MAX_TESTS * 3][16] =
       0xc8, 0xb5, 0xd4, 0xcf, 0x5a, 0xe9, 0xf1, 0x9a },
 };
 
-int mbedtls_gcm_self_test( int verbose )
+int mixpanel_mbedtls_gcm_self_test( int verbose )
 {
-    mbedtls_gcm_context ctx;
+    mixpanel_mbedtls_gcm_context ctx;
     unsigned char buf[64];
     unsigned char tag_buf[16];
     int i, j, ret;
-    mbedtls_cipher_id_t cipher = MBEDTLS_CIPHER_ID_AES;
+    mixpanel_mbedtls_cipher_id_t cipher = MBEDTLS_CIPHER_ID_AES;
 
-    mbedtls_gcm_init( &ctx );
+    mixpanel_mbedtls_gcm_init( &ctx );
 
     for( j = 0; j < 3; j++ )
     {
@@ -752,12 +752,12 @@ int mbedtls_gcm_self_test( int verbose )
         for( i = 0; i < MAX_TESTS; i++ )
         {
             if( verbose != 0 )
-                mbedtls_printf( "  AES-GCM-%3d #%d (%s): ",
+                mixpanel_mbedtls_printf( "  AES-GCM-%3d #%d (%s): ",
                                  key_len, i, "enc" );
 
-            mbedtls_gcm_setkey( &ctx, cipher, key[key_index[i]], key_len );
+            mixpanel_mbedtls_gcm_setkey( &ctx, cipher, key[key_index[i]], key_len );
 
-            ret = mbedtls_gcm_crypt_and_tag( &ctx, MBEDTLS_GCM_ENCRYPT,
+            ret = mixpanel_mbedtls_gcm_crypt_and_tag( &ctx, MBEDTLS_GCM_ENCRYPT,
                                      pt_len[i],
                                      iv[iv_index[i]], iv_len[i],
                                      additional[add_index[i]], add_len[i],
@@ -768,23 +768,23 @@ int mbedtls_gcm_self_test( int verbose )
                 memcmp( tag_buf, tag[j * 6 + i], 16 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 return( 1 );
             }
 
-            mbedtls_gcm_free( &ctx );
+            mixpanel_mbedtls_gcm_free( &ctx );
 
             if( verbose != 0 )
-                mbedtls_printf( "passed\n" );
+                mixpanel_mbedtls_printf( "passed\n" );
 
             if( verbose != 0 )
-                mbedtls_printf( "  AES-GCM-%3d #%d (%s): ",
+                mixpanel_mbedtls_printf( "  AES-GCM-%3d #%d (%s): ",
                                  key_len, i, "dec" );
 
-            mbedtls_gcm_setkey( &ctx, cipher, key[key_index[i]], key_len );
+            mixpanel_mbedtls_gcm_setkey( &ctx, cipher, key[key_index[i]], key_len );
 
-            ret = mbedtls_gcm_crypt_and_tag( &ctx, MBEDTLS_GCM_DECRYPT,
+            ret = mixpanel_mbedtls_gcm_crypt_and_tag( &ctx, MBEDTLS_GCM_DECRYPT,
                                      pt_len[i],
                                      iv[iv_index[i]], iv_len[i],
                                      additional[add_index[i]], add_len[i],
@@ -795,29 +795,29 @@ int mbedtls_gcm_self_test( int verbose )
                 memcmp( tag_buf, tag[j * 6 + i], 16 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 return( 1 );
             }
 
-            mbedtls_gcm_free( &ctx );
+            mixpanel_mbedtls_gcm_free( &ctx );
 
             if( verbose != 0 )
-                mbedtls_printf( "passed\n" );
+                mixpanel_mbedtls_printf( "passed\n" );
 
             if( verbose != 0 )
-                mbedtls_printf( "  AES-GCM-%3d #%d split (%s): ",
+                mixpanel_mbedtls_printf( "  AES-GCM-%3d #%d split (%s): ",
                                  key_len, i, "enc" );
 
-            mbedtls_gcm_setkey( &ctx, cipher, key[key_index[i]], key_len );
+            mixpanel_mbedtls_gcm_setkey( &ctx, cipher, key[key_index[i]], key_len );
 
-            ret = mbedtls_gcm_starts( &ctx, MBEDTLS_GCM_ENCRYPT,
+            ret = mixpanel_mbedtls_gcm_starts( &ctx, MBEDTLS_GCM_ENCRYPT,
                               iv[iv_index[i]], iv_len[i],
                               additional[add_index[i]], add_len[i] );
             if( ret != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 return( 1 );
             }
@@ -825,66 +825,66 @@ int mbedtls_gcm_self_test( int verbose )
             if( pt_len[i] > 32 )
             {
                 size_t rest_len = pt_len[i] - 32;
-                ret = mbedtls_gcm_update( &ctx, 32, pt[pt_index[i]], buf );
+                ret = mixpanel_mbedtls_gcm_update( &ctx, 32, pt[pt_index[i]], buf );
                 if( ret != 0 )
                 {
                     if( verbose != 0 )
-                        mbedtls_printf( "failed\n" );
+                        mixpanel_mbedtls_printf( "failed\n" );
 
                     return( 1 );
                 }
 
-                ret = mbedtls_gcm_update( &ctx, rest_len, pt[pt_index[i]] + 32,
+                ret = mixpanel_mbedtls_gcm_update( &ctx, rest_len, pt[pt_index[i]] + 32,
                                   buf + 32 );
                 if( ret != 0 )
                 {
                     if( verbose != 0 )
-                        mbedtls_printf( "failed\n" );
+                        mixpanel_mbedtls_printf( "failed\n" );
 
                     return( 1 );
                 }
             }
             else
             {
-                ret = mbedtls_gcm_update( &ctx, pt_len[i], pt[pt_index[i]], buf );
+                ret = mixpanel_mbedtls_gcm_update( &ctx, pt_len[i], pt[pt_index[i]], buf );
                 if( ret != 0 )
                 {
                     if( verbose != 0 )
-                        mbedtls_printf( "failed\n" );
+                        mixpanel_mbedtls_printf( "failed\n" );
 
                     return( 1 );
                 }
             }
 
-            ret = mbedtls_gcm_finish( &ctx, tag_buf, 16 );
+            ret = mixpanel_mbedtls_gcm_finish( &ctx, tag_buf, 16 );
             if( ret != 0 ||
                 memcmp( buf, ct[j * 6 + i], pt_len[i] ) != 0 ||
                 memcmp( tag_buf, tag[j * 6 + i], 16 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 return( 1 );
             }
 
-            mbedtls_gcm_free( &ctx );
+            mixpanel_mbedtls_gcm_free( &ctx );
 
             if( verbose != 0 )
-                mbedtls_printf( "passed\n" );
+                mixpanel_mbedtls_printf( "passed\n" );
 
             if( verbose != 0 )
-                mbedtls_printf( "  AES-GCM-%3d #%d split (%s): ",
+                mixpanel_mbedtls_printf( "  AES-GCM-%3d #%d split (%s): ",
                                  key_len, i, "dec" );
 
-            mbedtls_gcm_setkey( &ctx, cipher, key[key_index[i]], key_len );
+            mixpanel_mbedtls_gcm_setkey( &ctx, cipher, key[key_index[i]], key_len );
 
-            ret = mbedtls_gcm_starts( &ctx, MBEDTLS_GCM_DECRYPT,
+            ret = mixpanel_mbedtls_gcm_starts( &ctx, MBEDTLS_GCM_DECRYPT,
                               iv[iv_index[i]], iv_len[i],
                               additional[add_index[i]], add_len[i] );
             if( ret != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 return( 1 );
             }
@@ -892,58 +892,58 @@ int mbedtls_gcm_self_test( int verbose )
             if( pt_len[i] > 32 )
             {
                 size_t rest_len = pt_len[i] - 32;
-                ret = mbedtls_gcm_update( &ctx, 32, ct[j * 6 + i], buf );
+                ret = mixpanel_mbedtls_gcm_update( &ctx, 32, ct[j * 6 + i], buf );
                 if( ret != 0 )
                 {
                     if( verbose != 0 )
-                        mbedtls_printf( "failed\n" );
+                        mixpanel_mbedtls_printf( "failed\n" );
 
                     return( 1 );
                 }
 
-                ret = mbedtls_gcm_update( &ctx, rest_len, ct[j * 6 + i] + 32,
+                ret = mixpanel_mbedtls_gcm_update( &ctx, rest_len, ct[j * 6 + i] + 32,
                                   buf + 32 );
                 if( ret != 0 )
                 {
                     if( verbose != 0 )
-                        mbedtls_printf( "failed\n" );
+                        mixpanel_mbedtls_printf( "failed\n" );
 
                     return( 1 );
                 }
             }
             else
             {
-                ret = mbedtls_gcm_update( &ctx, pt_len[i], ct[j * 6 + i], buf );
+                ret = mixpanel_mbedtls_gcm_update( &ctx, pt_len[i], ct[j * 6 + i], buf );
                 if( ret != 0 )
                 {
                     if( verbose != 0 )
-                        mbedtls_printf( "failed\n" );
+                        mixpanel_mbedtls_printf( "failed\n" );
 
                     return( 1 );
                 }
             }
 
-            ret = mbedtls_gcm_finish( &ctx, tag_buf, 16 );
+            ret = mixpanel_mbedtls_gcm_finish( &ctx, tag_buf, 16 );
             if( ret != 0 ||
                 memcmp( buf, pt[pt_index[i]], pt_len[i] ) != 0 ||
                 memcmp( tag_buf, tag[j * 6 + i], 16 ) != 0 )
             {
                 if( verbose != 0 )
-                    mbedtls_printf( "failed\n" );
+                    mixpanel_mbedtls_printf( "failed\n" );
 
                 return( 1 );
             }
 
-            mbedtls_gcm_free( &ctx );
+            mixpanel_mbedtls_gcm_free( &ctx );
 
             if( verbose != 0 )
-                mbedtls_printf( "passed\n" );
+                mixpanel_mbedtls_printf( "passed\n" );
 
         }
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "\n" );
+        mixpanel_mbedtls_printf( "\n" );
 
     return( 0 );
 }

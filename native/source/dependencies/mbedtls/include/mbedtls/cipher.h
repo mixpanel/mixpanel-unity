@@ -73,7 +73,7 @@ typedef enum {
     MBEDTLS_CIPHER_ID_CAMELLIA,
     MBEDTLS_CIPHER_ID_BLOWFISH,
     MBEDTLS_CIPHER_ID_ARC4,
-} mbedtls_cipher_id_t;
+} mixpanel_mbedtls_cipher_id_t;
 
 typedef enum {
     MBEDTLS_CIPHER_NONE = 0,
@@ -125,7 +125,7 @@ typedef enum {
     MBEDTLS_CIPHER_CAMELLIA_128_CCM,
     MBEDTLS_CIPHER_CAMELLIA_192_CCM,
     MBEDTLS_CIPHER_CAMELLIA_256_CCM,
-} mbedtls_cipher_type_t;
+} mixpanel_mbedtls_cipher_type_t;
 
 typedef enum {
     MBEDTLS_MODE_NONE = 0,
@@ -137,7 +137,7 @@ typedef enum {
     MBEDTLS_MODE_GCM,
     MBEDTLS_MODE_STREAM,
     MBEDTLS_MODE_CCM,
-} mbedtls_cipher_mode_t;
+} mixpanel_mbedtls_cipher_mode_t;
 
 typedef enum {
     MBEDTLS_PADDING_PKCS7 = 0,     /**< PKCS7 padding (default)        */
@@ -145,13 +145,13 @@ typedef enum {
     MBEDTLS_PADDING_ZEROS_AND_LEN, /**< ANSI X.923 padding             */
     MBEDTLS_PADDING_ZEROS,         /**< zero padding (not reversible!) */
     MBEDTLS_PADDING_NONE,          /**< never pad (full blocks only)   */
-} mbedtls_cipher_padding_t;
+} mixpanel_mbedtls_cipher_padding_t;
 
 typedef enum {
     MBEDTLS_OPERATION_NONE = -1,
     MBEDTLS_DECRYPT = 0,
     MBEDTLS_ENCRYPT,
-} mbedtls_operation_t;
+} mixpanel_mbedtls_operation_t;
 
 enum {
     /** Undefined key length */
@@ -172,17 +172,17 @@ enum {
 /**
  * Base cipher information (opaque struct).
  */
-typedef struct mbedtls_cipher_base_t mbedtls_cipher_base_t;
+typedef struct mixpanel_mbedtls_cipher_base_t mixpanel_mbedtls_cipher_base_t;
 
 /**
  * Cipher information. Allows cipher functions to be called in a generic way.
  */
 typedef struct {
     /** Full cipher identifier (e.g. MBEDTLS_CIPHER_AES_256_CBC) */
-    mbedtls_cipher_type_t type;
+    mixpanel_mbedtls_cipher_type_t type;
 
     /** Cipher mode (e.g. MBEDTLS_MODE_CBC) */
-    mbedtls_cipher_mode_t mode;
+    mixpanel_mbedtls_cipher_mode_t mode;
 
     /** Cipher key length, in bits (default length for variable sized ciphers)
      *  (Includes parity bits for ciphers like DES) */
@@ -202,22 +202,22 @@ typedef struct {
     unsigned int block_size;
 
     /** Base cipher information and functions */
-    const mbedtls_cipher_base_t *base;
+    const mixpanel_mbedtls_cipher_base_t *base;
 
-} mbedtls_cipher_info_t;
+} mixpanel_mbedtls_cipher_info_t;
 
 /**
  * Generic cipher context.
  */
 typedef struct {
     /** Information about the associated cipher */
-    const mbedtls_cipher_info_t *cipher_info;
+    const mixpanel_mbedtls_cipher_info_t *cipher_info;
 
     /** Key length to use */
     int key_bitlen;
 
     /** Operation that the context's key has been initialised for */
-    mbedtls_operation_t operation;
+    mixpanel_mbedtls_operation_t operation;
 
 #if defined(MBEDTLS_CIPHER_MODE_WITH_PADDING)
     /** Padding functions to use, if relevant for cipher mode */
@@ -239,7 +239,7 @@ typedef struct {
 
     /** Cipher-specific context */
     void *cipher_ctx;
-} mbedtls_cipher_context_t;
+} mixpanel_mbedtls_cipher_context_t;
 
 /**
  * \brief Returns the list of ciphers supported by the generic cipher module.
@@ -247,7 +247,7 @@ typedef struct {
  * \return              a statically allocated array of ciphers, the last entry
  *                      is 0.
  */
-const int *mbedtls_cipher_list( void );
+const int *mixpanel_mbedtls_cipher_list( void );
 
 /**
  * \brief               Returns the cipher information structure associated
@@ -258,7 +258,7 @@ const int *mbedtls_cipher_list( void );
  * \return              the cipher information structure associated with the
  *                      given cipher_name, or NULL if not found.
  */
-const mbedtls_cipher_info_t *mbedtls_cipher_info_from_string( const char *cipher_name );
+const mixpanel_mbedtls_cipher_info_t *mixpanel_mbedtls_cipher_info_from_string( const char *cipher_name );
 
 /**
  * \brief               Returns the cipher information structure associated
@@ -269,7 +269,7 @@ const mbedtls_cipher_info_t *mbedtls_cipher_info_from_string( const char *cipher
  * \return              the cipher information structure associated with the
  *                      given cipher_type, or NULL if not found.
  */
-const mbedtls_cipher_info_t *mbedtls_cipher_info_from_type( const mbedtls_cipher_type_t cipher_type );
+const mixpanel_mbedtls_cipher_info_t *mixpanel_mbedtls_cipher_info_from_type( const mixpanel_mbedtls_cipher_type_t cipher_type );
 
 /**
  * \brief               Returns the cipher information structure associated
@@ -283,28 +283,28 @@ const mbedtls_cipher_info_t *mbedtls_cipher_info_from_type( const mbedtls_cipher
  * \return              the cipher information structure associated with the
  *                      given cipher_type, or NULL if not found.
  */
-const mbedtls_cipher_info_t *mbedtls_cipher_info_from_values( const mbedtls_cipher_id_t cipher_id,
+const mixpanel_mbedtls_cipher_info_t *mixpanel_mbedtls_cipher_info_from_values( const mixpanel_mbedtls_cipher_id_t cipher_id,
                                               int key_bitlen,
-                                              const mbedtls_cipher_mode_t mode );
+                                              const mixpanel_mbedtls_cipher_mode_t mode );
 
 /**
  * \brief               Initialize a cipher_context (as NONE)
  */
-void mbedtls_cipher_init( mbedtls_cipher_context_t *ctx );
+void mixpanel_mbedtls_cipher_init( mixpanel_mbedtls_cipher_context_t *ctx );
 
 /**
  * \brief               Free and clear the cipher-specific context of ctx.
  *                      Freeing ctx itself remains the responsibility of the
  *                      caller.
  */
-void mbedtls_cipher_free( mbedtls_cipher_context_t *ctx );
+void mixpanel_mbedtls_cipher_free( mixpanel_mbedtls_cipher_context_t *ctx );
 
 /**
  * \brief               Initialises and fills the cipher context structure with
  *                      the appropriate values.
  *
  * \note                Currently also clears structure. In future versions you
- *                      will be required to call mbedtls_cipher_init() on the structure
+ *                      will be required to call mixpanel_mbedtls_cipher_init() on the structure
  *                      first.
  *
  * \param ctx           context to initialise. May not be NULL.
@@ -315,7 +315,7 @@ void mbedtls_cipher_free( mbedtls_cipher_context_t *ctx );
  *                      MBEDTLS_ERR_CIPHER_ALLOC_FAILED if allocation of the
  *                      cipher-specific context failed.
  */
-int mbedtls_cipher_setup( mbedtls_cipher_context_t *ctx, const mbedtls_cipher_info_t *cipher_info );
+int mixpanel_mbedtls_cipher_setup( mixpanel_mbedtls_cipher_context_t *ctx, const mixpanel_mbedtls_cipher_info_t *cipher_info );
 
 /**
  * \brief               Returns the block size of the given cipher.
@@ -325,7 +325,7 @@ int mbedtls_cipher_setup( mbedtls_cipher_context_t *ctx, const mbedtls_cipher_in
  * \return              size of the cipher's blocks, or 0 if ctx has not been
  *                      initialised.
  */
-static inline unsigned int mbedtls_cipher_get_block_size( const mbedtls_cipher_context_t *ctx )
+static inline unsigned int mixpanel_mbedtls_cipher_get_block_size( const mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return 0;
@@ -342,7 +342,7 @@ static inline unsigned int mbedtls_cipher_get_block_size( const mbedtls_cipher_c
  * \return              mode of operation, or MBEDTLS_MODE_NONE if ctx
  *                      has not been initialised.
  */
-static inline mbedtls_cipher_mode_t mbedtls_cipher_get_cipher_mode( const mbedtls_cipher_context_t *ctx )
+static inline mixpanel_mbedtls_cipher_mode_t mixpanel_mbedtls_cipher_get_cipher_mode( const mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return MBEDTLS_MODE_NONE;
@@ -359,7 +359,7 @@ static inline mbedtls_cipher_mode_t mbedtls_cipher_get_cipher_mode( const mbedtl
  *                      (0 for ciphers not using IV/NONCE).
  *                      If IV has already been set: actual size.
  */
-static inline int mbedtls_cipher_get_iv_size( const mbedtls_cipher_context_t *ctx )
+static inline int mixpanel_mbedtls_cipher_get_iv_size( const mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return 0;
@@ -378,7 +378,7 @@ static inline int mbedtls_cipher_get_iv_size( const mbedtls_cipher_context_t *ct
  * \return              type of the cipher, or MBEDTLS_CIPHER_NONE if ctx has
  *                      not been initialised.
  */
-static inline mbedtls_cipher_type_t mbedtls_cipher_get_type( const mbedtls_cipher_context_t *ctx )
+static inline mixpanel_mbedtls_cipher_type_t mixpanel_mbedtls_cipher_get_type( const mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return MBEDTLS_CIPHER_NONE;
@@ -393,7 +393,7 @@ static inline mbedtls_cipher_type_t mbedtls_cipher_get_type( const mbedtls_ciphe
  *
  * \return              name of the cipher, or NULL if ctx was not initialised.
  */
-static inline const char *mbedtls_cipher_get_name( const mbedtls_cipher_context_t *ctx )
+static inline const char *mixpanel_mbedtls_cipher_get_name( const mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return 0;
@@ -410,7 +410,7 @@ static inline const char *mbedtls_cipher_get_name( const mbedtls_cipher_context_
  *                      MBEDTLS_KEY_LENGTH_NONE if ctx has not been
  *                      initialised.
  */
-static inline int mbedtls_cipher_get_key_bitlen( const mbedtls_cipher_context_t *ctx )
+static inline int mixpanel_mbedtls_cipher_get_key_bitlen( const mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return MBEDTLS_KEY_LENGTH_NONE;
@@ -427,7 +427,7 @@ static inline int mbedtls_cipher_get_key_bitlen( const mbedtls_cipher_context_t 
  *                      or MBEDTLS_OPERATION_NONE if ctx has not been
  *                      initialised.
  */
-static inline mbedtls_operation_t mbedtls_cipher_get_operation( const mbedtls_cipher_context_t *ctx )
+static inline mixpanel_mbedtls_operation_t mixpanel_mbedtls_cipher_get_operation( const mixpanel_mbedtls_cipher_context_t *ctx )
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return MBEDTLS_OPERATION_NONE;
@@ -450,8 +450,8 @@ static inline mbedtls_operation_t mbedtls_cipher_get_operation( const mbedtls_ci
  *                      parameter verification fails or a cipher specific
  *                      error code.
  */
-int mbedtls_cipher_setkey( mbedtls_cipher_context_t *ctx, const unsigned char *key,
-                   int key_bitlen, const mbedtls_operation_t operation );
+int mixpanel_mbedtls_cipher_setkey( mixpanel_mbedtls_cipher_context_t *ctx, const unsigned char *key,
+                   int key_bitlen, const mixpanel_mbedtls_operation_t operation );
 
 #if defined(MBEDTLS_CIPHER_MODE_WITH_PADDING)
 /**
@@ -466,7 +466,7 @@ int mbedtls_cipher_setkey( mbedtls_cipher_context_t *ctx, const unsigned char *k
  *                      MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA if the cipher mode
  *                      does not support padding.
  */
-int mbedtls_cipher_set_padding_mode( mbedtls_cipher_context_t *ctx, mbedtls_cipher_padding_t mode );
+int mixpanel_mbedtls_cipher_set_padding_mode( mixpanel_mbedtls_cipher_context_t *ctx, mixpanel_mbedtls_cipher_padding_t mode );
 #endif /* MBEDTLS_CIPHER_MODE_WITH_PADDING */
 
 /**
@@ -482,7 +482,7 @@ int mbedtls_cipher_set_padding_mode( mbedtls_cipher_context_t *ctx, mbedtls_ciph
  * \note                Some ciphers don't use IVs nor NONCE. For these
  *                      ciphers, this function has no effect.
  */
-int mbedtls_cipher_set_iv( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_set_iv( mixpanel_mbedtls_cipher_context_t *ctx,
                    const unsigned char *iv, size_t iv_len );
 
 /**
@@ -493,13 +493,13 @@ int mbedtls_cipher_set_iv( mbedtls_cipher_context_t *ctx,
  * \returns             0 on success, MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA
  *                      if parameter verification fails.
  */
-int mbedtls_cipher_reset( mbedtls_cipher_context_t *ctx );
+int mixpanel_mbedtls_cipher_reset( mixpanel_mbedtls_cipher_context_t *ctx );
 
 #if defined(MBEDTLS_GCM_C)
 /**
  * \brief               Add additional data (for AEAD ciphers).
  *                      Currently only supported with GCM.
- *                      Must be called exactly once, after mbedtls_cipher_reset().
+ *                      Must be called exactly once, after mixpanel_mbedtls_cipher_reset().
  *
  * \param ctx           generic cipher context
  * \param ad            Additional data to use.
@@ -507,7 +507,7 @@ int mbedtls_cipher_reset( mbedtls_cipher_context_t *ctx );
  *
  * \return              0 on success, or a specific error code.
  */
-int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_update_ad( mixpanel_mbedtls_cipher_context_t *ctx,
                       const unsigned char *ad, size_t ad_len );
 #endif /* MBEDTLS_GCM_C */
 
@@ -537,10 +537,10 @@ int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
  *                      error code.
  *
  * \note                If the underlying cipher is GCM, all calls to this
- *                      function, except the last one before mbedtls_cipher_finish(),
+ *                      function, except the last one before mixpanel_mbedtls_cipher_finish(),
  *                      must have ilen a multiple of the block size.
  */
-int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *input,
+int mixpanel_mbedtls_cipher_update( mixpanel_mbedtls_cipher_context_t *ctx, const unsigned char *input,
                    size_t ilen, unsigned char *output, size_t *olen );
 
 /**
@@ -560,14 +560,14 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
  *                      MBEDTLS_ERR_CIPHER_INVALID_PADDING on invalid padding
  *                      while decrypting or a cipher specific error code.
  */
-int mbedtls_cipher_finish( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_finish( mixpanel_mbedtls_cipher_context_t *ctx,
                    unsigned char *output, size_t *olen );
 
 #if defined(MBEDTLS_GCM_C)
 /**
  * \brief               Write tag for AEAD ciphers.
  *                      Currently only supported with GCM.
- *                      Must be called after mbedtls_cipher_finish().
+ *                      Must be called after mixpanel_mbedtls_cipher_finish().
  *
  * \param ctx           Generic cipher context
  * \param tag           buffer to write the tag
@@ -575,13 +575,13 @@ int mbedtls_cipher_finish( mbedtls_cipher_context_t *ctx,
  *
  * \return              0 on success, or a specific error code.
  */
-int mbedtls_cipher_write_tag( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_write_tag( mixpanel_mbedtls_cipher_context_t *ctx,
                       unsigned char *tag, size_t tag_len );
 
 /**
  * \brief               Check tag for AEAD ciphers.
  *                      Currently only supported with GCM.
- *                      Must be called after mbedtls_cipher_finish().
+ *                      Must be called after mixpanel_mbedtls_cipher_finish().
  *
  * \param ctx           Generic cipher context
  * \param tag           Buffer holding the tag
@@ -589,7 +589,7 @@ int mbedtls_cipher_write_tag( mbedtls_cipher_context_t *ctx,
  *
  * \return              0 on success, or a specific error code.
  */
-int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_check_tag( mixpanel_mbedtls_cipher_context_t *ctx,
                       const unsigned char *tag, size_t tag_len );
 #endif /* MBEDTLS_GCM_C */
 
@@ -620,7 +620,7 @@ int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
  *                      while decrypting, or
  *                      a cipher specific error code.
  */
-int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_crypt( mixpanel_mbedtls_cipher_context_t *ctx,
                   const unsigned char *iv, size_t iv_len,
                   const unsigned char *input, size_t ilen,
                   unsigned char *output, size_t *olen );
@@ -648,7 +648,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
  *                      MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA, or
  *                      a cipher specific error code.
  */
-int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_auth_encrypt( mixpanel_mbedtls_cipher_context_t *ctx,
                          const unsigned char *iv, size_t iv_len,
                          const unsigned char *ad, size_t ad_len,
                          const unsigned char *input, size_t ilen,
@@ -682,7 +682,7 @@ int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
  *                      is zeroed out to prevent the unauthentic plaintext to
  *                      be used by mistake, making this interface safer.
  */
-int mbedtls_cipher_auth_decrypt( mbedtls_cipher_context_t *ctx,
+int mixpanel_mbedtls_cipher_auth_decrypt( mixpanel_mbedtls_cipher_context_t *ctx,
                          const unsigned char *iv, size_t iv_len,
                          const unsigned char *ad, size_t ad_len,
                          const unsigned char *input, size_t ilen,

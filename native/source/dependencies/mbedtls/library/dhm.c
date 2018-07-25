@@ -49,20 +49,20 @@
 #else
 #include <stdlib.h>
 #include <stdio.h>
-#define mbedtls_printf     printf
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
+#define mixpanel_mbedtls_printf     printf
+#define mixpanel_mbedtls_calloc    calloc
+#define mixpanel_mbedtls_free       free
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 /*
- * helper to validate the mbedtls_mpi size and import it
+ * helper to validate the mixpanel_mbedtls_mpi size and import it
  */
-static int dhm_read_bignum( mbedtls_mpi *X,
+static int dhm_read_bignum( mixpanel_mbedtls_mpi *X,
                             unsigned char **p,
                             const unsigned char *end )
 {
@@ -77,7 +77,7 @@ static int dhm_read_bignum( mbedtls_mpi *X,
     if( (int)( end - *p ) < n )
         return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
-    if( ( ret = mbedtls_mpi_read_binary( X, *p, n ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_mpi_read_binary( X, *p, n ) ) != 0 )
         return( MBEDTLS_ERR_DHM_READ_PARAMS_FAILED + ret );
 
     (*p) += n;
@@ -94,36 +94,36 @@ static int dhm_read_bignum( mbedtls_mpi *X,
  *  http://www.cl.cam.ac.uk/~rja14/Papers/psandqs.pdf
  *  http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2005-2643
  */
-static int dhm_check_range( const mbedtls_mpi *param, const mbedtls_mpi *P )
+static int dhm_check_range( const mixpanel_mbedtls_mpi *param, const mixpanel_mbedtls_mpi *P )
 {
-    mbedtls_mpi L, U;
+    mixpanel_mbedtls_mpi L, U;
     int ret = MBEDTLS_ERR_DHM_BAD_INPUT_DATA;
 
-    mbedtls_mpi_init( &L ); mbedtls_mpi_init( &U );
+    mixpanel_mbedtls_mpi_init( &L ); mixpanel_mbedtls_mpi_init( &U );
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &L, 2 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_sub_int( &U, P, 2 ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_lset( &L, 2 ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_sub_int( &U, P, 2 ) );
 
-    if( mbedtls_mpi_cmp_mpi( param, &L ) >= 0 &&
-        mbedtls_mpi_cmp_mpi( param, &U ) <= 0 )
+    if( mixpanel_mbedtls_mpi_cmp_mpi( param, &L ) >= 0 &&
+        mixpanel_mbedtls_mpi_cmp_mpi( param, &U ) <= 0 )
     {
         ret = 0;
     }
 
 cleanup:
-    mbedtls_mpi_free( &L ); mbedtls_mpi_free( &U );
+    mixpanel_mbedtls_mpi_free( &L ); mixpanel_mbedtls_mpi_free( &U );
     return( ret );
 }
 
-void mbedtls_dhm_init( mbedtls_dhm_context *ctx )
+void mixpanel_mbedtls_dhm_init( mixpanel_mbedtls_dhm_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_dhm_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_dhm_context ) );
 }
 
 /*
  * Parse the ServerKeyExchange parameters
  */
-int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
+int mixpanel_mbedtls_dhm_read_params( mixpanel_mbedtls_dhm_context *ctx,
                      unsigned char **p,
                      const unsigned char *end )
 {
@@ -137,7 +137,7 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
     if( ( ret = dhm_check_range( &ctx->GY, &ctx->P ) ) != 0 )
         return( ret );
 
-    ctx->len = mbedtls_mpi_size( &ctx->P );
+    ctx->len = mixpanel_mbedtls_mpi_size( &ctx->P );
 
     return( 0 );
 }
@@ -145,7 +145,7 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
 /*
  * Setup and write the ServerKeyExchange parameters
  */
-int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
+int mixpanel_mbedtls_dhm_make_params( mixpanel_mbedtls_dhm_context *ctx, int x_size,
                      unsigned char *output, size_t *olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
@@ -154,7 +154,7 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
     size_t n1, n2, n3;
     unsigned char *p;
 
-    if( mbedtls_mpi_cmp_int( &ctx->P, 0 ) == 0 )
+    if( mixpanel_mbedtls_mpi_cmp_int( &ctx->P, 0 ) == 0 )
         return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
     /*
@@ -162,10 +162,10 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
      */
     do
     {
-        mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
+        mixpanel_mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
 
-        while( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->X, 1 ) );
+        while( mixpanel_mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
+            MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_shift_r( &ctx->X, 1 ) );
 
         if( count++ > 10 )
             return( MBEDTLS_ERR_DHM_MAKE_PARAMS_FAILED );
@@ -175,7 +175,7 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
     /*
      * Calculate GX = G^X mod P
      */
-    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &ctx->GX, &ctx->G, &ctx->X,
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_exp_mod( &ctx->GX, &ctx->G, &ctx->X,
                           &ctx->P , &ctx->RP ) );
 
     if( ( ret = dhm_check_range( &ctx->GX, &ctx->P ) ) != 0 )
@@ -185,13 +185,13 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
      * export P, G, GX
      */
 #define DHM_MPI_EXPORT(X,n)                     \
-    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( X, p + 2, n ) ); \
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_write_binary( X, p + 2, n ) ); \
     *p++ = (unsigned char)( n >> 8 );           \
     *p++ = (unsigned char)( n      ); p += n;
 
-    n1 = mbedtls_mpi_size( &ctx->P  );
-    n2 = mbedtls_mpi_size( &ctx->G  );
-    n3 = mbedtls_mpi_size( &ctx->GX );
+    n1 = mixpanel_mbedtls_mpi_size( &ctx->P  );
+    n2 = mixpanel_mbedtls_mpi_size( &ctx->G  );
+    n3 = mixpanel_mbedtls_mpi_size( &ctx->GX );
 
     p = output;
     DHM_MPI_EXPORT( &ctx->P , n1 );
@@ -213,7 +213,7 @@ cleanup:
 /*
  * Import the peer's public value G^Y
  */
-int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
+int mixpanel_mbedtls_dhm_read_public( mixpanel_mbedtls_dhm_context *ctx,
                      const unsigned char *input, size_t ilen )
 {
     int ret;
@@ -221,7 +221,7 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
     if( ctx == NULL || ilen < 1 || ilen > ctx->len )
         return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
-    if( ( ret = mbedtls_mpi_read_binary( &ctx->GY, input, ilen ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_mpi_read_binary( &ctx->GY, input, ilen ) ) != 0 )
         return( MBEDTLS_ERR_DHM_READ_PUBLIC_FAILED + ret );
 
     return( 0 );
@@ -230,7 +230,7 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
 /*
  * Create own private value X and export G^X
  */
-int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
+int mixpanel_mbedtls_dhm_make_public( mixpanel_mbedtls_dhm_context *ctx, int x_size,
                      unsigned char *output, size_t olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
@@ -240,7 +240,7 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
     if( ctx == NULL || olen < 1 || olen > ctx->len )
         return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
-    if( mbedtls_mpi_cmp_int( &ctx->P, 0 ) == 0 )
+    if( mixpanel_mbedtls_mpi_cmp_int( &ctx->P, 0 ) == 0 )
         return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
 
     /*
@@ -248,23 +248,23 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
      */
     do
     {
-        mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
+        mixpanel_mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
 
-        while( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->X, 1 ) );
+        while( mixpanel_mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
+            MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_shift_r( &ctx->X, 1 ) );
 
         if( count++ > 10 )
             return( MBEDTLS_ERR_DHM_MAKE_PUBLIC_FAILED );
     }
     while( dhm_check_range( &ctx->X, &ctx->P ) != 0 );
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &ctx->GX, &ctx->G, &ctx->X,
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_exp_mod( &ctx->GX, &ctx->G, &ctx->X,
                           &ctx->P , &ctx->RP ) );
 
     if( ( ret = dhm_check_range( &ctx->GX, &ctx->P ) ) != 0 )
         return( ret );
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->GX, output, olen ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_write_binary( &ctx->GX, output, olen ) );
 
 cleanup:
 
@@ -280,7 +280,7 @@ cleanup:
  *  DSS, and other systems. In : Advances in Cryptology-CRYPTO'96. Springer
  *  Berlin Heidelberg, 1996. p. 104-113.
  */
-static int dhm_update_blinding( mbedtls_dhm_context *ctx,
+static int dhm_update_blinding( mixpanel_mbedtls_dhm_context *ctx,
                     int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
     int ret, count;
@@ -289,11 +289,11 @@ static int dhm_update_blinding( mbedtls_dhm_context *ctx,
      * Don't use any blinding the first time a particular X is used,
      * but remember it to use blinding next time.
      */
-    if( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->pX ) != 0 )
+    if( mixpanel_mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->pX ) != 0 )
     {
-        MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &ctx->pX, &ctx->X ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &ctx->Vi, 1 ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &ctx->Vf, 1 ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_copy( &ctx->pX, &ctx->X ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_lset( &ctx->Vi, 1 ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_lset( &ctx->Vf, 1 ) );
 
         return( 0 );
     }
@@ -302,13 +302,13 @@ static int dhm_update_blinding( mbedtls_dhm_context *ctx,
      * Ok, we need blinding. Can we re-use existing values?
      * If yes, just update them by squaring them.
      */
-    if( mbedtls_mpi_cmp_int( &ctx->Vi, 1 ) != 0 )
+    if( mixpanel_mbedtls_mpi_cmp_int( &ctx->Vi, 1 ) != 0 )
     {
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &ctx->Vi, &ctx->Vi, &ctx->Vi ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &ctx->Vi, &ctx->Vi, &ctx->P ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( &ctx->Vi, &ctx->Vi, &ctx->Vi ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( &ctx->Vi, &ctx->Vi, &ctx->P ) );
 
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &ctx->Vf, &ctx->Vf, &ctx->Vf ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &ctx->Vf, &ctx->Vf, &ctx->P ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( &ctx->Vf, &ctx->Vf, &ctx->Vf ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( &ctx->Vf, &ctx->Vf, &ctx->P ) );
 
         return( 0 );
     }
@@ -321,19 +321,19 @@ static int dhm_update_blinding( mbedtls_dhm_context *ctx,
     count = 0;
     do
     {
-        mbedtls_mpi_fill_random( &ctx->Vi, mbedtls_mpi_size( &ctx->P ), f_rng, p_rng );
+        mixpanel_mbedtls_mpi_fill_random( &ctx->Vi, mixpanel_mbedtls_mpi_size( &ctx->P ), f_rng, p_rng );
 
-        while( mbedtls_mpi_cmp_mpi( &ctx->Vi, &ctx->P ) >= 0 )
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->Vi, 1 ) );
+        while( mixpanel_mbedtls_mpi_cmp_mpi( &ctx->Vi, &ctx->P ) >= 0 )
+            MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_shift_r( &ctx->Vi, 1 ) );
 
         if( count++ > 10 )
             return( MBEDTLS_ERR_MPI_NOT_ACCEPTABLE );
     }
-    while( mbedtls_mpi_cmp_int( &ctx->Vi, 1 ) <= 0 );
+    while( mixpanel_mbedtls_mpi_cmp_int( &ctx->Vi, 1 ) <= 0 );
 
     /* Vf = Vi^-X mod P */
-    MBEDTLS_MPI_CHK( mbedtls_mpi_inv_mod( &ctx->Vf, &ctx->Vi, &ctx->P ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &ctx->Vf, &ctx->Vf, &ctx->X, &ctx->P, &ctx->RP ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_inv_mod( &ctx->Vf, &ctx->Vi, &ctx->P ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_exp_mod( &ctx->Vf, &ctx->Vf, &ctx->X, &ctx->P, &ctx->RP ) );
 
 cleanup:
     return( ret );
@@ -342,13 +342,13 @@ cleanup:
 /*
  * Derive and export the shared secret (G^Y)^X mod P
  */
-int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
+int mixpanel_mbedtls_dhm_calc_secret( mixpanel_mbedtls_dhm_context *ctx,
                      unsigned char *output, size_t output_size, size_t *olen,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
     int ret;
-    mbedtls_mpi GYb;
+    mixpanel_mbedtls_mpi GYb;
 
     if( ctx == NULL || output_size < ctx->len )
         return( MBEDTLS_ERR_DHM_BAD_INPUT_DATA );
@@ -356,35 +356,35 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
     if( ( ret = dhm_check_range( &ctx->GY, &ctx->P ) ) != 0 )
         return( ret );
 
-    mbedtls_mpi_init( &GYb );
+    mixpanel_mbedtls_mpi_init( &GYb );
 
     /* Blind peer's value */
     if( f_rng != NULL )
     {
         MBEDTLS_MPI_CHK( dhm_update_blinding( ctx, f_rng, p_rng ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &GYb, &ctx->GY, &ctx->Vi ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &GYb, &GYb, &ctx->P ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( &GYb, &ctx->GY, &ctx->Vi ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( &GYb, &GYb, &ctx->P ) );
     }
     else
-        MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &GYb, &ctx->GY ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_copy( &GYb, &ctx->GY ) );
 
     /* Do modular exponentiation */
-    MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &ctx->K, &GYb, &ctx->X,
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_exp_mod( &ctx->K, &GYb, &ctx->X,
                           &ctx->P, &ctx->RP ) );
 
     /* Unblind secret value */
     if( f_rng != NULL )
     {
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &ctx->K, &ctx->K, &ctx->Vf ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &ctx->K, &ctx->K, &ctx->P ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mul_mpi( &ctx->K, &ctx->K, &ctx->Vf ) );
+        MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_mod_mpi( &ctx->K, &ctx->K, &ctx->P ) );
     }
 
-    *olen = mbedtls_mpi_size( &ctx->K );
+    *olen = mixpanel_mbedtls_mpi_size( &ctx->K );
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->K, output, *olen ) );
+    MBEDTLS_MPI_CHK( mixpanel_mbedtls_mpi_write_binary( &ctx->K, output, *olen ) );
 
 cleanup:
-    mbedtls_mpi_free( &GYb );
+    mixpanel_mbedtls_mpi_free( &GYb );
 
     if( ret != 0 )
         return( MBEDTLS_ERR_DHM_CALC_SECRET_FAILED + ret );
@@ -395,36 +395,36 @@ cleanup:
 /*
  * Free the components of a DHM key
  */
-void mbedtls_dhm_free( mbedtls_dhm_context *ctx )
+void mixpanel_mbedtls_dhm_free( mixpanel_mbedtls_dhm_context *ctx )
 {
-    mbedtls_mpi_free( &ctx->pX); mbedtls_mpi_free( &ctx->Vf ); mbedtls_mpi_free( &ctx->Vi );
-    mbedtls_mpi_free( &ctx->RP ); mbedtls_mpi_free( &ctx->K ); mbedtls_mpi_free( &ctx->GY );
-    mbedtls_mpi_free( &ctx->GX ); mbedtls_mpi_free( &ctx->X ); mbedtls_mpi_free( &ctx->G );
-    mbedtls_mpi_free( &ctx->P );
+    mixpanel_mbedtls_mpi_free( &ctx->pX); mixpanel_mbedtls_mpi_free( &ctx->Vf ); mixpanel_mbedtls_mpi_free( &ctx->Vi );
+    mixpanel_mbedtls_mpi_free( &ctx->RP ); mixpanel_mbedtls_mpi_free( &ctx->K ); mixpanel_mbedtls_mpi_free( &ctx->GY );
+    mixpanel_mbedtls_mpi_free( &ctx->GX ); mixpanel_mbedtls_mpi_free( &ctx->X ); mixpanel_mbedtls_mpi_free( &ctx->G );
+    mixpanel_mbedtls_mpi_free( &ctx->P );
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_dhm_context ) );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_dhm_context ) );
 }
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
 /*
  * Parse DHM parameters
  */
-int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
+int mixpanel_mbedtls_dhm_parse_dhm( mixpanel_mbedtls_dhm_context *dhm, const unsigned char *dhmin,
                    size_t dhminlen )
 {
     int ret;
     size_t len;
     unsigned char *p, *end;
 #if defined(MBEDTLS_PEM_PARSE_C)
-    mbedtls_pem_context pem;
+    mixpanel_mbedtls_pem_context pem;
 
-    mbedtls_pem_init( &pem );
+    mixpanel_mbedtls_pem_init( &pem );
 
-    /* Avoid calling mbedtls_pem_read_buffer() on non-null-terminated string */
+    /* Avoid calling mixpanel_mbedtls_pem_read_buffer() on non-null-terminated string */
     if( dhminlen == 0 || dhmin[dhminlen - 1] != '\0' )
         ret = MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT;
     else
-        ret = mbedtls_pem_read_buffer( &pem,
+        ret = mixpanel_mbedtls_pem_read_buffer( &pem,
                                "-----BEGIN DH PARAMETERS-----",
                                "-----END DH PARAMETERS-----",
                                dhmin, NULL, 0, &dhminlen );
@@ -452,7 +452,7 @@ int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
      *      privateValueLength INTEGER OPTIONAL
      *  }
      */
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
+    if( ( ret = mixpanel_mbedtls_asn1_get_tag( &p, end, &len,
             MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 )
     {
         ret = MBEDTLS_ERR_DHM_INVALID_FORMAT + ret;
@@ -461,8 +461,8 @@ int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
 
     end = p + len;
 
-    if( ( ret = mbedtls_asn1_get_mpi( &p, end, &dhm->P  ) ) != 0 ||
-        ( ret = mbedtls_asn1_get_mpi( &p, end, &dhm->G ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_asn1_get_mpi( &p, end, &dhm->P  ) ) != 0 ||
+        ( ret = mixpanel_mbedtls_asn1_get_mpi( &p, end, &dhm->G ) ) != 0 )
     {
         ret = MBEDTLS_ERR_DHM_INVALID_FORMAT + ret;
         goto exit;
@@ -472,10 +472,10 @@ int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
     {
         /* This might be the optional privateValueLength.
          * If so, we can cleanly discard it */
-        mbedtls_mpi rec;
-        mbedtls_mpi_init( &rec );
-        ret = mbedtls_asn1_get_mpi( &p, end, &rec );
-        mbedtls_mpi_free( &rec );
+        mixpanel_mbedtls_mpi rec;
+        mixpanel_mbedtls_mpi_init( &rec );
+        ret = mixpanel_mbedtls_asn1_get_mpi( &p, end, &rec );
+        mixpanel_mbedtls_mpi_free( &rec );
         if ( ret != 0 )
         {
             ret = MBEDTLS_ERR_DHM_INVALID_FORMAT + ret;
@@ -491,14 +491,14 @@ int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
 
     ret = 0;
 
-    dhm->len = mbedtls_mpi_size( &dhm->P );
+    dhm->len = mixpanel_mbedtls_mpi_size( &dhm->P );
 
 exit:
 #if defined(MBEDTLS_PEM_PARSE_C)
-    mbedtls_pem_free( &pem );
+    mixpanel_mbedtls_pem_free( &pem );
 #endif
     if( ret != 0 )
-        mbedtls_dhm_free( dhm );
+        mixpanel_mbedtls_dhm_free( dhm );
 
     return( ret );
 }
@@ -530,7 +530,7 @@ static int load_file( const char *path, unsigned char **buf, size_t *n )
     *n = (size_t) size;
 
     if( *n + 1 == 0 ||
-        ( *buf = mbedtls_calloc( 1, *n + 1 ) ) == NULL )
+        ( *buf = mixpanel_mbedtls_calloc( 1, *n + 1 ) ) == NULL )
     {
         fclose( f );
         return( MBEDTLS_ERR_DHM_ALLOC_FAILED );
@@ -539,7 +539,7 @@ static int load_file( const char *path, unsigned char **buf, size_t *n )
     if( fread( *buf, 1, *n, f ) != *n )
     {
         fclose( f );
-        mbedtls_free( *buf );
+        mixpanel_mbedtls_free( *buf );
         return( MBEDTLS_ERR_DHM_FILE_IO_ERROR );
     }
 
@@ -556,7 +556,7 @@ static int load_file( const char *path, unsigned char **buf, size_t *n )
 /*
  * Load and parse DHM parameters
  */
-int mbedtls_dhm_parse_dhmfile( mbedtls_dhm_context *dhm, const char *path )
+int mixpanel_mbedtls_dhm_parse_dhmfile( mixpanel_mbedtls_dhm_context *dhm, const char *path )
 {
     int ret;
     size_t n;
@@ -565,10 +565,10 @@ int mbedtls_dhm_parse_dhmfile( mbedtls_dhm_context *dhm, const char *path )
     if( ( ret = load_file( path, &buf, &n ) ) != 0 )
         return( ret );
 
-    ret = mbedtls_dhm_parse_dhm( dhm, buf, n );
+    ret = mixpanel_mbedtls_dhm_parse_dhm( dhm, buf, n );
 
-    mbedtls_zeroize( buf, n );
-    mbedtls_free( buf );
+    mixpanel_mbedtls_zeroize( buf, n );
+    mixpanel_mbedtls_free( buf );
 
     return( ret );
 }
@@ -577,44 +577,44 @@ int mbedtls_dhm_parse_dhmfile( mbedtls_dhm_context *dhm, const char *path )
 
 #if defined(MBEDTLS_SELF_TEST)
 
-static const char mbedtls_test_dhm_params[] =
+static const char mixpanel_mbedtls_test_dhm_params[] =
 "-----BEGIN DH PARAMETERS-----\r\n"
 "MIGHAoGBAJ419DBEOgmQTzo5qXl5fQcN9TN455wkOL7052HzxxRVMyhYmwQcgJvh\r\n"
 "1sa18fyfR9OiVEMYglOpkqVoGLN7qd5aQNNi5W7/C+VBdHTBJcGZJyyP5B3qcz32\r\n"
 "9mLJKudlVudV0Qxk5qUJaPZ/xupz0NyoVpviuiBOI1gNi8ovSXWzAgEC\r\n"
 "-----END DH PARAMETERS-----\r\n";
 
-static const size_t mbedtls_test_dhm_params_len = sizeof( mbedtls_test_dhm_params );
+static const size_t mixpanel_mbedtls_test_dhm_params_len = sizeof( mixpanel_mbedtls_test_dhm_params );
 
 /*
  * Checkup routine
  */
-int mbedtls_dhm_self_test( int verbose )
+int mixpanel_mbedtls_dhm_self_test( int verbose )
 {
     int ret;
-    mbedtls_dhm_context dhm;
+    mixpanel_mbedtls_dhm_context dhm;
 
-    mbedtls_dhm_init( &dhm );
+    mixpanel_mbedtls_dhm_init( &dhm );
 
     if( verbose != 0 )
-        mbedtls_printf( "  DHM parameter load: " );
+        mixpanel_mbedtls_printf( "  DHM parameter load: " );
 
-    if( ( ret = mbedtls_dhm_parse_dhm( &dhm,
-                    (const unsigned char *) mbedtls_test_dhm_params,
-                    mbedtls_test_dhm_params_len ) ) != 0 )
+    if( ( ret = mixpanel_mbedtls_dhm_parse_dhm( &dhm,
+                    (const unsigned char *) mixpanel_mbedtls_test_dhm_params,
+                    mixpanel_mbedtls_test_dhm_params_len ) ) != 0 )
     {
         if( verbose != 0 )
-            mbedtls_printf( "failed\n" );
+            mixpanel_mbedtls_printf( "failed\n" );
 
         ret = 1;
         goto exit;
     }
 
     if( verbose != 0 )
-        mbedtls_printf( "passed\n\n" );
+        mixpanel_mbedtls_printf( "passed\n\n" );
 
 exit:
-    mbedtls_dhm_free( &dhm );
+    mixpanel_mbedtls_dhm_free( &dhm );
 
     return( ret );
 }

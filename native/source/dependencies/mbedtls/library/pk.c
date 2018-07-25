@@ -40,14 +40,14 @@
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
 /*
- * Initialise a mbedtls_pk_context
+ * Initialise a mixpanel_mbedtls_pk_context
  */
-void mbedtls_pk_init( mbedtls_pk_context *ctx )
+void mixpanel_mbedtls_pk_init( mixpanel_mbedtls_pk_context *ctx )
 {
     if( ctx == NULL )
         return;
@@ -57,37 +57,37 @@ void mbedtls_pk_init( mbedtls_pk_context *ctx )
 }
 
 /*
- * Free (the components of) a mbedtls_pk_context
+ * Free (the components of) a mixpanel_mbedtls_pk_context
  */
-void mbedtls_pk_free( mbedtls_pk_context *ctx )
+void mixpanel_mbedtls_pk_free( mixpanel_mbedtls_pk_context *ctx )
 {
     if( ctx == NULL || ctx->pk_info == NULL )
         return;
 
     ctx->pk_info->ctx_free_func( ctx->pk_ctx );
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_pk_context ) );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_pk_context ) );
 }
 
 /*
  * Get pk_info structure from type
  */
-const mbedtls_pk_info_t * mbedtls_pk_info_from_type( mbedtls_pk_type_t pk_type )
+const mixpanel_mbedtls_pk_info_t * mixpanel_mbedtls_pk_info_from_type( mixpanel_mbedtls_pk_type_t pk_type )
 {
     switch( pk_type ) {
 #if defined(MBEDTLS_RSA_C)
         case MBEDTLS_PK_RSA:
-            return( &mbedtls_rsa_info );
+            return( &mixpanel_mbedtls_rsa_info );
 #endif
 #if defined(MBEDTLS_ECP_C)
         case MBEDTLS_PK_ECKEY:
-            return( &mbedtls_eckey_info );
+            return( &mixpanel_mbedtls_eckey_info );
         case MBEDTLS_PK_ECKEY_DH:
-            return( &mbedtls_eckeydh_info );
+            return( &mixpanel_mbedtls_eckeydh_info );
 #endif
 #if defined(MBEDTLS_ECDSA_C)
         case MBEDTLS_PK_ECDSA:
-            return( &mbedtls_ecdsa_info );
+            return( &mixpanel_mbedtls_ecdsa_info );
 #endif
         /* MBEDTLS_PK_RSA_ALT omitted on purpose */
         default:
@@ -98,7 +98,7 @@ const mbedtls_pk_info_t * mbedtls_pk_info_from_type( mbedtls_pk_type_t pk_type )
 /*
  * Initialise context
  */
-int mbedtls_pk_setup( mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info )
+int mixpanel_mbedtls_pk_setup( mixpanel_mbedtls_pk_context *ctx, const mixpanel_mbedtls_pk_info_t *info )
 {
     if( ctx == NULL || info == NULL || ctx->pk_info != NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
@@ -115,13 +115,13 @@ int mbedtls_pk_setup( mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info )
 /*
  * Initialize an RSA-alt context
  */
-int mbedtls_pk_setup_rsa_alt( mbedtls_pk_context *ctx, void * key,
-                         mbedtls_pk_rsa_alt_decrypt_func decrypt_func,
-                         mbedtls_pk_rsa_alt_sign_func sign_func,
-                         mbedtls_pk_rsa_alt_key_len_func key_len_func )
+int mixpanel_mbedtls_pk_setup_rsa_alt( mixpanel_mbedtls_pk_context *ctx, void * key,
+                         mixpanel_mbedtls_pk_rsa_alt_decrypt_func decrypt_func,
+                         mixpanel_mbedtls_pk_rsa_alt_sign_func sign_func,
+                         mixpanel_mbedtls_pk_rsa_alt_key_len_func key_len_func )
 {
-    mbedtls_rsa_alt_context *rsa_alt;
-    const mbedtls_pk_info_t *info = &mbedtls_rsa_alt_info;
+    mixpanel_mbedtls_rsa_alt_context *rsa_alt;
+    const mixpanel_mbedtls_pk_info_t *info = &mixpanel_mbedtls_rsa_alt_info;
 
     if( ctx == NULL || ctx->pk_info != NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
@@ -131,7 +131,7 @@ int mbedtls_pk_setup_rsa_alt( mbedtls_pk_context *ctx, void * key,
 
     ctx->pk_info = info;
 
-    rsa_alt = (mbedtls_rsa_alt_context *) ctx->pk_ctx;
+    rsa_alt = (mixpanel_mbedtls_rsa_alt_context *) ctx->pk_ctx;
 
     rsa_alt->key = key;
     rsa_alt->decrypt_func = decrypt_func;
@@ -145,7 +145,7 @@ int mbedtls_pk_setup_rsa_alt( mbedtls_pk_context *ctx, void * key,
 /*
  * Tell if a PK can do the operations of the given type
  */
-int mbedtls_pk_can_do( const mbedtls_pk_context *ctx, mbedtls_pk_type_t type )
+int mixpanel_mbedtls_pk_can_do( const mixpanel_mbedtls_pk_context *ctx, mixpanel_mbedtls_pk_type_t type )
 {
     /* null or NONE context can't do anything */
     if( ctx == NULL || ctx->pk_info == NULL )
@@ -155,26 +155,26 @@ int mbedtls_pk_can_do( const mbedtls_pk_context *ctx, mbedtls_pk_type_t type )
 }
 
 /*
- * Helper for mbedtls_pk_sign and mbedtls_pk_verify
+ * Helper for mixpanel_mbedtls_pk_sign and mixpanel_mbedtls_pk_verify
  */
-static inline int pk_hashlen_helper( mbedtls_md_type_t md_alg, size_t *hash_len )
+static inline int pk_hashlen_helper( mixpanel_mbedtls_md_type_t md_alg, size_t *hash_len )
 {
-    const mbedtls_md_info_t *md_info;
+    const mixpanel_mbedtls_md_info_t *md_info;
 
     if( *hash_len != 0 )
         return( 0 );
 
-    if( ( md_info = mbedtls_md_info_from_type( md_alg ) ) == NULL )
+    if( ( md_info = mixpanel_mbedtls_md_info_from_type( md_alg ) ) == NULL )
         return( -1 );
 
-    *hash_len = mbedtls_md_get_size( md_info );
+    *hash_len = mixpanel_mbedtls_md_get_size( md_info );
     return( 0 );
 }
 
 /*
  * Verify a signature
  */
-int mbedtls_pk_verify( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
+int mixpanel_mbedtls_pk_verify( mixpanel_mbedtls_pk_context *ctx, mixpanel_mbedtls_md_type_t md_alg,
                const unsigned char *hash, size_t hash_len,
                const unsigned char *sig, size_t sig_len )
 {
@@ -192,32 +192,32 @@ int mbedtls_pk_verify( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /*
  * Verify a signature with options
  */
-int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
-                   mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
+int mixpanel_mbedtls_pk_verify_ext( mixpanel_mbedtls_pk_type_t type, const void *options,
+                   mixpanel_mbedtls_pk_context *ctx, mixpanel_mbedtls_md_type_t md_alg,
                    const unsigned char *hash, size_t hash_len,
                    const unsigned char *sig, size_t sig_len )
 {
     if( ctx == NULL || ctx->pk_info == NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
 
-    if( ! mbedtls_pk_can_do( ctx, type ) )
+    if( ! mixpanel_mbedtls_pk_can_do( ctx, type ) )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
 
     if( type == MBEDTLS_PK_RSASSA_PSS )
     {
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V21)
         int ret;
-        const mbedtls_pk_rsassa_pss_options *pss_opts;
+        const mixpanel_mbedtls_pk_rsassa_pss_options *pss_opts;
 
         if( options == NULL )
             return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
 
-        pss_opts = (const mbedtls_pk_rsassa_pss_options *) options;
+        pss_opts = (const mixpanel_mbedtls_pk_rsassa_pss_options *) options;
 
-        if( sig_len < mbedtls_pk_get_len( ctx ) )
+        if( sig_len < mixpanel_mbedtls_pk_get_len( ctx ) )
             return( MBEDTLS_ERR_RSA_VERIFY_FAILED );
 
-        ret = mbedtls_rsa_rsassa_pss_verify_ext( mbedtls_pk_rsa( *ctx ),
+        ret = mixpanel_mbedtls_rsa_rsassa_pss_verify_ext( mixpanel_mbedtls_pk_rsa( *ctx ),
                 NULL, NULL, MBEDTLS_RSA_PUBLIC,
                 md_alg, (unsigned int) hash_len, hash,
                 pss_opts->mgf1_hash_id,
@@ -226,7 +226,7 @@ int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
         if( ret != 0 )
             return( ret );
 
-        if( sig_len > mbedtls_pk_get_len( ctx ) )
+        if( sig_len > mixpanel_mbedtls_pk_get_len( ctx ) )
             return( MBEDTLS_ERR_PK_SIG_LEN_MISMATCH );
 
         return( 0 );
@@ -239,13 +239,13 @@ int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
     if( options != NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
 
-    return( mbedtls_pk_verify( ctx, md_alg, hash, hash_len, sig, sig_len ) );
+    return( mixpanel_mbedtls_pk_verify( ctx, md_alg, hash, hash_len, sig, sig_len ) );
 }
 
 /*
  * Make a signature
  */
-int mbedtls_pk_sign( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
+int mixpanel_mbedtls_pk_sign( mixpanel_mbedtls_pk_context *ctx, mixpanel_mbedtls_md_type_t md_alg,
              const unsigned char *hash, size_t hash_len,
              unsigned char *sig, size_t *sig_len,
              int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
@@ -264,7 +264,7 @@ int mbedtls_pk_sign( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /*
  * Decrypt message
  */
-int mbedtls_pk_decrypt( mbedtls_pk_context *ctx,
+int mixpanel_mbedtls_pk_decrypt( mixpanel_mbedtls_pk_context *ctx,
                 const unsigned char *input, size_t ilen,
                 unsigned char *output, size_t *olen, size_t osize,
                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
@@ -282,7 +282,7 @@ int mbedtls_pk_decrypt( mbedtls_pk_context *ctx,
 /*
  * Encrypt message
  */
-int mbedtls_pk_encrypt( mbedtls_pk_context *ctx,
+int mixpanel_mbedtls_pk_encrypt( mixpanel_mbedtls_pk_context *ctx,
                 const unsigned char *input, size_t ilen,
                 unsigned char *output, size_t *olen, size_t osize,
                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
@@ -300,7 +300,7 @@ int mbedtls_pk_encrypt( mbedtls_pk_context *ctx,
 /*
  * Check public-private key pair
  */
-int mbedtls_pk_check_pair( const mbedtls_pk_context *pub, const mbedtls_pk_context *prv )
+int mixpanel_mbedtls_pk_check_pair( const mixpanel_mbedtls_pk_context *pub, const mixpanel_mbedtls_pk_context *prv )
 {
     if( pub == NULL || pub->pk_info == NULL ||
         prv == NULL || prv->pk_info == NULL ||
@@ -326,7 +326,7 @@ int mbedtls_pk_check_pair( const mbedtls_pk_context *pub, const mbedtls_pk_conte
 /*
  * Get key size in bits
  */
-size_t mbedtls_pk_get_bitlen( const mbedtls_pk_context *ctx )
+size_t mixpanel_mbedtls_pk_get_bitlen( const mixpanel_mbedtls_pk_context *ctx )
 {
     if( ctx == NULL || ctx->pk_info == NULL )
         return( 0 );
@@ -337,7 +337,7 @@ size_t mbedtls_pk_get_bitlen( const mbedtls_pk_context *ctx )
 /*
  * Export debug information
  */
-int mbedtls_pk_debug( const mbedtls_pk_context *ctx, mbedtls_pk_debug_item *items )
+int mixpanel_mbedtls_pk_debug( const mixpanel_mbedtls_pk_context *ctx, mixpanel_mbedtls_pk_debug_item *items )
 {
     if( ctx == NULL || ctx->pk_info == NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
@@ -352,7 +352,7 @@ int mbedtls_pk_debug( const mbedtls_pk_context *ctx, mbedtls_pk_debug_item *item
 /*
  * Access the PK type name
  */
-const char *mbedtls_pk_get_name( const mbedtls_pk_context *ctx )
+const char *mixpanel_mbedtls_pk_get_name( const mixpanel_mbedtls_pk_context *ctx )
 {
     if( ctx == NULL || ctx->pk_info == NULL )
         return( "invalid PK" );
@@ -363,7 +363,7 @@ const char *mbedtls_pk_get_name( const mbedtls_pk_context *ctx )
 /*
  * Access the PK type
  */
-mbedtls_pk_type_t mbedtls_pk_get_type( const mbedtls_pk_context *ctx )
+mixpanel_mbedtls_pk_type_t mixpanel_mbedtls_pk_get_type( const mixpanel_mbedtls_pk_context *ctx )
 {
     if( ctx == NULL || ctx->pk_info == NULL )
         return( MBEDTLS_PK_NONE );

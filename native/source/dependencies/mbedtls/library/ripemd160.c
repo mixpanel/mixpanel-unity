@@ -21,7 +21,7 @@
 
 /*
  *  The RIPEMD-160 algorithm was designed by RIPE in 1996
- *  http://homes.esat.kuleuven.be/~bosselae/mbedtls_ripemd160.html
+ *  http://homes.esat.kuleuven.be/~bosselae/mixpanel_mbedtls_ripemd160.html
  *  http://ehash.iaik.tugraz.at/wiki/RIPEMD-160
  */
 
@@ -42,7 +42,7 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf printf
+#define mixpanel_mbedtls_printf printf
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
@@ -70,25 +70,25 @@
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
+static void mixpanel_mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
-void mbedtls_ripemd160_init( mbedtls_ripemd160_context *ctx )
+void mixpanel_mbedtls_ripemd160_init( mixpanel_mbedtls_ripemd160_context *ctx )
 {
-    memset( ctx, 0, sizeof( mbedtls_ripemd160_context ) );
+    memset( ctx, 0, sizeof( mixpanel_mbedtls_ripemd160_context ) );
 }
 
-void mbedtls_ripemd160_free( mbedtls_ripemd160_context *ctx )
+void mixpanel_mbedtls_ripemd160_free( mixpanel_mbedtls_ripemd160_context *ctx )
 {
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_ripemd160_context ) );
+    mixpanel_mbedtls_zeroize( ctx, sizeof( mixpanel_mbedtls_ripemd160_context ) );
 }
 
-void mbedtls_ripemd160_clone( mbedtls_ripemd160_context *dst,
-                        const mbedtls_ripemd160_context *src )
+void mixpanel_mbedtls_ripemd160_clone( mixpanel_mbedtls_ripemd160_context *dst,
+                        const mixpanel_mbedtls_ripemd160_context *src )
 {
     *dst = *src;
 }
@@ -96,7 +96,7 @@ void mbedtls_ripemd160_clone( mbedtls_ripemd160_context *dst,
 /*
  * RIPEMD-160 context setup
  */
-void mbedtls_ripemd160_starts( mbedtls_ripemd160_context *ctx )
+void mixpanel_mbedtls_ripemd160_starts( mixpanel_mbedtls_ripemd160_context *ctx )
 {
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -112,7 +112,7 @@ void mbedtls_ripemd160_starts( mbedtls_ripemd160_context *ctx )
 /*
  * Process one block
  */
-void mbedtls_ripemd160_process( mbedtls_ripemd160_context *ctx, const unsigned char data[64] )
+void mixpanel_mbedtls_ripemd160_process( mixpanel_mbedtls_ripemd160_context *ctx, const unsigned char data[64] )
 {
     uint32_t A, B, C, D, E, Ap, Bp, Cp, Dp, Ep, X[16];
 
@@ -293,7 +293,7 @@ void mbedtls_ripemd160_process( mbedtls_ripemd160_context *ctx, const unsigned c
 /*
  * RIPEMD-160 process buffer
  */
-void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
+void mixpanel_mbedtls_ripemd160_update( mixpanel_mbedtls_ripemd160_context *ctx,
                        const unsigned char *input, size_t ilen )
 {
     size_t fill;
@@ -314,7 +314,7 @@ void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
     if( left && ilen >= fill )
     {
         memcpy( (void *) (ctx->buffer + left), input, fill );
-        mbedtls_ripemd160_process( ctx, ctx->buffer );
+        mixpanel_mbedtls_ripemd160_process( ctx, ctx->buffer );
         input += fill;
         ilen  -= fill;
         left = 0;
@@ -322,7 +322,7 @@ void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
 
     while( ilen >= 64 )
     {
-        mbedtls_ripemd160_process( ctx, input );
+        mixpanel_mbedtls_ripemd160_process( ctx, input );
         input += 64;
         ilen  -= 64;
     }
@@ -344,7 +344,7 @@ static const unsigned char ripemd160_padding[64] =
 /*
  * RIPEMD-160 final digest
  */
-void mbedtls_ripemd160_finish( mbedtls_ripemd160_context *ctx, unsigned char output[20] )
+void mixpanel_mbedtls_ripemd160_finish( mixpanel_mbedtls_ripemd160_context *ctx, unsigned char output[20] )
 {
     uint32_t last, padn;
     uint32_t high, low;
@@ -360,8 +360,8 @@ void mbedtls_ripemd160_finish( mbedtls_ripemd160_context *ctx, unsigned char out
     last = ctx->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    mbedtls_ripemd160_update( ctx, ripemd160_padding, padn );
-    mbedtls_ripemd160_update( ctx, msglen, 8 );
+    mixpanel_mbedtls_ripemd160_update( ctx, ripemd160_padding, padn );
+    mixpanel_mbedtls_ripemd160_update( ctx, msglen, 8 );
 
     PUT_UINT32_LE( ctx->state[0], output,  0 );
     PUT_UINT32_LE( ctx->state[1], output,  4 );
@@ -373,22 +373,22 @@ void mbedtls_ripemd160_finish( mbedtls_ripemd160_context *ctx, unsigned char out
 /*
  * output = RIPEMD-160( input buffer )
  */
-void mbedtls_ripemd160( const unsigned char *input, size_t ilen,
+void mixpanel_mbedtls_ripemd160( const unsigned char *input, size_t ilen,
                 unsigned char output[20] )
 {
-    mbedtls_ripemd160_context ctx;
+    mixpanel_mbedtls_ripemd160_context ctx;
 
-    mbedtls_ripemd160_init( &ctx );
-    mbedtls_ripemd160_starts( &ctx );
-    mbedtls_ripemd160_update( &ctx, input, ilen );
-    mbedtls_ripemd160_finish( &ctx, output );
-    mbedtls_ripemd160_free( &ctx );
+    mixpanel_mbedtls_ripemd160_init( &ctx );
+    mixpanel_mbedtls_ripemd160_starts( &ctx );
+    mixpanel_mbedtls_ripemd160_update( &ctx, input, ilen );
+    mixpanel_mbedtls_ripemd160_finish( &ctx, output );
+    mixpanel_mbedtls_ripemd160_free( &ctx );
 }
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
  * Test vectors from the RIPEMD-160 paper and
- * http://homes.esat.kuleuven.be/~bosselae/mbedtls_ripemd160.html#HMAC
+ * http://homes.esat.kuleuven.be/~bosselae/mixpanel_mbedtls_ripemd160.html#HMAC
  */
 #define TESTS   8
 #define KEYS    2
@@ -428,7 +428,7 @@ static const unsigned char ripemd160_test_md[TESTS][20] =
 /*
  * Checkup routine
  */
-int mbedtls_ripemd160_self_test( int verbose )
+int mixpanel_mbedtls_ripemd160_self_test( int verbose )
 {
     int i;
     unsigned char output[20];
@@ -438,22 +438,22 @@ int mbedtls_ripemd160_self_test( int verbose )
     for( i = 0; i < TESTS; i++ )
     {
         if( verbose != 0 )
-            mbedtls_printf( "  RIPEMD-160 test #%d: ", i + 1 );
+            mixpanel_mbedtls_printf( "  RIPEMD-160 test #%d: ", i + 1 );
 
-        mbedtls_ripemd160( (const unsigned char *) ripemd160_test_input[i],
+        mixpanel_mbedtls_ripemd160( (const unsigned char *) ripemd160_test_input[i],
                    strlen( ripemd160_test_input[i] ),
                    output );
 
         if( memcmp( output, ripemd160_test_md[i], 20 ) != 0 )
         {
             if( verbose != 0 )
-                mbedtls_printf( "failed\n" );
+                mixpanel_mbedtls_printf( "failed\n" );
 
             return( 1 );
         }
 
         if( verbose != 0 )
-            mbedtls_printf( "passed\n" );
+            mixpanel_mbedtls_printf( "passed\n" );
     }
 
     return( 0 );

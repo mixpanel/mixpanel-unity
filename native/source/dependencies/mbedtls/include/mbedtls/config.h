@@ -99,7 +99,7 @@
  *
  * Enabling MBEDTLS_PLATFORM_MEMORY without the
  * MBEDTLS_PLATFORM_{FREE,CALLOC}_MACROs will provide
- * "mbedtls_platform_set_calloc_free()" allowing you to set an alternative calloc() and
+ * "mixpanel_mbedtls_platform_set_calloc_free()" allowing you to set an alternative calloc() and
  * free() function pointer at runtime.
  *
  * Enabling MBEDTLS_PLATFORM_MEMORY and specifying
@@ -138,7 +138,7 @@
  * abstraction layer.
  *
  * Example: In case you uncomment MBEDTLS_PLATFORM_PRINTF_ALT, mbed TLS will
- * provide a function "mbedtls_platform_set_printf()" that allows you to set an
+ * provide a function "mixpanel_mbedtls_platform_set_printf()" that allows you to set an
  * alternative printf function pointer.
  *
  * All these define require MBEDTLS_PLATFORM_C to be defined!
@@ -197,8 +197,8 @@
 /**
  * \def MBEDTLS_TIMING_ALT
  *
- * Uncomment to provide your own alternate implementation for mbedtls_timing_hardclock(),
- * mbedtls_timing_get_timer(), mbedtls_set_alarm(), mbedtls_set/get_delay()
+ * Uncomment to provide your own alternate implementation for mixpanel_mbedtls_timing_hardclock(),
+ * mixpanel_mbedtls_timing_get_timer(), mixpanel_mbedtls_set_alarm(), mixpanel_mbedtls_set/get_delay()
  *
  * Only works if you have MBEDTLS_TIMING_C enabled.
  *
@@ -219,7 +219,7 @@
  * functions, use one of the MBEDTLS__FUNCTION_NAME__ALT flags.
  *
  * Example: In case you uncomment MBEDTLS_AES_ALT, mbed TLS will no longer
- * provide the "struct mbedtls_aes_context" definition and omit the base function
+ * provide the "struct mixpanel_mbedtls_aes_context" definition and omit the base function
  * declarations and implementations. "aes_alt.h" will be included from
  * "aes.h" to include the new function definitions.
  *
@@ -251,9 +251,9 @@
  * used, in contrast to the MBEDTLS__MODULE_NAME__ALT flags.
  *
  * Example: In case you uncomment MBEDTLS_SHA256_PROCESS_ALT, mbed TLS will
- * no longer provide the mbedtls_sha1_process() function, but it will still provide
- * the other function (using your mbedtls_sha1_process() function) and the definition
- * of mbedtls_sha1_context, so your implementation of mbedtls_sha1_process must be compatible
+ * no longer provide the mixpanel_mbedtls_sha1_process() function, but it will still provide
+ * the other function (using your mixpanel_mbedtls_sha1_process() function) and the definition
+ * of mixpanel_mbedtls_sha1_context, so your implementation of mixpanel_mbedtls_sha1_process must be compatible
  * with this definition.
  *
  * Note: if you use the AES_xxx_ALT macros, then is is recommended to also set
@@ -284,7 +284,7 @@
  * Uncomment this macro to let mbed TLS use your own implementation of a
  * hardware entropy collector.
  *
- * Your function must be called \c mbedtls_hardware_poll(), have the same
+ * Your function must be called \c mixpanel_mbedtls_hardware_poll(), have the same
  * prototype as declared in entropy_poll.h, and accept NULL as first argument.
  *
  * Uncomment to use your own hardware entropy collector.
@@ -398,8 +398,8 @@
  *
  * Remove RC4 ciphersuites by default in SSL / TLS.
  * This flag removes the ciphersuites based on RC4 from the default list as
- * returned by mbedtls_ssl_list_ciphersuites(). However, it is still possible to
- * enable (some of) them with mbedtls_ssl_conf_ciphersuites() by including them
+ * returned by mixpanel_mbedtls_ssl_list_ciphersuites(). However, it is still possible to
+ * enable (some of) them with mixpanel_mbedtls_ssl_conf_ciphersuites() by including them
  * explicitly.
  *
  * Uncomment this macro to remove RC4 ciphersuites by default.
@@ -711,15 +711,15 @@
 /**
  * \def MBEDTLS_ERROR_STRERROR_DUMMY
  *
- * Enable a dummy error function to make use of mbedtls_strerror() in
+ * Enable a dummy error function to make use of mixpanel_mbedtls_strerror() in
  * third party libraries easier when MBEDTLS_ERROR_C is disabled
  * (no effect when MBEDTLS_ERROR_C is enabled).
  *
  * You can safely disable this if MBEDTLS_ERROR_C is enabled, or if you're
- * not using mbedtls_strerror() or error_strerror() in your application.
+ * not using mixpanel_mbedtls_strerror() or error_strerror() in your application.
  *
  * Disable if you run into name conflicts and want to really remove the
- * mbedtls_strerror()
+ * mixpanel_mbedtls_strerror()
  */
 #define MBEDTLS_ERROR_STRERROR_DUMMY
 
@@ -743,7 +743,7 @@
  * \def MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
  *
  * Do not add default entropy sources. These are the platform specific,
- * mbedtls_timing_hardclock and HAVEGE based poll functions.
+ * mixpanel_mbedtls_timing_hardclock and HAVEGE based poll functions.
  *
  * This is useful to have more control over the added entropy sources in an
  * application.
@@ -861,7 +861,7 @@
  * The default implementation is meant to be a reasonnable compromise between
  * performance and size. This version optimizes more aggressively for size at
  * the expense of performance. Eg on Cortex-M4 it reduces the size of
- * mbedtls_sha256_process() from ~2KB to ~0.5KB for a performance hit of about
+ * mixpanel_mbedtls_sha256_process() from ~2KB to ~0.5KB for a performance hit of about
  * 30%.
  *
  * Uncomment to enable the smaller implementation of SHA256.
@@ -1110,7 +1110,7 @@
  *           MBEDTLS_SSL_PROTO_DTLS
  *
  * \warning Disabling this is often a security risk!
- * See mbedtls_ssl_conf_dtls_anti_replay() for details.
+ * See mixpanel_mbedtls_ssl_conf_dtls_anti_replay() for details.
  *
  * Comment this to disable anti-replay in DTLS.
  */
@@ -1139,7 +1139,7 @@
  *
  * Enable support for a limit of records with bad MAC.
  *
- * See mbedtls_ssl_conf_dtls_badmac_limit().
+ * See mixpanel_mbedtls_ssl_conf_dtls_badmac_limit().
  *
  * Requires: MBEDTLS_SSL_PROTO_DTLS
  */
@@ -1206,7 +1206,7 @@
  *
  * Allow run-time checking of compile-time enabled features. Thus allowing users
  * to check at run-time if the library is for instance compiled with threading
- * support via mbedtls_version_check_feature().
+ * support via mixpanel_mbedtls_version_check_feature().
  *
  * Requires: MBEDTLS_VERSION_C
  *
@@ -1437,7 +1437,7 @@
  *          library/pkwrite.c
  *          library/x509_create.c
  *          library/x509write_crt.c
- *          library/mbedtls_x509write_csr.c
+ *          library/mixpanel_mbedtls_x509write_csr.c
  */
 #define MBEDTLS_ASN1_WRITE_C
 
@@ -1705,7 +1705,7 @@
  * Module:  library/error.c
  * Caller:
  *
- * This module enables mbedtls_strerror().
+ * This module enables mixpanel_mbedtls_strerror().
  */
 #define MBEDTLS_ERROR_C
 
@@ -1765,7 +1765,7 @@
  *
  * Enable the generic message digest layer.
  *
- * Module:  library/mbedtls_md.c
+ * Module:  library/mixpanel_mbedtls_md.c
  * Caller:
  *
  * Uncomment to enable generic message digest wrappers.
@@ -1777,7 +1777,7 @@
  *
  * Enable the MD2 hash algorithm.
  *
- * Module:  library/mbedtls_md2.c
+ * Module:  library/mixpanel_mbedtls_md2.c
  * Caller:
  *
  * Uncomment to enable support for (rare) MD2-signed X.509 certs.
@@ -1789,7 +1789,7 @@
  *
  * Enable the MD4 hash algorithm.
  *
- * Module:  library/mbedtls_md4.c
+ * Module:  library/mixpanel_mbedtls_md4.c
  * Caller:
  *
  * Uncomment to enable support for (rare) MD4-signed X.509 certs.
@@ -1801,8 +1801,8 @@
  *
  * Enable the MD5 hash algorithm.
  *
- * Module:  library/mbedtls_md5.c
- * Caller:  library/mbedtls_md.c
+ * Module:  library/mixpanel_mbedtls_md5.c
+ * Caller:  library/mixpanel_mbedtls_md.c
  *          library/pem.c
  *          library/ssl_tls.c
  *
@@ -1851,11 +1851,11 @@
  *          library/rsa.c
  *          library/x509.c
  *          library/x509_create.c
- *          library/mbedtls_x509_crl.c
- *          library/mbedtls_x509_crt.c
- *          library/mbedtls_x509_csr.c
+ *          library/mixpanel_mbedtls_x509_crl.c
+ *          library/mixpanel_mbedtls_x509_crt.c
+ *          library/mixpanel_mbedtls_x509_csr.c
  *          library/x509write_crt.c
- *          library/mbedtls_x509write_csr.c
+ *          library/mixpanel_mbedtls_x509write_csr.c
  *
  * This modules translates between OIDs and internal values.
  */
@@ -1883,9 +1883,9 @@
  * Module:  library/pem.c
  * Caller:  library/dhm.c
  *          library/pkparse.c
- *          library/mbedtls_x509_crl.c
- *          library/mbedtls_x509_crt.c
- *          library/mbedtls_x509_csr.c
+ *          library/mixpanel_mbedtls_x509_crl.c
+ *          library/mixpanel_mbedtls_x509_crt.c
+ *          library/mixpanel_mbedtls_x509_csr.c
  *
  * Requires: MBEDTLS_BASE64_C
  *
@@ -1901,7 +1901,7 @@
  * Module:  library/pem.c
  * Caller:  library/pkwrite.c
  *          library/x509write_crt.c
- *          library/mbedtls_x509write_csr.c
+ *          library/mixpanel_mbedtls_x509write_csr.c
  *
  * Requires: MBEDTLS_BASE64_C
  *
@@ -1931,8 +1931,8 @@
  * Enable the generic public (asymetric) key parser.
  *
  * Module:  library/pkparse.c
- * Caller:  library/mbedtls_x509_crt.c
- *          library/mbedtls_x509_csr.c
+ * Caller:  library/mixpanel_mbedtls_x509_crt.c
+ *          library/mixpanel_mbedtls_x509_csr.c
  *
  * Requires: MBEDTLS_PK_C
  *
@@ -2023,8 +2023,8 @@
  *
  * Enable the RIPEMD-160 hash algorithm.
  *
- * Module:  library/mbedtls_ripemd160.c
- * Caller:  library/mbedtls_md.c
+ * Module:  library/mixpanel_mbedtls_ripemd160.c
+ * Caller:  library/mixpanel_mbedtls_md.c
  *
  */
 #define MBEDTLS_RIPEMD160_C
@@ -2052,8 +2052,8 @@
  *
  * Enable the SHA1 cryptographic hash algorithm.
  *
- * Module:  library/mbedtls_sha1.c
- * Caller:  library/mbedtls_md.c
+ * Module:  library/mixpanel_mbedtls_sha1.c
+ * Caller:  library/mixpanel_mbedtls_md.c
  *          library/ssl_cli.c
  *          library/ssl_srv.c
  *          library/ssl_tls.c
@@ -2068,9 +2068,9 @@
  *
  * Enable the SHA-224 and SHA-256 cryptographic hash algorithms.
  *
- * Module:  library/mbedtls_sha256.c
+ * Module:  library/mixpanel_mbedtls_sha256.c
  * Caller:  library/entropy.c
- *          library/mbedtls_md.c
+ *          library/mixpanel_mbedtls_md.c
  *          library/ssl_cli.c
  *          library/ssl_srv.c
  *          library/ssl_tls.c
@@ -2085,9 +2085,9 @@
  *
  * Enable the SHA-384 and SHA-512 cryptographic hash algorithms.
  *
- * Module:  library/mbedtls_sha512.c
+ * Module:  library/mixpanel_mbedtls_sha512.c
  * Caller:  library/entropy.c
- *          library/mbedtls_md.c
+ *          library/mixpanel_mbedtls_md.c
  *          library/ssl_cli.c
  *          library/ssl_srv.c
  *
@@ -2223,9 +2223,9 @@
  * Enable X.509 core for using certificates.
  *
  * Module:  library/x509.c
- * Caller:  library/mbedtls_x509_crl.c
- *          library/mbedtls_x509_crt.c
- *          library/mbedtls_x509_csr.c
+ * Caller:  library/mixpanel_mbedtls_x509_crl.c
+ *          library/mixpanel_mbedtls_x509_crt.c
+ *          library/mixpanel_mbedtls_x509_csr.c
  *
  * Requires: MBEDTLS_ASN1_PARSE_C, MBEDTLS_BIGNUM_C, MBEDTLS_OID_C,
  *           MBEDTLS_PK_PARSE_C
@@ -2239,7 +2239,7 @@
  *
  * Enable X.509 certificate parsing.
  *
- * Module:  library/mbedtls_x509_crt.c
+ * Module:  library/mixpanel_mbedtls_x509_crt.c
  * Caller:  library/ssl_cli.c
  *          library/ssl_srv.c
  *          library/ssl_tls.c
@@ -2255,8 +2255,8 @@
  *
  * Enable X.509 CRL parsing.
  *
- * Module:  library/mbedtls_x509_crl.c
- * Caller:  library/mbedtls_x509_crt.c
+ * Module:  library/mixpanel_mbedtls_x509_crl.c
+ * Caller:  library/mixpanel_mbedtls_x509_crt.c
  *
  * Requires: MBEDTLS_X509_USE_C
  *
@@ -2269,7 +2269,7 @@
  *
  * Enable X.509 Certificate Signing Request (CSR) parsing.
  *
- * Module:  library/mbedtls_x509_csr.c
+ * Module:  library/mixpanel_mbedtls_x509_csr.c
  * Caller:  library/x509_crt_write.c
  *
  * Requires: MBEDTLS_X509_USE_C

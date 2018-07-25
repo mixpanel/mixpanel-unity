@@ -40,25 +40,25 @@ extern "C" {
 /**
  * Base cipher information. The non-mode specific functions and values.
  */
-struct mbedtls_cipher_base_t
+struct mixpanel_mbedtls_cipher_base_t
 {
     /** Base Cipher type (e.g. MBEDTLS_CIPHER_ID_AES) */
-    mbedtls_cipher_id_t cipher;
+    mixpanel_mbedtls_cipher_id_t cipher;
 
     /** Encrypt using ECB */
-    int (*ecb_func)( void *ctx, mbedtls_operation_t mode,
+    int (*ecb_func)( void *ctx, mixpanel_mbedtls_operation_t mode,
                      const unsigned char *input, unsigned char *output );
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
     /** Encrypt using CBC */
-    int (*cbc_func)( void *ctx, mbedtls_operation_t mode, size_t length,
+    int (*cbc_func)( void *ctx, mixpanel_mbedtls_operation_t mode, size_t length,
                      unsigned char *iv, const unsigned char *input,
                      unsigned char *output );
 #endif
 
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
     /** Encrypt using CFB (Full length) */
-    int (*cfb_func)( void *ctx, mbedtls_operation_t mode, size_t length, size_t *iv_off,
+    int (*cfb_func)( void *ctx, mixpanel_mbedtls_operation_t mode, size_t length, size_t *iv_off,
                      unsigned char *iv, const unsigned char *input,
                      unsigned char *output );
 #endif
@@ -94,13 +94,13 @@ struct mbedtls_cipher_base_t
 
 typedef struct
 {
-    mbedtls_cipher_type_t type;
-    const mbedtls_cipher_info_t *info;
-} mbedtls_cipher_definition_t;
+    mixpanel_mbedtls_cipher_type_t type;
+    const mixpanel_mbedtls_cipher_info_t *info;
+} mixpanel_mbedtls_cipher_definition_t;
 
-extern const mbedtls_cipher_definition_t mbedtls_cipher_definitions[];
+extern const mixpanel_mbedtls_cipher_definition_t mixpanel_mbedtls_cipher_definitions[];
 
-extern int mbedtls_cipher_supported[];
+extern int mixpanel_mbedtls_cipher_supported[];
 
 #ifdef __cplusplus
 }
