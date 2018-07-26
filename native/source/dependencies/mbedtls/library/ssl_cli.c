@@ -67,7 +67,7 @@ static void ssl_write_hostname_ext( mixpanel_mbedtls_ssl_context *ssl,
     if( ssl->hostname == NULL )
         return;
 
-    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello2222, adding server name extension: %s",
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, adding server name extension: %s",
                    ssl->hostname ) );
 
     hostname_len = strlen( ssl->hostname );
@@ -805,7 +805,6 @@ static int ssl_write_client_hello( mixpanel_mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MBEDTLS_SSL_ALPN)
-    MBEDTLS_SSL_DEBUG_MSG( 3, ( "MBEDTLS_SSL_ALPN defined but we don't support it, please don't crash me..." ) );
     ssl_write_alpn_ext( ssl, p + 2 + ext_len, &olen );
     ext_len += olen;
 #endif
