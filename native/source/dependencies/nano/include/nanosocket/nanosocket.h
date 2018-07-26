@@ -383,7 +383,7 @@ class MBEDTLSSocket : public Socket
     public:
         MBEDTLSSocket()
         {
-            mixpanel_mbedtls_debug_set_threshold( 4 );
+            mixpanel_mbedtls_debug_set_threshold(0);
             mixpanel_mbedtls_net_init( &net );
             mixpanel_mbedtls_ssl_init( &ssl );
             mixpanel_mbedtls_ssl_config_init( &conf );
