@@ -383,7 +383,6 @@ class MBEDTLSSocket : public Socket
     public:
         MBEDTLSSocket()
         {
-            mixpanel_mbedtls_debug_set_threshold(0);
             mixpanel_mbedtls_net_init( &net );
             mixpanel_mbedtls_ssl_init( &ssl );
             mixpanel_mbedtls_ssl_config_init( &conf );
@@ -477,6 +476,7 @@ class MBEDTLSSocket : public Socket
 
         virtual int close() override
         {
+            //mixpanel_mbedtls_debug_set_threshold(1000);
             mixpanel_mbedtls_net_free( &net );
             //mixpanel_mbedtls_x509_crt_free( &cacert );
             mixpanel_mbedtls_ssl_free( &ssl );
