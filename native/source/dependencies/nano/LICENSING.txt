@@ -1,3 +1,0 @@
-The author of this library (Tokuhiro Matsuno) was kind enough to change the license to the MIT or the Perl License. Thanks to him for that! besides that, we've made minor changes:
-- added win32 compatibility
-- fixed url parsing for release builds (the call to parse() was wrapped inside an assert)
