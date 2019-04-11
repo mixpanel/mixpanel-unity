@@ -102,7 +102,7 @@ namespace mixpanel
         /// <param name="key">name of the property to register</param>
         /// <param name="value">value of the property to register</param>
         public static void RegisterOnce(string key, object value) {
-            if (!props.ContainsKey(key))
+            if (!OnceProperties.ContainsKey(key))
                 OnceProperties.Add(key, value);
         }
 
