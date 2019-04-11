@@ -72,7 +72,7 @@ namespace mixpanel
             #else
             result = SystemInfo.deviceUniqueIdentifier;
             #endif
-            if (string.IsNullOrEmpty(result)) result = Guid.NewGuid().ToString();
+            if (string.IsNullOrEmpty(result) || result == "n/a") result = Guid.NewGuid().ToString();
             return result;
         }
     }

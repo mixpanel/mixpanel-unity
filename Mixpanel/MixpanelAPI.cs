@@ -92,7 +92,7 @@ namespace mixpanel
         /// <param name="value">value of the property to register</param>
         public static void Register(string key, object value) {
             var props = SuperProperties;
-            props.Add(key, value);
+            props[key] = value;
             SuperProperties = props;
         }
 
@@ -102,7 +102,8 @@ namespace mixpanel
         /// <param name="key">name of the property to register</param>
         /// <param name="value">value of the property to register</param>
         public static void RegisterOnce(string key, object value) {
-            OnceProperties.Add(key, value);
+            if (!props.ContainsKey(key))
+                OnceProperties.Add(key, value);
         }
 
         /// <summary>
@@ -152,6 +153,19 @@ namespace mixpanel
         public static void Track(string eventName)
         {
             track(eventName, new Value());
+        }
+
+        /// <summary>
+        /// Tracks an event with properties of key=value.
+        /// </summary>
+        /// <param name="eventName">the name of the event to send</param>
+        /// <param name="key">A Key value for the data</param>
+        /// <param name="value">The value to use for the key</param>
+        public static void Track(string eventName, string key, object value)
+        {
+            var data = new Value();
+            data[key] = value;
+            track(eventName, data);
         }
 
         /// <summary>
