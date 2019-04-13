@@ -1,6 +1,6 @@
 Latest Version 
 --------------
-##### _April 12th, 2019_ - [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
+##### _April 12th, 2019_ - [v2.0.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.0.0)
 
 Getting Started
 ---------------

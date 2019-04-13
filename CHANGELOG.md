@@ -1,4 +1,4 @@
-## [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
+## [v2.0.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.0.0)
 ### April 12th - 2018
 
 #### This version is a complete rewrite of the library to support ALL platforms that unity can compile to.
