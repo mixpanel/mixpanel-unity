@@ -6,9 +6,9 @@ Getting Started
 ---------------
 Check out our [official documentation](https://mixpanel.com/help/reference/unity) to learn how to install the library in Unity. You will also learn how to make use of all the features we currently support!
 
-Other links:
-* [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
-* [Sample application](https://github.com/rocktavious/mixpanel-unity/tree/master/Demo)
+Demo
+----
+Checkout our [Sample application](https://github.com/rocktavious/mixpanel-unity/tree/master/Demo)
 
 Want to Contribute?
 -------------------
