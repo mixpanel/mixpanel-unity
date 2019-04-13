@@ -1,8 +1,6 @@
 Latest Version 
 --------------
-##### _Aug 7th, 2018_ - [v1.3.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.3.1)
-
-[See the changes](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.3.0).
+##### _April 12th, 2019_ - [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
 
 Getting Started
 ---------------
@@ -19,28 +17,13 @@ We'd also love for you to come and work with us! Check out http://boards.greenho
 
 Changelog
 ---------
-See [wiki page](https://github.com/mixpanel/mixpanel-unity/wiki/Changelog).
+See [changelog](https://github.com/rocktavious/mixpanel-unity/tree/master/CHANGELOG.md) for details.
 
+Unity Package Manager
+---------------------
 
-Building the SDK
-----------------
+This library can be installed using the unity package manager system with git
 
-Add all dependencies of the Mixpanel SDK to your app using the following code in your terminal:
-
-```
-sh ./native/build/install_dependencies.sh
-```
-
-Make sure you've logged in to the Unity app.
-
-Then, run the following build script in your terminal: 
-
-```
-cd build
-python build_all.py # on OS X
-build_all.py # on Windows
-```
-
-Note that Unity must be closed while running build_all.py.
-
-The build script will create all the project files (make, xcode, visual studio), perform the builds and run the tests suites. The test suites are run on: OS X, Windows, iOS Simulator and Android Device (if one is attached).
+* In your unity project root open Packages/manifest.json
+* Add the following line to the dependencies section `"com.mixpanel.unity": "https://github.com/rocktavious/mixpanel-unity.git",`
+* Open Unity and the package should download automatically
