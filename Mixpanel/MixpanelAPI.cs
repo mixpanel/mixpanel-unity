@@ -172,7 +172,7 @@ namespace mixpanel
         /// Tracks an event with properties.
         /// </summary>
         /// <param name="eventName">the name of the event to send</param>
-        /// <param name="properties">A JSONObject containing the key value pairs of the properties
+        /// <param name="properties">A Value containing the key value pairs of the properties
         /// to include in this event. Pass null if no extra properties exist.
         /// </param>
         public static void Track(string eventName, Value properties)

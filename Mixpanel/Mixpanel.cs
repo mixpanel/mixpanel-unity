@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using Newtonsoft.Json;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -15,6 +14,7 @@ namespace mixpanel
     {
         internal static MixpanelAsync async;
         internal static Value OnceProperties = new Value();
+        internal static Value AutoProperties;
 
         internal static string Base64Encode(string text) {
             var bytes = Encoding.UTF8.GetBytes(text);
@@ -23,13 +23,21 @@ namespace mixpanel
 
         internal static string BuildURL(string endpoint, Value data)
         {
-            if (MixpanelSettings.Instance.ShowDebug) Debug.Log(JsonConvert.SerializeObject(data));
-            return string.Format("{0}/?data={1}", endpoint, Base64Encode(JsonConvert.SerializeObject(data)));
+            if (MixpanelSettings.Instance.ShowDebug) Debug.Log(Json.Serialize(data));
+            return string.Format("{0}/?ip=1&data={1}", endpoint, Base64Encode(Json.Serialize(data)));
         }
 
         internal static void track(string eventName, Value properties)
         {
             if (!IsTracking) return;
+            if (AutoProperties == null) AutoProperties = collectAutoProperties();
+            foreach (var item in AutoProperties)
+            {
+                properties[item.Key] =  item.Value;
+            }
+            // These auto properties can change in runtime so don't bake them
+            properties["$screen_width"] = Screen.width;
+            properties["$screen_height"] = Screen.height;
             foreach (var item in OnceProperties)
             {
                 properties[item.Key] =  item.Value;
@@ -53,6 +61,21 @@ namespace mixpanel
             var data = new Value() { {"event", eventName}, {"properties", properties} };
             DoRequest("https://api.mixpanel.com/track", data);
             // "https://api.mixpanel.com/import" if time is long?!?
+        }
+
+        internal static Value collectAutoProperties()
+        {
+            Value properties = new Value();
+            properties["$app_build_number"] = Application.version;
+            properties["$app_version"] = Application.unityVersion;
+            properties["$device"] = Application.platform.ToString();
+            properties["$model"] = SystemInfo.deviceModel;
+            properties["$os"] = SystemInfo.operatingSystemFamily.ToString();
+            properties["$os_version"] = SystemInfo.operatingSystem;
+            properties["$screen_dpi"] = Screen.dpi;
+            properties["$wifi"] = Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork;
+            properties["mp_lib"] = "unity";
+            return properties;
         }
 
         internal static void engage(Value properties)

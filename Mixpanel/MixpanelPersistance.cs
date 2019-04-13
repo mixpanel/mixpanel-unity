@@ -1,5 +1,4 @@
 using UnityEngine;
-using Newtonsoft.Json;
 
 namespace mixpanel
 {
@@ -40,12 +39,12 @@ namespace mixpanel
             get {
                 if (!PlayerPrefs.HasKey(SuperPropertiesName))
                 {
-                    PlayerPrefs.SetString(SuperPropertiesName, JsonConvert.SerializeObject(new Value()));
+                    PlayerPrefs.SetString(SuperPropertiesName, Json.Serialize(new Value()));
                 }
-                return JsonConvert.DeserializeObject<Value>(PlayerPrefs.GetString(SuperPropertiesName));
+                return Json.Deserialize(PlayerPrefs.GetString(SuperPropertiesName));
             }
             set {
-                PlayerPrefs.SetString(SuperPropertiesName, JsonConvert.SerializeObject(value));
+                PlayerPrefs.SetString(SuperPropertiesName, Json.Serialize(value));
             }
         }
 
@@ -53,12 +52,12 @@ namespace mixpanel
             get {
                 if (!PlayerPrefs.HasKey(TimedEventsName))
                 {
-                    PlayerPrefs.SetString(TimedEventsName, JsonConvert.SerializeObject(new Value()));
+                    PlayerPrefs.SetString(TimedEventsName, Json.Serialize(new Value()));
                 }
-                return JsonConvert.DeserializeObject<Value>(PlayerPrefs.GetString(TimedEventsName));
+                return Json.Deserialize(PlayerPrefs.GetString(TimedEventsName));
             }
             set {
-                PlayerPrefs.SetString(TimedEventsName, JsonConvert.SerializeObject(value));
+                PlayerPrefs.SetString(TimedEventsName, Json.Serialize(value));
             }
         }
     }
