@@ -1,4 +1,4 @@
-# [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
+## [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
 ### April 12th - 2018
 
 #### This version is a complete rewrite of the library to support ALL platforms that unity can compile to.
@@ -11,14 +11,14 @@ The github repo has also been structured so that it supports the Unity 2018.3 pa
 
 ---
 
-# [v1.1.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.1.1)
+## [v1.1.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.1.1)
 ### December 18th - 2017
 
 Bug fixes
 
 ---
 
-# [v1.1.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.1.0)
+## [v1.1.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.1.0)
 ### October 6th - 2017
 
 Improvements
@@ -32,7 +32,7 @@ Fix crash occurring only for Android when AdvertisingIdClient.Info.getId() was r
 
 ---
 
-# [v1.0.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/1.0.1)
+## [v1.0.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/1.0.1)
 ### June 16th - 2016
 
 iOS
@@ -46,7 +46,7 @@ Networking now backs off exponentially on failure
 
 ---
 
-# [v1.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/1.0.0)
+## [v1.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/1.0.0)
 ### June 3rd - 2016
 
 We are thrilled to release the official Mixpanel Unity SDK. Some links to get started:
