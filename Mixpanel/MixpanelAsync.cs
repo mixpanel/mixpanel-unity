@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,11 +6,11 @@ namespace mixpanel
 {
     public class MixpanelAsync : MonoBehaviour
     {
-        private Stack<IEnumerator> queue;
+        private Stack<IEnumerator> _queue;
 
         private void Awake()
         {
-            queue = new Stack<IEnumerator>();
+            this._queue = new Stack<IEnumerator>();
         }
 
         private void Start()
@@ -21,7 +20,7 @@ namespace mixpanel
 
         private void LateUpdate()
         {
-            foreach (var item in queue)
+            foreach (IEnumerator item in this._queue)
             {
                 StartCoroutine(item);
             }
@@ -29,7 +28,7 @@ namespace mixpanel
 
         internal void Enqueue(IEnumerator request)
         {
-            queue.Push(request);
+            this._queue.Push(request);
         }
     }
 }

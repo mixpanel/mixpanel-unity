@@ -60,7 +60,7 @@ namespace mixpanel
 
         public static string GetID()
         {
-            string result = "";
+            string result;
             #if UNITY_ANDROID && !UNITY_EDITOR
             result = get_android_advertising_id();
             if (string.IsNullOrEmpty(result))

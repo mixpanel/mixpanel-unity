@@ -12,73 +12,75 @@ namespace mixpanel
 {
     public static partial class Mixpanel
     {
-        internal static MixpanelAsync async;
+        internal static MixpanelAsync Async;
         internal static Value OnceProperties = new Value();
         internal static Value AutoProperties;
 
         internal static string Base64Encode(string text) {
-            var bytes = Encoding.UTF8.GetBytes(text);
+            byte[] bytes = Encoding.UTF8.GetBytes(text);
             return Convert.ToBase64String(bytes);
         }
 
         internal static string BuildURL(string endpoint, Value data)
         {
             if (MixpanelSettings.Instance.ShowDebug) Debug.Log(Json.Serialize(data));
-            return string.Format("{0}/?ip=1&data={1}", endpoint, Base64Encode(Json.Serialize(data)));
+            return $"{endpoint}/?ip=1&data={Base64Encode(Json.Serialize(data))}";
         }
 
-        internal static void track(string eventName, Value properties)
+        internal static void DoTrack(string eventName, Value properties)
         {
             if (!IsTracking) return;
-            if (AutoProperties == null) AutoProperties = collectAutoProperties();
-            foreach (var item in AutoProperties)
+            if (AutoProperties == null) AutoProperties = CollectAutoProperties();
+            foreach (KeyValuePair<string, object> item in AutoProperties)
             {
                 properties[item.Key] =  item.Value;
             }
             // These auto properties can change in runtime so don't bake them
             properties["$screen_width"] = Screen.width;
             properties["$screen_height"] = Screen.height;
-            foreach (var item in OnceProperties)
+            foreach (KeyValuePair<string, object> item in OnceProperties)
             {
                 properties[item.Key] =  item.Value;
             }
             OnceProperties = new Value();
-            foreach (var item in SuperProperties)
+            foreach (KeyValuePair<string, object> item in SuperProperties)
             {
                 properties[item.Key] = item.Value;
             }
-            object startTime;
-            if (TimedEvents.TryGetValue(eventName, out startTime))
+
+            if (TimedEvents.TryGetValue(eventName, out object startTime))
             {
                 properties["$duration"] = CurrentTime() - (double)startTime;
-                var events = TimedEvents;
+                Value events = TimedEvents;
                 events.Remove(eventName);
                 TimedEvents = events;
             }
             properties["token"] = MixpanelSettings.Instance.Token;
             properties["distinct_id"] = DistinctID;
             properties["time"] = CurrentTime();
-            var data = new Value() { {"event", eventName}, {"properties", properties} };
+            Value data = new Value { {"event", eventName}, {"properties", properties} };
             DoRequest("https://api.mixpanel.com/track", data);
             // "https://api.mixpanel.com/import" if time is long?!?
         }
 
-        internal static Value collectAutoProperties()
+        internal static Value CollectAutoProperties()
         {
-            Value properties = new Value();
-            properties["$app_build_number"] = Application.version;
-            properties["$app_version"] = Application.unityVersion;
-            properties["$device"] = Application.platform.ToString();
-            properties["$model"] = SystemInfo.deviceModel;
-            properties["$os"] = SystemInfo.operatingSystemFamily.ToString();
-            properties["$os_version"] = SystemInfo.operatingSystem;
-            properties["$screen_dpi"] = Screen.dpi;
-            properties["$wifi"] = Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork;
-            properties["mp_lib"] = "unity";
+            Value properties = new Value
+            {
+                ["$app_build_number"] = Application.version,
+                ["$app_version"] = Application.unityVersion,
+                ["$device"] = Application.platform.ToString(),
+                ["$model"] = SystemInfo.deviceModel,
+                ["$os"] = SystemInfo.operatingSystemFamily.ToString(),
+                ["$os_version"] = SystemInfo.operatingSystem,
+                ["$screen_dpi"] = Screen.dpi,
+                ["$wifi"] = Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork,
+                ["mp_lib"] = "unity"
+            };
             return properties;
         }
 
-        internal static void engage(Value properties)
+        internal static void DoEngage(Value properties)
         {
             if (!IsTracking) return;
             properties["$token"] = MixpanelSettings.Instance.Token;
@@ -107,27 +109,25 @@ namespace mixpanel
 
         internal static void RuntimeRequest(UnityWebRequest request)
         {
-            if (async == null) async = new GameObject("Mixpanel").AddComponent<MixpanelAsync>();
-            async.Enqueue(HandleRequest(request));
+            if (Async == null) Async = new GameObject("Mixpanel").AddComponent<MixpanelAsync>();
+            Async.Enqueue(HandleRequest(request));
         }
 
         internal static IEnumerator HandleRequest(UnityWebRequest request)
         {
             yield return request.SendWebRequest();
             while (!request.isDone) yield return new WaitForEndOfFrame();
-            if (MixpanelSettings.Instance.ShowDebug)
-            {
-                if (request.isNetworkError || request.isHttpError)
-                    Debug.Log(request.error);
-                else
-                    Debug.Log(request.downloadHandler.text);
-            }
+            if (!MixpanelSettings.Instance.ShowDebug) yield break;
+            if (request.isNetworkError || request.isHttpError)
+                Debug.Log(request.error);
+            else
+                Debug.Log(request.downloadHandler.text);
         }
 
         internal static double CurrentTime()
         {
             DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            double currentEpochTime = (double)(DateTime.UtcNow - epochStart).TotalSeconds;
+            double currentEpochTime = (DateTime.UtcNow - epochStart).TotalSeconds;
             return currentEpochTime;
         }
 

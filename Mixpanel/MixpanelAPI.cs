@@ -23,7 +23,7 @@ namespace mixpanel
         public static void Alias(string alias)
         {
             if (alias == DistinctID) return;
-            track("$create_alias", new Value(){{ "distinct_id", DistinctID }, { "alias", alias }});
+            DoTrack("$create_alias", new Value(){{ "distinct_id", DistinctID }, { "alias", alias }});
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace mixpanel
         /// <param name="eventName">the name of event to clear event timer</param>
         public static void ClearTimedEvent(string eventName)
         {
-            var events = TimedEvents;
+            Value events = TimedEvents;
             events.Remove(eventName);
             TimedEvents = events;
         }
@@ -77,12 +77,12 @@ namespace mixpanel
         /// <summary>
         /// Opt in tracking.
         /// </summary>
-        /// <param name="distinct_id">the distinct id for events. Behind the scenes,
+        /// <param name="distinctID">the distinct id for events. Behind the scenes,
         /// <code>Identify</code> will be called by using this distinct id.</param>
-        public static void OptInTracking(string distinct_id)
+        public static void OptInTracking(string distinctID)
         {
             IsTracking = true;
-            DistinctID = distinct_id;
+            DistinctID = distinctID;
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace mixpanel
         /// <param name="key">name of the property to register</param>
         /// <param name="value">value of the property to register</param>
         public static void Register(string key, object value) {
-            var props = SuperProperties;
+            Value props = SuperProperties;
             props[key] = value;
             SuperProperties = props;
         }
@@ -126,7 +126,7 @@ namespace mixpanel
         /// <param name="eventName">the name of the event to track with timing</param>
         public static void StartTimedEvent(string eventName)
         {
-            var events = TimedEvents;
+            Value events = TimedEvents;
             events[eventName] = CurrentTime();
             TimedEvents = events;
         }
@@ -138,12 +138,10 @@ namespace mixpanel
         /// <param name="eventName">the name of the event to track with timing</param>
         public static void StartTimedEventOnce(string eventName)
         {
-            var events = TimedEvents;
-            if (!events.ContainsKey(eventName))
-            {
-                events[eventName] = CurrentTime();
-                TimedEvents = events;
-            }
+            Value events = TimedEvents;
+            if (events.ContainsKey(eventName)) return;
+            events[eventName] = CurrentTime();
+            TimedEvents = events;
         }
 
         /// <summary>
@@ -152,7 +150,7 @@ namespace mixpanel
         /// <param name="eventName">the name of the event to send</param>
         public static void Track(string eventName)
         {
-            track(eventName, new Value());
+            DoTrack(eventName, new Value());
         }
 
         /// <summary>
@@ -163,9 +161,9 @@ namespace mixpanel
         /// <param name="value">The value to use for the key</param>
         public static void Track(string eventName, string key, object value)
         {
-            var data = new Value();
+            Value data = new Value();
             data[key] = value;
-            track(eventName, data);
+            DoTrack(eventName, data);
         }
 
         /// <summary>
@@ -177,7 +175,7 @@ namespace mixpanel
         /// </param>
         public static void Track(string eventName, Value properties)
         {
-            track(eventName, properties);
+            DoTrack(eventName, properties);
         }
 
         /// <summary>
@@ -185,7 +183,7 @@ namespace mixpanel
         /// </summary>
         /// <param name="key">name of the property to unregister</param>
         public static void Unregister(string key) {
-            var props = SuperProperties;
+            Value props = SuperProperties;
             props.Remove(key);
             SuperProperties = props;
         }
