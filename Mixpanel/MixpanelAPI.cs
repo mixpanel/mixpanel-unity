@@ -20,30 +20,21 @@ namespace mixpanel
         /// Creates a distinct_id alias.
         /// </summary>
         /// <param name="alias">the new distinct_id that should represent original</param>
-        public static void Alias(string alias)
+        public static void Alias(this string alias)
         {
-            if (alias == DistinctID) return;
-            DoTrack("$create_alias", new Value(){{ "distinct_id", DistinctID }, { "alias", alias }});
+            if (alias != DistinctId) DoTrack("$create_alias", new Value {{"distinct_id", DistinctId}, {"alias", alias}});
         }
 
         /// <summary>
         /// Clears all current event timers.
         /// </summary>
-        public static void ClearTimedEvents()
-        {
-            TimedEvents = new Value();
-        }
+        public static void ClearTimedEvents() => TimedEvents = Value.Object;
 
         /// <summary>
         /// Clears the event timer for a single event.
         /// </summary>
         /// <param name="eventName">the name of event to clear event timer</param>
-        public static void ClearTimedEvent(string eventName)
-        {
-            Value events = TimedEvents;
-            events.Remove(eventName);
-            TimedEvents = events;
-        }
+        public static void ClearTimedEvent(string eventName) => TimedEvents.Remove(eventName);
 
         /// <summary>
         /// Sets the distinct ID of the current user.
@@ -53,36 +44,27 @@ namespace mixpanel
         /// retention and funnel reporting, so be sure that the given value is globally unique for each
         /// individual user you intend to track.
         /// </param>
-        public static void Identify(string uniqueId)
-        {
-            DistinctID = uniqueId;
-        }
+        public static void Identify(string uniqueId) => DistinctId = uniqueId;
 
         /// <summary>
         /// Opt out tracking.
         /// </summary>
-        public static void OptOutTracking()
-        {
-            IsTracking = false;
-        }
+        public static void OptOutTracking() => IsTracking = false;
 
         /// <summary>
         /// Opt in tracking.
         /// </summary>
-        public static void OptInTracking()
-        {
-            IsTracking = true;
-        }
+        public static void OptInTracking() => IsTracking = true;
 
         /// <summary>
         /// Opt in tracking.
         /// </summary>
-        /// <param name="distinctID">the distinct id for events. Behind the scenes,
+        /// <param name="distinctId">the distinct id for events. Behind the scenes,
         /// <code>Identify</code> will be called by using this distinct id.</param>
-        public static void OptInTracking(string distinctID)
+        public static void OptInTracking(string distinctId)
         {
             IsTracking = true;
-            DistinctID = distinctID;
+            DistinctId = distinctId;
         }
 
         /// <summary>
@@ -90,10 +72,8 @@ namespace mixpanel
         /// </summary>
         /// <param name="key">name of the property to register</param>
         /// <param name="value">value of the property to register</param>
-        public static void Register(string key, object value) {
-            Value props = SuperProperties;
-            props[key] = value;
-            SuperProperties = props;
+        public static void Register(string key, Value value) {
+            SuperProperties[key] = value;
         }
 
         /// <summary>
@@ -101,20 +81,19 @@ namespace mixpanel
         /// </summary>
         /// <param name="key">name of the property to register</param>
         /// <param name="value">value of the property to register</param>
-        public static void RegisterOnce(string key, object value) {
+        public static void RegisterOnce(string key, Value value) {
             if (!OnceProperties.ContainsKey(key))
                 OnceProperties.Add(key, value);
         }
 
         /// <summary>
-        /// Clears all distinct_ids, superProperties, and push registrations from persistent storage.
+        /// Clears all superProperties, and push registrations from persistent storage.
         /// Will not clear referrer information.
         /// </summary>
         public static void Reset()
         {
-            DistinctID = GetID();
-            SuperProperties = new Value();
-            OnceProperties = new Value();
+            SuperProperties = Value.Object;
+            OnceProperties = Value.Object;
             // push registrations
         }
 
@@ -124,12 +103,7 @@ namespace mixpanel
         /// representing the number of seconds between your calls.
         /// </summary>
         /// <param name="eventName">the name of the event to track with timing</param>
-        public static void StartTimedEvent(string eventName)
-        {
-            Value events = TimedEvents;
-            events[eventName] = CurrentTime();
-            TimedEvents = events;
-        }
+        public static void StartTimedEvent(string eventName) => TimedEvents[eventName] = CurrentTime();
 
         /// <summary>
         /// Begin timing of an event, but only if the event has not already been registered as a timed event.
@@ -138,20 +112,14 @@ namespace mixpanel
         /// <param name="eventName">the name of the event to track with timing</param>
         public static void StartTimedEventOnce(string eventName)
         {
-            Value events = TimedEvents;
-            if (events.ContainsKey(eventName)) return;
-            events[eventName] = CurrentTime();
-            TimedEvents = events;
+            if (!TimedEvents.ContainsKey(eventName)) TimedEvents[eventName] = CurrentTime();
         }
 
         /// <summary>
         /// Tracks an event.
         /// </summary>
         /// <param name="eventName">the name of the event to send</param>
-        public static void Track(string eventName)
-        {
-            DoTrack(eventName, new Value());
-        }
+        public static void Track(string eventName) => DoTrack(eventName, Value.Object);
 
         /// <summary>
         /// Tracks an event with properties of key=value.
@@ -159,12 +127,7 @@ namespace mixpanel
         /// <param name="eventName">the name of the event to send</param>
         /// <param name="key">A Key value for the data</param>
         /// <param name="value">The value to use for the key</param>
-        public static void Track(string eventName, string key, object value)
-        {
-            Value data = new Value();
-            data[key] = value;
-            DoTrack(eventName, data);
-        }
+        public static void Track(string eventName, string key, Value value) => DoTrack(eventName, new Value {{key, value}});
 
         /// <summary>
         /// Tracks an event with properties.
@@ -173,19 +136,21 @@ namespace mixpanel
         /// <param name="properties">A Value containing the key value pairs of the properties
         /// to include in this event. Pass null if no extra properties exist.
         /// </param>
-        public static void Track(string eventName, Value properties)
-        {
-            DoTrack(eventName, properties);
-        }
+        public static void Track(string eventName, Value properties) => DoTrack(eventName, properties);
 
         /// <summary>
         /// Removes a single superProperty.
         /// </summary>
         /// <param name="key">name of the property to unregister</param>
-        public static void Unregister(string key) {
-            Value props = SuperProperties;
-            props.Remove(key);
-            SuperProperties = props;
+        public static void Unregister(string key) => SuperProperties.Remove(key);
+
+        /// <summary>
+        /// Flushes the queued data to Mixpanel
+        /// </summary>
+        public static void Flush()
+        {
+            SaveBatches();
+            MixpanelManager.Flush();
         }
     }
 }

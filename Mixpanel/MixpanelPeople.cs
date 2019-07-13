@@ -1,3 +1,5 @@
+using System;
+
 namespace mixpanel
 {
     public static partial class Mixpanel
@@ -22,8 +24,9 @@ namespace mixpanel
             /// </summary>
             /// <param name="property">the %People Analytics property that should have it's value appended to</param>
             /// <param name="values">the new value that will appear at the end of the property's list</param>
-            public static void Append(string property, object[] values)
+            public static void Append(string property, Value values)
             {
+                if(!values.IsArray) throw new ArgumentException("Append with values property must be an array", nameof(values));
                 DoEngage(new Value {{ "$append", new Value {{ property, values }} }});
             }
 
@@ -49,7 +52,7 @@ namespace mixpanel
             /// </summary>
             /// <param name="property">property name</param>
             /// <param name="by">amount to increment by</param>
-            public static void Increment(string property, object by)
+            public static void Increment(string property, Value by)
             {
                 DoEngage(new Value {{ "$add", new Value {{ property, by }} }});
             }
@@ -71,7 +74,7 @@ namespace mixpanel
             /// </summary>
             /// <param name="property">property name</param>
             /// <param name="to">property value</param>
-            public static void Set(string property, object to)
+            public static void Set(string property, Value to)
             {
                 DoEngage(new Value {{ "$set", new Value {{ property, to }} }});
             }
@@ -90,7 +93,7 @@ namespace mixpanel
             /// </summary>
             /// <param name="property">property name</param>
             /// <param name="to">property value</param>
-            public static void SetOnce(string property, object to)
+            public static void SetOnce(string property, Value to)
             {
                 DoEngage(new Value {{ "$set_once", new Value {{ property, to }} }});
             }
@@ -131,8 +134,9 @@ namespace mixpanel
             /// If the property exists and is not list-valued, the union will be ignored.            /// </summary>
             /// <param name="property">name of the list-valued property to set or modify</param>
             /// <param name="values">an array of values to add to the property value if not already present</param>
-            public static void Union(string property, object[] values)
+            public static void Union(string property, Value values)
             {
+                if(!values.IsArray) throw new ArgumentException("Union with values property must be an array", nameof(values));
                 DoEngage(new Value {{ "$union", new Value {{ property, values }} }});
             }
 
