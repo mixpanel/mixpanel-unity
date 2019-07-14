@@ -5,9 +5,9 @@
 
 The basis for this rewrite was https://github.com/mixpanel/mixpanel-unity/issues/10 to support WebGL but since the library was rewriten in plain c# it should work for any platform unity can compile to.
 
-The API has stayed complient with the documentation though there maybe a few changes to a few of the mixpanel properties that come though automatically due to unity not having access to certain system/device information easily
+The API has stayed compliant with the documentation though there maybe a few changes to a few of the mixpanel properties that come though automatically due to unity not having access to certain system/device information easily please reachout to us if there is something missing after you upgrade and we can introspect it
 
-The github repo has also been structured so that it supports the Unity 2018.3 package manager (please see the README for package manager install instructions)
+The github repo has also been structured so that it supports the Unity 2018.4 package manager (please see the README for package manager install instructions)
 
 ---
 

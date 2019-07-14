@@ -5,7 +5,7 @@
   "description": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rocktavious/mixpanel-unity"
+    "url": "https://github.com/mixpanel/mixpanel-unity"
   },
   "author": "Kyle Rockman",
   "license": "Apache V2",

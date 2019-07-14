@@ -1,29 +1,39 @@
 Latest Version 
 --------------
-##### _April 12th, 2019_ - [v2.0.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.0.0)
+##### _July 19th, 2019_ - [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
+
+Supported Unity Version >= 2018.4
 
 Getting Started
 ---------------
-Check out our [official documentation](https://mixpanel.com/help/reference/unity) to learn how to install the library in Unity. You will also learn how to make use of all the features we currently support!
+Check out our [official documentation](https://mixpanel.com/help/reference/unity) to learn how to make use of all the features we currently support!
 
-Demo
-----
-Checkout our [Sample application](https://github.com/rocktavious/mixpanel-unity/tree/master/Demo)
+Installation
+------------
+
+This library can be installed using the unity package manager system (Unity >= 2018.4) with git
+
+* In your unity project root open `./Packages/manifest.json`
+* Add the following line to the dependencies section `"com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git",`
+* Open Unity and the package should download automatically
+
+Alternatively you can go to the releases page and down the `.unitypackage` file of the library and have unity that.
+
+Examples
+--------
+Checkout our Examples by importing the `Examples.unitypackage` file located inside the `Mixpanel` folder after you follow the installation instructions above
 
 Want to Contribute?
 -------------------
 The Mixpanel library for Unity is an open source project, and we'd love to see your contributions!
 We'd also love for you to come and work with us! Check out http://boards.greenhouse.io/mixpanel/jobs/25078#.U_4BBEhORKU for details.
 
+The best way to work on the Mixpanel library is the clone this repository and use a unity "local" package reference by creating a new unity project and opening the `./Packages/manifest.json` file and adding the following line under the `dependencies` section
+
+```json
+"com.mixpanel.unity": "file:C:/Path/to/cloned/repo/mixpanel-unity",
+```
+
 Changelog
 ---------
-See [changelog](https://github.com/rocktavious/mixpanel-unity/tree/master/CHANGELOG.md) for details.
-
-Unity Package Manager
----------------------
-
-This library can be installed using the unity package manager system with git
-
-* In your unity project root open Packages/manifest.json
-* Add the following line to the dependencies section `"com.mixpanel.unity": "https://github.com/rocktavious/mixpanel-unity.git",`
-* Open Unity and the package should download automatically
+See [changelog](https://github.com/mixpanel/mixpanel-unity/tree/master/CHANGELOG.md) for details.
