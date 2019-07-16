@@ -87,8 +87,8 @@ namespace mixpanel
             }
             Debug.LogWarning($"[Mixpanel] Failed to sent batch because - '{request.error}'");
             retryCount += 1;
-            // 2, 4, 6, 8, 10, 12, 14, 16, 18, 20 = 110 seconds total
-            yield return new WaitForSecondsRealtime(retryCount * RetryDelayFactor);
+            // 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 = 2046 seconds total
+            yield return new WaitForSecondsRealtime(Math.Pow(2, retryCount));
             StartCoroutine(BuildRequest(id, batch, retryCount));
         }
 
