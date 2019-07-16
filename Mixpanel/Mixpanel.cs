@@ -61,7 +61,7 @@ namespace mixpanel
                 {"$app_build_number", Application.version},
                 {"$carrier", ""},
                 {"$wifi", Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork},
-                {"$radio", ""},
+                {"$radio", GetRadio()},
                 {"$brand", ""},
                 {"$device", Application.platform.ToString()},
                 {"$screen_dpi", Screen.dpi},
@@ -113,6 +113,20 @@ namespace mixpanel
             properties["$android_app_version_code"] = Application.version;
             #endif
             return properties;
+        }
+
+        internal static string GetRadio()
+        {
+            switch(Application.internetReachability)
+            {
+                case NetworkReachability.NotReachable :
+                    return "none"
+                case NetworkReachability.ReachableViaCarrierDataNetwork :
+                    return "carrier"
+                case NetworkReachability.ReachableViaLocalAreaNetwork :
+                    return "wifi"
+            }
+            return "none";
         }
 
         internal static double CurrentTime()
