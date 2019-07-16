@@ -23,6 +23,7 @@ namespace mixpanel
         public static void Alias(this string alias)
         {
             if (alias != DistinctId) DoTrack("$create_alias", new Value {{"distinct_id", DistinctId}, {"alias", alias}});
+            DistinctId = alias;
         }
 
         /// <summary>
