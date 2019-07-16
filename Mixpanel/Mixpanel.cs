@@ -120,11 +120,11 @@ namespace mixpanel
             switch(Application.internetReachability)
             {
                 case NetworkReachability.NotReachable :
-                    return "none"
+                    return "none";
                 case NetworkReachability.ReachableViaCarrierDataNetwork :
-                    return "carrier"
+                    return "carrier";
                 case NetworkReachability.ReachableViaLocalAreaNetwork :
-                    return "wifi"
+                    return "wifi";
             }
             return "none";
         }
