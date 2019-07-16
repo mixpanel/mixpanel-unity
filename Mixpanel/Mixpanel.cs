@@ -71,6 +71,7 @@ namespace mixpanel
                 {"$bluetooth_version", "none"}
             };
             #if UNITY_IOS
+            properties["$os_version"] = Device.systemVersion},
             properties["$manufacturer"] = "Apple";
             properties["$ios_ifa"] = Device.advertisingIdentifier;
             #endif
@@ -95,7 +96,7 @@ namespace mixpanel
             Value properties = new Value();
             #if UNITY_IOS
             properties["$ios_lib_version"] = MixpanelUnityVersion;
-            properties["$ios_version"] = SystemInfo.operatingSystem;
+            properties["$ios_version"] = Device.systemVersion;
             properties["$ios_app_version"] = Application.version;
             properties["$ios_app_release"] = Application.unityVersion;
             properties["$ios_device_model"] = SystemInfo.deviceModel;
