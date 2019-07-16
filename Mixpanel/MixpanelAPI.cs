@@ -22,8 +22,11 @@ namespace mixpanel
         /// <param name="alias">the new distinct_id that should represent original</param>
         public static void Alias(this string alias)
         {
-            if (alias != DistinctId) DoTrack("$create_alias", new Value {{"distinct_id", DistinctId}, {"alias", alias}});
-            DistinctId = alias;
+            if (alias != DistinctId)
+            {
+                DoTrack("$create_alias", new Value {{"distinct_id", DistinctId}, {"alias", alias}});
+                Identify(alias);
+            }
         }
 
         /// <summary>
@@ -65,7 +68,7 @@ namespace mixpanel
         public static void OptInTracking(string distinctId)
         {
             IsTracking = true;
-            DistinctId = distinctId;
+            Identify(distinctId);
         }
 
         /// <summary>
