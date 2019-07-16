@@ -73,6 +73,7 @@ namespace mixpanel
             #if UNITY_IOS
             properties["$os_version"] = Device.systemVersion},
             properties["$manufacturer"] = "Apple";
+            properties["$carrier"] = GetCarrier();
             properties["$ios_ifa"] = Device.advertisingIdentifier;
             #endif
             #if UNITY_ANDRIOD
