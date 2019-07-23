@@ -153,7 +153,7 @@ namespace mixpanel
         /// </summary>
         public static void Flush()
         {
-            SaveBatches();
+            Save();
             MixpanelManager.Flush();
         }
     }

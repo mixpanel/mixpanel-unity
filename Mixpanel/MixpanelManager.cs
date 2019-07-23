@@ -2,8 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -53,14 +51,14 @@ namespace mixpanel
             while (_needsFlush)
             {
                 _needsFlush = false;
-                foreach (KeyValuePair<string, MixpanelBatch> item in Mixpanel.Batches)
+                foreach (MixpanelBatch item in Mixpanel.PrepareBatches())
                 {
-                    StartCoroutine(BuildRequest(item.Key, item.Value));
+                    StartCoroutine(BuildRequest(item));
                 }
             }
         }
 
-        private IEnumerator BuildRequest(string id, MixpanelBatch batch, int retryCount = 0)
+        private IEnumerator BuildRequest(MixpanelBatch batch, int retryCount = 0)
         {
             string url = batch.Url;
             if (MixpanelSettings.Instance.ShowDebug) Debug.Log($"[Mixpanel] Sending Request - '{url}'");
@@ -70,26 +68,35 @@ namespace mixpanel
             // TODO: Be smarter about the errors coming back?
             if (!request.isNetworkError && !request.isHttpError)
             {
-                Mixpanel.SuccessfulBatch(id);
+                Mixpanel.SuccessfulBatch(batch);
                 yield break;
             }
             if (request.responseCode == 413) // Payload Too Large
             {
-                Mixpanel.ReBatch(id, batch);
+                // Rebatch
+                int newBatchSize = (int)(batch.Requests.Count * 0.5f);
+                foreach (IEnumerable<MixpanelRequest> newBatch in batch.Requests.Batch(newBatchSize))
+                {
+                    StartCoroutine(BuildRequest(new MixpanelBatch(batch.Endpoint, newBatch)));
+                }
                 _needsFlush = true;
                 yield break;
             }
             if (retryCount > RetryMaxTries)
             {
-                Mixpanel.BisectBatch(id, batch);
+                // Split Batch
+                foreach (MixpanelRequest item in batch.Requests)
+                {
+                    StartCoroutine(BuildRequest(new MixpanelBatch(batch.Endpoint, item)));
+                }
                 _needsFlush = true;
                 yield break;
             }
             Debug.LogWarning($"[Mixpanel] Failed to sent batch because - '{request.error}'");
             retryCount += 1;
             // 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 = 2046 seconds total
-            yield return new WaitForSecondsRealtime(Math.Pow(2, retryCount));
-            StartCoroutine(BuildRequest(id, batch, retryCount));
+            yield return new WaitForSecondsRealtime((float)Math.Pow(2, retryCount));
+            StartCoroutine(BuildRequest(batch, retryCount));
         }
 
         #region Static

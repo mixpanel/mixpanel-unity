@@ -1,16 +1,44 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
+using mixpanel.serialization;
 using UnityEngine;
 
 namespace mixpanel
 {
+    [Serializable]
+    internal struct MixpanelRequest
+    {
+        [SerializeField]
+        internal string id;
+        [SerializeField]
+        internal Value data;
+    }
+    
     internal struct MixpanelBatch
     {
         internal string Endpoint;
-        internal Value Data;
+        internal List<MixpanelRequest> Requests;
+        private string Payload;
+        
+        internal MixpanelBatch(string endpoint, MixpanelRequest request)
+        {
+            Endpoint = endpoint;
+            Requests = new List<MixpanelRequest> { request };
+            Payload = Base64Encode(new Value(Requests.Select(x => x.data)).ToString());
+        }
 
-        internal string Url => $"{Endpoint}/?ip=1&data={Base64Encode(Data.ToString())}";
+        internal MixpanelBatch(string endpoint, IEnumerable<MixpanelRequest> requests)
+        {
+            Endpoint = endpoint;
+            Requests = new List<MixpanelRequest>(requests);
+            Payload = Base64Encode(new Value(Requests.Select(x => x.data)).ToString());
+        }
+
+        internal string Url => $"{Endpoint}/?ip=1&data={Payload}";
 
         private static string Base64Encode(string text) {
             byte[] bytes = Encoding.UTF8.GetBytes(text);
@@ -20,86 +48,35 @@ namespace mixpanel
     
     public static partial class Mixpanel
     {
-        private const string BatchesName = "Mixpanel.Batches";
-
-        private static readonly Dictionary<string, List<Value>> Buffer = new Dictionary<string, List<Value>>();
-        internal static readonly Dictionary<string, MixpanelBatch> Batches = new Dictionary<string, MixpanelBatch>();
-
         private static void Enqueue(string endpoint, Value data)
         {
-            if (Buffer.ContainsKey(endpoint))  Buffer[endpoint].Add(data);
-            else Buffer[endpoint] = new List<Value>{ data };
+            MixpanelRequest request = new MixpanelRequest { id = Guid.NewGuid().ToString(), data = data };
+            if (!Data.buffer.ContainsKey(endpoint)) Data.buffer[endpoint] = new Dictionary<string, MixpanelRequest>();
+            Data.buffer[endpoint].Add(request.id, request);
+            Save();
         }
 
-        private static MixpanelBatch CreateBatch(string endpoint, Value data)
+        internal static IEnumerable<MixpanelBatch> PrepareBatches()
         {
-            return new MixpanelBatch {Endpoint = endpoint, Data = data};
-        }
-
-        private static void InsertBatch(MixpanelBatch batch)
-        {
-            Batches.Add(Guid.NewGuid().ToString(), batch);
-        }
-        
-        private static void PrepareBatches()
-        {
-            foreach (KeyValuePair<string, List<Value>> item in Buffer)
+            foreach (KeyValuePair<string, Dictionary<string, MixpanelRequest>> item in Data.buffer)
             {
-                foreach (IEnumerable<Value> batch in item.Value.Batch(40))
+                foreach (IEnumerable<MixpanelRequest> batch in item.Value.Values.Batch(40))
                 {
-                    InsertBatch(CreateBatch(item.Key, new Value(batch)));
+                    yield return new MixpanelBatch(item.Key, batch);
                 }
             }
-            Buffer.Clear();
         }
 
-        internal static void SuccessfulBatch(string id)
+        internal static void SuccessfulBatch(MixpanelBatch batch)
         {
-            Batches.Remove(id);
-        }
-        
-        internal static void BisectBatch(string id, MixpanelBatch batch)
-        {
-            Batches.Remove(id);
-            foreach (Value item in batch.Data)
+            Dictionary<string, MixpanelRequest> buffer = Data.buffer[batch.Endpoint];
+            foreach (string id in batch.Requests.Select(x => x.id))
             {
-                InsertBatch(CreateBatch(batch.Endpoint, item));
+                buffer.Remove(id);
             }
-        }
 
-        internal static void ReBatch(string id, MixpanelBatch batch)
-        {
-            Batches.Remove(id);
-            int newBatchSize = (int)(batch.Data.Count * 0.5f);
-            foreach (IEnumerable<Value> newBatch in batch.Data.Values.Batch(newBatchSize))
-            {
-                InsertBatch(CreateBatch(batch.Endpoint, new Value(newBatch)));
-            }
-        }
-
-        internal static void LoadBatches()
-        {
-            if (!PlayerPrefs.HasKey(BatchesName))
-            {
-                PlayerPrefs.SetString(BatchesName, Value.Array.Serialize());
-            }
-            Batches.Clear();
-            Value data = Value.Deserialize(PlayerPrefs.GetString(BatchesName));
-            foreach (Value item in data)
-            {
-                InsertBatch(CreateBatch(item["Endpoint"], item["Data"]));
-            }
-        }
-
-        internal static void SaveBatches()
-        {
-            PrepareBatches();
-            Value data = Value.Array;
-            foreach (MixpanelBatch batch in Batches.Values)
-            {
-                data.Add(new Value{ {"Endpoint", batch.Endpoint}, {"Data", batch.Data}});
-            }
-            PlayerPrefs.SetString(BatchesName, data.Serialize());
+            Data.buffer[batch.Endpoint] = buffer;
+            Save();
         }
     }
 }

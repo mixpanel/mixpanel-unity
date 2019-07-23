@@ -2,6 +2,8 @@ using System;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using mixpanel.serialization;
 using UnityEngine;
 using UnityEngine.Networking;
 #if UNITY_EDITOR
@@ -144,14 +146,19 @@ namespace mixpanel
 
         internal static void Load()
         {
-            LoadData();
-            LoadBatches();
+            if (File.Exists(DataPersistencePath))
+                _data = SerializationUtility.DeserializeValue<MixpanelData>(File.ReadAllBytes(DataPersistencePath),
+                    DataFormat.Binary);
+            else
+            {
+                _data = new MixpanelData();
+                Save();
+            }
         }
 
         internal static void Save()
         {
-            SaveData();
-            SaveBatches();
+            File.WriteAllBytes(DataPersistencePath, SerializationUtility.SerializeValue(Data, DataFormat.Binary));
         }
     }
 }
