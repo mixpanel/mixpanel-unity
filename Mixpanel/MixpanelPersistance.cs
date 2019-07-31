@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace mixpanel
@@ -7,6 +8,7 @@ namespace mixpanel
     {
         private const string DistinctIdName = "Mixpanel.DistinctId";
         private const string IsTrackingName = "Mixpanel.IsTracking";
+        private const string PushDeviceTokenName  = "Mixpanel.PushDeviceToken";
         private const string SuperPropertiesName = "Mixpanel.SuperProperties";
         private const string TimedEventsName = "Mixpanel.TimedEvents";
 
@@ -18,8 +20,15 @@ namespace mixpanel
         }
 
         public static bool IsTracking;
+        internal static string PushDeviceTokenString;
         internal static Value SuperProperties;
         internal static Value TimedEvents;
+
+        [Conditional("UNITY_IOS")]
+        internal static void SetPushDeviceToken(string token)
+        {
+            PushDeviceTokenString = token;
+        }
 
         internal static void LoadData()
         {
@@ -36,6 +45,12 @@ namespace mixpanel
                 PlayerPrefs.SetInt(IsTrackingName, 1);
             }
             IsTracking = PlayerPrefs.GetInt(IsTrackingName) == 1;
+            
+            if (!PlayerPrefs.HasKey(PushDeviceTokenName))
+            {
+                PlayerPrefs.GetString(PushDeviceTokenName, "");
+            }
+            SetPushDeviceToken(PlayerPrefs.GetString(PushDeviceTokenName));
             
             if (!PlayerPrefs.HasKey(SuperPropertiesName))
             {
@@ -54,6 +69,7 @@ namespace mixpanel
         {
             PlayerPrefs.SetString(DistinctIdName, DistinctId);
             PlayerPrefs.SetInt(IsTrackingName, IsTracking ? 1 : 0);
+            PlayerPrefs.SetString(PushDeviceTokenName, PushDeviceTokenString);
             PlayerPrefs.SetString(SuperPropertiesName, SuperProperties.Serialize());
             PlayerPrefs.SetString(TimedEventsName, TimedEvents.Serialize());
         }

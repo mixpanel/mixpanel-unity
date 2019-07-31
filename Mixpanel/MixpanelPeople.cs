@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace mixpanel
 {
@@ -179,6 +180,14 @@ namespace mixpanel
             public static string Name
             {
                 set => DoEngage(new Value {{ "$set", new Value {{ "$last_name", value}} }});
+            }
+            
+            /// <summary>
+            /// Register the given device to receive push notifications.
+            /// </summary>
+            public static byte[] PushDeviceToken
+            {
+                set => SetPushDeviceToken(BitConverter.ToString(value).ToLower().Replace("-", ""));
             }
         }
     }

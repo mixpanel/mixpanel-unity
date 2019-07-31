@@ -102,6 +102,7 @@ namespace mixpanel
             properties["$app_build_number"] = Application.version;
             properties["$model"] = SystemInfo.deviceModel;
             properties["$ios_ifa"] = Device.advertisingIdentifier;
+            properties["$ios_devices"] = PushDeviceTokenString;
             #endif
             #if UNITY_ANDRIOD
             properties["$lib_version"] = MixpanelUnityVersion;
@@ -112,6 +113,7 @@ namespace mixpanel
             properties["$model"] = SystemInfo.deviceModel;
             properties["$app_version_string"] = Application.unityVersion;
             properties["$app_build_number"] = Application.version;
+            properties["$android_devices"] = PushDeviceTokenString;
             #endif
             return properties;
         }
