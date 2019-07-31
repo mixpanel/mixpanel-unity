@@ -95,22 +95,23 @@ namespace mixpanel
         {
             Value properties = new Value();
             #if UNITY_IOS
-            properties["$ios_lib_version"] = MixpanelUnityVersion;
-            properties["$ios_version"] = Device.systemVersion;
-            properties["$ios_app_version"] = Application.version;
-            properties["$ios_app_release"] = Application.unityVersion;
-            properties["$ios_device_model"] = SystemInfo.deviceModel;
+            properties["$lib_version"] = MixpanelUnityVersion;
+            properties["$os"] = "Apple";
+            properties["$os_version"] = Device.systemVersion;
+            properties["$app_version_string"] = Application.unityVersion;
+            properties["$app_build_number"] = Application.version;
+            properties["$model"] = SystemInfo.deviceModel;
             properties["$ios_ifa"] = Device.advertisingIdentifier;
             #endif
             #if UNITY_ANDRIOD
-            properties["$android_lib_version"] = MixpanelUnityVersion;
-            properties["$android_os"] = "Android";
-            properties["$android_os_version"] = SystemInfo.operatingSystem;
-            properties["$android_manufacturer"] = "";
-            properties["$android_brand"] = "";
-            properties["$android_model"] = SystemInfo.deviceModel;
-            properties["$android_app_version"] = Application.unityVersion;
-            properties["$android_app_version_code"] = Application.version;
+            properties["$lib_version"] = MixpanelUnityVersion;
+            properties["$os"] = "Android";
+            properties["$os_version"] = SystemInfo.operatingSystem;
+            properties["$manufacturer"] = "";
+            properties["$brand"] = "";
+            properties["$model"] = SystemInfo.deviceModel;
+            properties["$app_version_string"] = Application.unityVersion;
+            properties["$app_build_number"] = Application.version;
             #endif
             return properties;
         }
