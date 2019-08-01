@@ -51,6 +51,8 @@ namespace mixpanel
 
         public bool IsArray => _valueType == ValueTypes.ARRAY;
         public bool IsObject => _valueType == ValueTypes.OBJECT;
+        public bool IsNumber => _valueType == ValueTypes.NUMBER;
+        public bool IsString => _valueType == ValueTypes.STRING && _dataType == DataTypes.PRIMITIVE;
 
         public Value this[int index]
         {

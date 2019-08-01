@@ -181,14 +181,22 @@ namespace mixpanel
             {
                 set => DoEngage(new Value {{ "$set", new Value {{ "$last_name", value}} }});
             }
-            
+
+
             /// <summary>
             /// Register the given device to receive push notifications.
             /// </summary>
+#if UNITY_IOS
             public static byte[] PushDeviceToken
             {
                 set => SetPushDeviceToken(BitConverter.ToString(value).ToLower().Replace("-", ""));
             }
+#elif UNITY_ANDROID
+            public static string PushDeviceToken
+            {
+                set => SetPushDeviceToken(value);
+            }
+#endif
         }
     }
 }

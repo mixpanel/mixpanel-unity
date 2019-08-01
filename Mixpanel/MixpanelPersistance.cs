@@ -24,7 +24,6 @@ namespace mixpanel
         internal static Value SuperProperties;
         internal static Value TimedEvents;
 
-        [Conditional("UNITY_IOS")]
         internal static void SetPushDeviceToken(string token)
         {
             PushDeviceTokenString = token;

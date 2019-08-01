@@ -102,6 +102,20 @@ namespace mixpanel
         }
 
         /// <summary>
+        /// Get value of super property. if such super property not created yet will return empty
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static Value GetSuperProperty(string name)
+        {
+            if (SuperProperties.TryGetValue(name, out var value))
+                return value;
+            if (OnceProperties.TryGetValue(name, out value))
+                return value;
+            return new Value();
+        }
+
+        /// <summary>
         /// Start timing of an event. Calling Mixpanel.StartTimedEvent(string eventName) will not send an event,
         /// but when you eventually call Mixpanel.Track(string eventName), your tracked event will be sent with a "$duration" property,
         /// representing the number of seconds between your calls.
