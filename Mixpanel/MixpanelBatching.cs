@@ -10,7 +10,8 @@ namespace mixpanel
         internal string Endpoint;
         internal Value Data;
 
-        internal string Url => $"{Endpoint}/?ip=1&data={Base64Encode(Data.ToString())}";
+        internal string Url => Endpoint;
+        internal string EncodedData => $"data={Base64Encode(Data.ToString())}";
 
         private static string Base64Encode(string text) {
             byte[] bytes = Encoding.UTF8.GetBytes(text);
@@ -41,7 +42,7 @@ namespace mixpanel
             Batches.Add(Guid.NewGuid().ToString(), batch);
         }
         
-        private static void PrepareBatches()
+        internal static void PrepareBatches()
         {
             foreach (KeyValuePair<string, List<Value>> item in Buffer)
             {

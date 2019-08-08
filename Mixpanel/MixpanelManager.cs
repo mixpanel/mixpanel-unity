@@ -53,6 +53,7 @@ namespace mixpanel
             while (_needsFlush)
             {
                 _needsFlush = false;
+                Mixpanel.PrepareBatches();
                 foreach (KeyValuePair<string, MixpanelBatch> item in Mixpanel.Batches)
                 {
                     StartCoroutine(BuildRequest(item.Key, item.Value));
@@ -63,8 +64,9 @@ namespace mixpanel
         private IEnumerator BuildRequest(string id, MixpanelBatch batch, int retryCount = 0)
         {
             string url = batch.Url;
-            if (MixpanelSettings.Instance.ShowDebug) Debug.Log($"[Mixpanel] Sending Request - '{url}'");
-            UnityWebRequest request = UnityWebRequest.Get(url);
+            string data = batch.EncodedData;
+            if (MixpanelSettings.Instance.ShowDebug) Debug.Log($"[Mixpanel] Sending Request - '{url}'\nData: {data}\nSource data: {batch.Data}");
+            UnityWebRequest request = UnityWebRequest.Post(url, data);
             yield return request.SendWebRequest();
             while (!request.isDone) yield return new WaitForEndOfFrame();
             // TODO: Be smarter about the errors coming back?
