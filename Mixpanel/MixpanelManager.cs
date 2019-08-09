@@ -33,7 +33,7 @@ namespace mixpanel
             while (true)
             {
                 yield return new WaitForSecondsRealtime(MixpanelSettings.Instance.FlushInterval);
-                DoFlush();
+                Mixpanel.Flush();
             }
         }
 
