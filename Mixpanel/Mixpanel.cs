@@ -71,11 +71,13 @@ namespace mixpanel
                 {"$bluetooth_version", "none"}
             };
             #if UNITY_IOS
+            properties["$os"] = "Apple";
             properties["$os_version"] = Device.systemVersion;
             properties["$manufacturer"] = "Apple";
             properties["$ios_ifa"] = Device.advertisingIdentifier;
             #endif
-            #if UNITY_ANDRIOD
+            #if UNITY_ANDROID
+            properties["$os"] = "Android";
             properties["$google_play_services"] = "";
             #endif
             return properties;
@@ -94,8 +96,8 @@ namespace mixpanel
         internal static Value CollectAutoEngageProperties()
         {
             Value properties = new Value();
-            #if UNITY_IOS
             properties["$lib_version"] = MixpanelUnityVersion;
+            #if UNITY_IOS
             properties["$os"] = "Apple";
             properties["$os_version"] = Device.systemVersion;
             properties["$app_version_string"] = Application.unityVersion;
@@ -104,8 +106,7 @@ namespace mixpanel
             properties["$ios_ifa"] = Device.advertisingIdentifier;
             properties["$ios_devices"] = PushDeviceTokenString;
             #endif
-            #if UNITY_ANDRIOD
-            properties["$lib_version"] = MixpanelUnityVersion;
+            #if UNITY_ANDROID
             properties["$os"] = "Android";
             properties["$os_version"] = SystemInfo.operatingSystem;
             properties["$manufacturer"] = "";
