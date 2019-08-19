@@ -9,7 +9,7 @@ namespace mixpanel.editor
         {
             // First parameter is the path in the Settings window.
             // Second parameter is the scope of this setting: it only appears in the Project Settings window.
-            var provider = new SettingsProvider("Project/Mixpanel", SettingsScope.Project)
+            var provider = new SettingsProvider("Project/Mixpanel", SettingsScope.Project);
             {
                 // Create the SettingsProvider and initialize its drawing (IMGUI) function in place:
                 guiHandler = (searchContext) =>
