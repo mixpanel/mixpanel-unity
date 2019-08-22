@@ -10,6 +10,7 @@ namespace mixpanel
         internal string Endpoint;
         internal Value Data;
 
+        internal string Url => $"{Endpoint}/?ip=1";
         internal string Payload => Base64Encode(Data.ToString());
 
         private static string Base64Encode(string text) {
