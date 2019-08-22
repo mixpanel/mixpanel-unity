@@ -10,7 +10,7 @@ namespace mixpanel
         internal string Endpoint;
         internal Value Data;
 
-        internal string Url => $"{Endpoint}/?ip=1&data={Base64Encode(Data.ToString())}";
+        internal string Payload => Base64Encode(Data.ToString());
 
         private static string Base64Encode(string text) {
             byte[] bytes = Encoding.UTF8.GetBytes(text);
@@ -45,7 +45,7 @@ namespace mixpanel
         {
             foreach (KeyValuePair<string, List<Value>> item in Buffer)
             {
-                foreach (IEnumerable<Value> batch in item.Value.Batch(40))
+                foreach (IEnumerable<Value> batch in item.Value.Batch(50))
                 {
                     InsertBatch(CreateBatch(item.Key, new Value(batch)));
                 }

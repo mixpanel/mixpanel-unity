@@ -62,9 +62,10 @@ namespace mixpanel
 
         private IEnumerator BuildRequest(string id, MixpanelBatch batch, int retryCount = 0)
         {
-            string url = batch.Url;
-            if (MixpanelSettings.Instance.ShowDebug) Debug.Log($"[Mixpanel] Sending Request - '{url}'");
-            UnityWebRequest request = UnityWebRequest.Get(url);
+            if (MixpanelSettings.Instance.ShowDebug) Debug.Log($"[Mixpanel] Sending Request - '{batch.Endpoint}' with payload '{batch.Payload}'");
+            WWWForm form = new WWWForm();
+            form.AddField("data", batch.Payload);
+            UnityWebRequest request = UnityWebRequest.Post(batch.Endpoint, form);
             yield return request.SendWebRequest();
             while (!request.isDone) yield return new WaitForEndOfFrame();
             // TODO: Be smarter about the errors coming back?
