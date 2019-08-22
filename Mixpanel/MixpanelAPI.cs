@@ -53,12 +53,24 @@ namespace mixpanel
         /// <summary>
         /// Opt out tracking.
         /// </summary>
-        public static void OptOutTracking() => IsTracking = false;
+        public static void OptOutTracking()
+        {
+            People.ClearCharges();
+            Flush();
+            People.DeleteUser();
+            Flush();
+            Reset();
+            IsTracking = false;
+        }
 
         /// <summary>
         /// Opt in tracking.
         /// </summary>
-        public static void OptInTracking() => IsTracking = true;
+        public static void OptInTracking()
+        {
+            IsTracking = true;
+            DoTrack("$opt_in", Value.Null);
+        }
 
         /// <summary>
         /// Opt in tracking.
@@ -67,8 +79,8 @@ namespace mixpanel
         /// <code>Identify</code> will be called by using this distinct id.</param>
         public static void OptInTracking(string distinctId)
         {
-            IsTracking = true;
             Identify(distinctId);
+            OptInTracking();
         }
 
         /// <summary>
@@ -91,14 +103,14 @@ namespace mixpanel
         }
 
         /// <summary>
-        /// Clears all superProperties, and push registrations from persistent storage.
-        /// Will not clear referrer information.
+        /// Clears all super properties, once properties, timed events and push registrations from persistent storage.
         /// </summary>
         public static void Reset()
         {
             SuperProperties = Value.Object;
             OnceProperties = Value.Object;
-            // push registrations
+            TimedEvents = Value.Object;
+            SetPushDeviceToken("");
         }
 
         /// <summary>

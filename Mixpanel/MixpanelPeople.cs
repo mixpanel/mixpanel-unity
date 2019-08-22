@@ -40,6 +40,14 @@ namespace mixpanel
             }
 
             /// <summary>
+            /// Permanently delete the identified people profile
+            /// </summary>
+            public static void DeleteUser()
+            {
+                DoEngage(new Value {{ "$delete", ""}});
+            }
+            
+            /// <summary>
             /// Change the existing values of multiple %People Analytics properties at once.
             /// </summary>
             /// <param name="properties"> A map of String properties names to Long amounts. Each property associated with a name in the map </param>
