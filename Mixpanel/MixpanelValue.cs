@@ -9,7 +9,8 @@ using UnityEngine.Assertions;
 
 namespace mixpanel
 {
-    public class Value : IEnumerable
+    [Serializable]
+    public class Value : IEnumerable, ISerializationCallbackReceiver
     {
         private enum ValueTypes
         {
@@ -39,15 +40,20 @@ namespace mixpanel
             RECT
         }
 
-        private ValueTypes _valueType = ValueTypes.OBJECT;
-        private DataTypes _dataType = DataTypes.UNDEFINED;
-        
-        private string _string;
-        private bool _bool;
-        private double _number;
-        
+        [SerializeField] private ValueTypes _valueType = ValueTypes.OBJECT;
+        [SerializeField] private DataTypes _dataType = DataTypes.UNDEFINED;
+        [SerializeField] private string _string;
+        [SerializeField] private bool _bool;
+        [SerializeField] private double _number;
+
+        [NonSerialized]
         private List<Value> _array = new List<Value>();
+        [SerializeField] private string[] _arrayData;
+
+        [NonSerialized]
         private Dictionary<string, Value> _container = new Dictionary<string, Value>();
+        [SerializeField] private string[] _containerKeys;
+        [SerializeField] private string[] _containerValues;
 
         public bool IsArray => _valueType == ValueTypes.ARRAY;
         public bool IsObject => _valueType == ValueTypes.OBJECT;
@@ -1040,6 +1046,72 @@ namespace mixpanel
             return ParseValue(new StringReader(json));
         }
         
+        #endregion
+        
+        #region UnitySerialization
+        public void OnBeforeSerialize()
+        {
+            SerializeList();
+            SerializeDictionary();
+        }
+
+        private void SerializeList()
+        {
+            if (_array == null) _array = new List<Value>(0);
+            int count = _array.Count;
+            _arrayData = new string[count];
+            if (count <= 0) return;
+            for (int i = 0; i < count; i++)
+            {
+                _arrayData[i] = JsonUtility.ToJson(_array[i]); 
+            }
+        }
+
+        private void SerializeDictionary()
+        {
+            if (_container == null) _container = new Dictionary<string, Value>(0);
+            int count = _container.Count;
+            _containerKeys = new string[count];
+            _containerValues = new string[count];
+            if (count <= 0) return;
+            using (Dictionary<string, Value>.Enumerator e = _container.GetEnumerator())
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    e.MoveNext();
+                    _containerKeys[i] = e.Current.Key;
+                    _containerValues[i] = JsonUtility.ToJson(e.Current.Value); 
+                }
+            }
+        }
+
+        public void OnAfterDeserialize()
+        {
+            DeserializeList();
+            DeserializeDictionary();
+        }
+
+        private void DeserializeList()
+        {
+            int count = _arrayData.Length;
+            if (count == 0) return;
+            _array = new List<Value>(count);
+            foreach (string data in _arrayData)
+            {
+                _array.Add(JsonUtility.FromJson<Value>(data));
+            }
+        }
+
+        private void DeserializeDictionary()
+        {
+            int count = _containerKeys.Length;
+            if (count == 0) return;
+            _container = new Dictionary<string, Value>(count);
+            for (int i = 0; i < count; i++)
+            {
+                _container[_containerKeys[i]] = JsonUtility.FromJson<Value>(_containerValues[i]);
+            }
+        }
         #endregion
     }
 }
