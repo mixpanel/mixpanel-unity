@@ -23,7 +23,7 @@ namespace mixpanel
         internal string Token {
             get {
                 #if UNITY_EDITOR || DEBUG
-                return this.DebugToken;
+                return DebugToken;
                 #else
                 return RuntimeToken;
                 #endif
@@ -43,7 +43,7 @@ namespace mixpanel
         private static MixpanelSettings FindOrCreateInstance()
         {
             MixpanelSettings instance = null;
-            instance = instance ? instance : Resources.Load<MixpanelSettings>("Mixpanel");
+            instance = instance ? null : Resources.Load<MixpanelSettings>("Mixpanel");
             instance = instance ? instance : Resources.LoadAll<MixpanelSettings>(string.Empty).FirstOrDefault();
             instance = instance ? instance : CreateAndSave<MixpanelSettings>();
             if (instance == null) throw new Exception("Could not find or create settings for Mixpanel");

@@ -639,5 +639,14 @@ namespace mixpanel.queue
 		private string GetDataPath(int index) => Path.Combine(_path, "data." + index);
 
 		private long GetOptimalTransactionLogSize() => 16 + sizeof(int) + sizeof(int) * 4 * CurrentCountOfItemsInQueue;
+
+		public void Clear()
+		{
+			using (PersistentQueueSession session = OpenSession())
+			{
+				while (session.Dequeue() != null) {}
+				session.Flush();
+			}
+		}
 	}
 }
