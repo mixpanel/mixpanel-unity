@@ -1,12 +1,6 @@
 using System;
-using System.Text;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
+
 #if UNITY_IOS
 using UnityEngine.iOS;
 #endif
@@ -17,23 +11,20 @@ namespace mixpanel
     {
         private const string MixpanelUnityVersion = "2.0.0";
         
-        private const string MixpanelTrackUrl = "https://api.mixpanel.com/track";
-        private const string MixpanelEngageUrl = "https://api.mixpanel.com/engage";
-        
-        internal static Value OnceProperties = Value.Object;
-        internal static Value AutoTrackProperties;
-        internal static Value AutoEngageProperties;
+        private static Value _autoTrackProperties;
+        private static Value _autoEngageProperties;
 
-        internal static void DoTrack(string eventName, Value properties)
+        private static void DoTrack(string eventName, Value properties)
         {
             if (!IsTracking) return;
-            if (AutoTrackProperties == null) AutoTrackProperties = CollectAutoTrackProperties();
-            properties.Merge(AutoTrackProperties);
+            if (properties == null) properties = ObjectPool.Get();
+            if (_autoTrackProperties == null) _autoTrackProperties = CollectAutoTrackProperties();
+            properties.Merge(_autoTrackProperties);
             // These auto properties can change in runtime so we don't bake them into AutoProperties
             properties["$screen_width"] = Screen.width;
             properties["$screen_height"] = Screen.height;
             properties.Merge(OnceProperties);
-            OnceProperties = new Value();
+            OnceProperties.OnRecycle();
             properties.Merge(SuperProperties);
             if (TimedEvents.TryGetValue(eventName, out Value startTime))
             {
@@ -43,11 +34,29 @@ namespace mixpanel
             properties["token"] = MixpanelSettings.Instance.Token;
             properties["distinct_id"] = DistinctId;
             properties["time"] = CurrentTime();
-            Value data = new Value { {"event", eventName}, {"properties", properties} };
-            Enqueue(MixpanelTrackUrl, data);
+            Value data = ObjectPool.Get();
+            data["event"] = eventName;
+            data["properties"] = properties;
+            MixpanelManager.EnqueueTrack(data);
+        }
+        
+        private static void DoEngage(Value properties)
+        {
+            if (!IsTracking) return;
+            if (_autoEngageProperties == null) _autoEngageProperties = CollectAutoEngageProperties();
+            properties.Merge(_autoEngageProperties);
+            properties["$token"] = MixpanelSettings.Instance.Token;
+            properties["$distinct_id"] = DistinctId;
+            MixpanelManager.EnqueueEngage(properties);
         }
 
-        internal static Value CollectAutoTrackProperties()
+        internal static void CollectAutoProperties()
+        {
+            if (_autoTrackProperties == null) _autoTrackProperties = CollectAutoTrackProperties();
+            if (_autoEngageProperties == null) _autoEngageProperties = CollectAutoEngageProperties();
+        }
+
+        private static Value CollectAutoTrackProperties()
         {
             Value properties = new Value
             {
@@ -71,31 +80,23 @@ namespace mixpanel
                 {"$bluetooth_version", "none"}
             };
             #if UNITY_IOS
+            properties["$os"] = "Apple";
             properties["$os_version"] = Device.systemVersion;
             properties["$manufacturer"] = "Apple";
             properties["$ios_ifa"] = Device.advertisingIdentifier;
             #endif
-            #if UNITY_ANDRIOD
+            #if UNITY_ANDROID
+            properties["$os"] = "Android";
             properties["$google_play_services"] = "";
             #endif
             return properties;
         }
 
-        internal static void DoEngage(Value properties)
-        {
-            if (!IsTracking) return;
-            if (AutoEngageProperties == null) AutoEngageProperties = CollectAutoEngageProperties();
-            properties.Merge(AutoEngageProperties);
-            properties["$token"] = MixpanelSettings.Instance.Token;
-            properties["$distinct_id"] = DistinctId;
-            Enqueue(MixpanelEngageUrl, properties);
-        }
-        
-        internal static Value CollectAutoEngageProperties()
+        private static Value CollectAutoEngageProperties()
         {
             Value properties = new Value();
-            #if UNITY_IOS
             properties["$lib_version"] = MixpanelUnityVersion;
+            #if UNITY_IOS
             properties["$os"] = "Apple";
             properties["$os_version"] = Device.systemVersion;
             properties["$app_version_string"] = Application.unityVersion;
@@ -104,8 +105,7 @@ namespace mixpanel
             properties["$ios_ifa"] = Device.advertisingIdentifier;
             properties["$ios_devices"] = PushDeviceTokenString;
             #endif
-            #if UNITY_ANDRIOD
-            properties["$lib_version"] = MixpanelUnityVersion;
+            #if UNITY_ANDROID
             properties["$os"] = "Android";
             properties["$os_version"] = SystemInfo.operatingSystem;
             properties["$manufacturer"] = "";
@@ -118,7 +118,7 @@ namespace mixpanel
             return properties;
         }
 
-        internal static string GetRadio()
+        private static string GetRadio()
         {
             switch(Application.internetReachability)
             {
@@ -132,28 +132,16 @@ namespace mixpanel
             return "none";
         }
 
-        internal static double CurrentTime()
+        private static double CurrentTime()
         {
             DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             double currentEpochTime = (DateTime.UtcNow - epochStart).TotalSeconds;
             return currentEpochTime;
         }
 
-        internal static string CurrentDateTime()
+        private static string CurrentDateTime()
         {
             return DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
-        }
-
-        internal static void Load()
-        {
-            LoadData();
-            LoadBatches();
-        }
-
-        internal static void Save()
-        {
-            SaveData();
-            SaveBatches();
         }
     }
 }

@@ -9,7 +9,8 @@ using UnityEngine.Assertions;
 
 namespace mixpanel
 {
-    public class Value : IEnumerable
+    [Serializable]
+    public class Value : IEnumerable, ISerializationCallbackReceiver, IMixpanelPoolable
     {
         private enum ValueTypes
         {
@@ -39,20 +40,43 @@ namespace mixpanel
             RECT
         }
 
-        private ValueTypes _valueType = ValueTypes.OBJECT;
-        private DataTypes _dataType = DataTypes.UNDEFINED;
-        
-        private string _string;
-        private bool _bool;
-        private double _number;
-        
-        private List<Value> _array = new List<Value>();
-        private Dictionary<string, Value> _container = new Dictionary<string, Value>();
+        [SerializeField] private ValueTypes _valueType = ValueTypes.OBJECT;
+        [SerializeField] private DataTypes _dataType = DataTypes.UNDEFINED;
+        [SerializeField] private string _string;
+        [SerializeField] private bool _bool;
+        [SerializeField] private double _number;
 
+        [NonSerialized]
+        private List<Value> _array = new List<Value>(50);
+        [SerializeField] private string[] _arrayData;
+
+        [NonSerialized]
+        private Dictionary<string, Value> _container = new Dictionary<string, Value>(5);
+        [SerializeField] private string[] _containerKeys;
+        [SerializeField] private string[] _containerValues;
+
+        public bool IsNull => _valueType == ValueTypes.NULL;
         public bool IsArray => _valueType == ValueTypes.ARRAY;
         public bool IsObject => _valueType == ValueTypes.OBJECT;
         public bool IsNumber => _valueType == ValueTypes.NUMBER;
         public bool IsString => _valueType == ValueTypes.STRING && _dataType == DataTypes.PRIMITIVE;
+
+        public void OnRecycle()
+        {
+            _string = "";
+            _bool = false;
+            _number = 0;
+            foreach (Value item in _array)
+            {
+                Mixpanel.Put(item);
+            }
+            _array.Clear();
+            foreach (Value value in _container.Values)
+            {
+                Mixpanel.Put(value); 
+            }
+            _container.Clear();
+        }
 
         public Value this[int index]
         {
@@ -70,7 +94,7 @@ namespace mixpanel
         {
             get
             {
-                if (!_container.ContainsKey(key)) _container[key] = Value.Object;
+                if (!_container.ContainsKey(key)) _container[key] = Mixpanel.ObjectPool.Get();
                 return _container[key];
             }
             set
@@ -205,15 +229,12 @@ namespace mixpanel
             switch (other._valueType)
             {
                 case ValueTypes.ARRAY:
-                    foreach (Value item in other._array)
-                    {
-                        _array.Add(item);
-                    }
+                    _array.AddRange(other._array);
                     return;
                 case ValueTypes.OBJECT:
-                    foreach (KeyValuePair<string, Value> item in other._container)
+                    foreach (string key in other._container.Keys)
                     {
-                        _container.Add(item.Key, item.Value);
+                        _container[key] = other._container[key];
                     }
                     return;
                 default:
@@ -468,6 +489,13 @@ namespace mixpanel
         #region Constructors
 
         public Value() {}
+
+        private Value(ValueTypes valueType, DataTypes dataTypes)
+        {
+            _valueType = valueType;
+            _dataType = dataTypes;
+        }
+
         public Value(string value) { String = value; }
         public Value(bool value) { Bool = value; }
         public Value(double value) { Number = value; }
@@ -499,9 +527,9 @@ namespace mixpanel
             _container = new Dictionary<string, Value>(data);
         }
 
-        public static Value Null => new Value { _valueType = ValueTypes.NULL, _dataType = DataTypes.PRIMITIVE };
-        public static Value Array => new Value { _valueType = ValueTypes.ARRAY, _dataType = DataTypes.CONTAINER };
-        public static Value Object => new Value { _valueType = ValueTypes.OBJECT, _dataType = DataTypes.CONTAINER };
+        public static Value Null => new Value(ValueTypes.NULL, DataTypes.PRIMITIVE);
+        public static Value Array => new Value(ValueTypes.ARRAY, DataTypes.CONTAINER);
+        public static Value Object => new Value(ValueTypes.OBJECT, DataTypes.CONTAINER);
 
         #endregion
 
@@ -1042,6 +1070,78 @@ namespace mixpanel
             return ParseValue(new StringReader(json));
         }
         
+        #endregion
+        
+        #region UnitySerialization
+        public void OnBeforeSerialize()
+        {
+            if (IsArray) SerializeList();
+            if (IsObject) SerializeDictionary();
+        }
+
+        private void SerializeList()
+        {
+            if (_array == null) _array = new List<Value>(0);
+            int count = _array.Count;
+            if (count <= 0) return;
+            _arrayData = new string[count];
+            for (int i = 0; i < count; i++)
+            {
+                _arrayData[i] = JsonUtility.ToJson(_array[i]); 
+            }
+        }
+
+        private void SerializeDictionary()
+        {
+            if (_container == null) _container = new Dictionary<string, Value>(0);
+            int count = _container.Count;
+            if (count <= 0) return;
+            _containerKeys = new string[count];
+            _containerValues = new string[count];
+            using (Dictionary<string, Value>.Enumerator e = _container.GetEnumerator())
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    e.MoveNext();
+                    _containerKeys[i] = e.Current.Key;
+                    _containerValues[i] = JsonUtility.ToJson(e.Current.Value); 
+                }
+            }
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if (IsArray) DeserializeList();
+            if (IsObject) DeserializeDictionary();
+        }
+
+        private void DeserializeList()
+        {
+            if (_arrayData == null) return;
+            int count = _arrayData.Length;
+            if (count == 0) return;
+            _array = new List<Value>(count);
+            foreach (string data in _arrayData)
+            {
+                Value item = Mixpanel.ObjectPool.Get();
+                JsonUtility.FromJsonOverwrite(data, item);
+                _array.Add(item);
+            }
+        }
+
+        private void DeserializeDictionary()
+        {
+            if (_containerKeys == null) return;
+            int count = _containerKeys.Length;
+            if (count == 0) return;
+            _container = new Dictionary<string, Value>(count);
+            for (int i = 0; i < count; i++)
+            {
+                Value item = Mixpanel.ObjectPool.Get();
+                JsonUtility.FromJsonOverwrite(_containerValues[i], item);
+                _container[_containerKeys[i]] = item;
+            }
+        }
         #endregion
     }
 }
