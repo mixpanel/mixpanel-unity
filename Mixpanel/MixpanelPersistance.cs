@@ -172,18 +172,31 @@ namespace mixpanel
                 PlayerPrefs.SetString(TimedEventsName, JsonUtility.ToJson(_timedEvents));
             }
         }
-        
+
         #endregion
 
         #region TrackQueue
 
-        public static readonly PersistentQueue TrackQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_track_queue"));
+#if UNITY_EDITOR
+#if UNITY_ANDROID
+        private static string TrackQueueFileName = "mixpanel_track_queue_android";
+        private static string EngageQueueFileName = "mixpanel_engage_queue_android";
+#elif UNITY_IOS
+        private static string TrackQueueFileName = "mixpanel_track_queue_ios";
+        private static string EngageQueueFileName = "mixpanel_engage_queue_ios";
+#endif
+#else
+        private static string TrackQueueFileName = "mixpanel_track_queue";
+        private static string EngageQueueFileName = "mixpanel_engage_queue";
+#endif
+
+        public static readonly PersistentQueue TrackQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, TrackQueueFileName));
 
         #endregion
 
         #region EngageQueue
 
-        public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_engage_queue"));
+        public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, EngageQueueFileName));
 
         #endregion
         
