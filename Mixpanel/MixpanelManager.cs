@@ -5,6 +5,8 @@ using System.Text;
 using mixpanel.queue;
 using UnityEngine;
 using UnityEngine.Networking;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace mixpanel
 {
