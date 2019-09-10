@@ -135,9 +135,12 @@ namespace mixpanel
                 while (count < 50)
                 {
                     byte[] data = session.Dequeue();
-                    if (!IsValidJson(data)) 
+                    if(data == null)
                         break;
-                    batch.Add(JsonUtility.FromJson<Value>(Encoding.UTF8.GetString(data)));
+                    var str = Encoding.UTF8.GetString(data);
+                    if (!IsValidJson(str)) 
+                        break;
+                    batch.Add(JsonUtility.FromJson<Value>(str));
                     ++count;
                 }
 
