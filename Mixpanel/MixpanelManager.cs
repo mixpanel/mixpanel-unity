@@ -133,7 +133,8 @@ namespace mixpanel
                 while (count < 50)
                 {
                     byte[] data = session.Dequeue();
-                    if (data == null) break;
+                    if (!IsValidJson(data)) 
+                        break;
                     batch.Add(JsonUtility.FromJson<Value>(Encoding.UTF8.GetString(data)));
                     ++count;
                 }
@@ -176,7 +177,34 @@ namespace mixpanel
             _instance.DoFlush(TrackUrl, Mixpanel.TrackQueue);
             _instance.DoFlush(EngageUrl, Mixpanel.EngageQueue);
         }
-        
+
+        public static bool IsValidJson(string strInput)
+        {
+            if(strInput == null)
+                return false;
+            strInput = strInput.Trim();
+            if ((strInput.StartsWith("{") && strInput.EndsWith("}")) || //For object
+                (strInput.StartsWith("[") && strInput.EndsWith("]"))) //For array
+            {
+                try
+                {
+                    var obj = JToken.Parse(strInput);
+                    return true;
+                }
+                catch (JsonReaderException jex)
+                {
+                    //Exception in parsing json
+//                    Console.WriteLine(jex.Message);
+                    return false;
+                }
+                catch (Exception ex) //some other exception
+                {
+//                    Console.WriteLine(ex.ToString());
+                    return false;
+                }
+            }
+        }
+
         #endregion
     }
 }
