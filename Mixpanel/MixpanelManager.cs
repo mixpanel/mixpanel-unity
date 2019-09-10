@@ -208,6 +208,8 @@ namespace mixpanel
                     return false;
                 }
             }
+
+            return false;
         }
 
         #endregion
