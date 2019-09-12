@@ -43,7 +43,6 @@ namespace mixpanel
         {
             DontDestroyOnLoad(this);
             StartCoroutine(PopulatePools());
-            StartCoroutine(TrimQueues());
             while (true)
             {
                 yield return new WaitForSecondsRealtime(MixpanelSettings.Instance.FlushInterval);
@@ -62,16 +61,6 @@ namespace mixpanel
                     Mixpanel.ObjectPool.Put(Value.Object);
                 }
                 yield return null;
-            }
-        }
-
-        private IEnumerator TrimQueues()
-        {
-            while (true)
-            {
-                yield return new WaitForSecondsRealtime(10);
-                Mixpanel.TrimQueue(Mixpanel.TrackQueue);
-                Mixpanel.TrimQueue(Mixpanel.EngageQueue);
             }
         }
 
