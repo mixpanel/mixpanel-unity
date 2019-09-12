@@ -10,9 +10,6 @@ namespace mixpanel
 {
     internal class MixpanelManager : MonoBehaviour
     {
-        private const string TrackUrl = "https://api.mixpanel.com/track/?ip=1";
-        private const string EngageUrl = "https://api.mixpanel.com/engage/?ip=1";
-
         private const int BatchSize = 50;
         
         private List<Value> TrackQueue = new List<Value>(500);
@@ -173,8 +170,8 @@ namespace mixpanel
 
         internal static void Flush()
         {
-            _instance.DoFlush(TrackUrl, Mixpanel.TrackQueue);
-            _instance.DoFlush(EngageUrl, Mixpanel.EngageQueue);
+            _instance.DoFlush(MixpanelSettings.Instance.TrackUrl, Mixpanel.TrackQueue);
+            _instance.DoFlush(MixpanelSettings.Instance.EngageUrl, Mixpanel.EngageQueue);
         }
         
         #endregion

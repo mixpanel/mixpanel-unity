@@ -10,14 +10,19 @@ namespace mixpanel
 {
     public class MixpanelSettings : ScriptableObject
     {
+        private const string TrackUrlTemplate = "{0}track/?ip=1";
+        private const string EngageUrlTemplate = "{0}engage/?ip=1";
+        
         //TODO: Convert to log level
         [Tooltip("If true will print helpful debugging messages")] 
         public bool ShowDebug;
+        [Tooltip("The api host of where to send the requests to. Useful when you need to proxy all the request to somewhere else.'")]
+        public string APIHostAddress = "https://api.mixpanel.com/";
         [Tooltip("The token of the Mixpanel project.")]
         public string RuntimeToken = "";
         [Tooltip("Used when the DEBUG compile flag is set or when in the editor. Useful if you want to use different tokens for test builds.")]
         public string DebugToken = "";
-        [Tooltip("Seconds (in realtime) between sending data to Mixpanel.")]
+        [Tooltip("Seconds (in realtime) between sending data to the API Host.")]
         public float FlushInterval = 60f;
 
         internal string Token {
@@ -35,11 +40,21 @@ namespace mixpanel
     
         public static MixpanelSettings Instance {
             get {
-                if (!_instance) _instance = FindOrCreateInstance();
+                if (!_instance)
+                {
+                    _instance = FindOrCreateInstance();
+                    string host = _instance.APIHostAddress.EndsWith("/") ? _instance.APIHostAddress : $"{_instance.APIHostAddress}/";
+                    _instance.TrackUrl = string.Format(TrackUrlTemplate, host);
+                    _instance.EngageUrl = string.Format(EngageUrlTemplate, host);
+                }
                 return _instance;
             }
         }
         
+        public string TrackUrl { get; private set; }
+        
+        public string EngageUrl { get; private set;  }
+
         private static MixpanelSettings FindOrCreateInstance()
         {
             MixpanelSettings instance = null;
