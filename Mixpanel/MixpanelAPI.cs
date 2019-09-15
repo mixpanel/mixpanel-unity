@@ -25,8 +25,12 @@ namespace mixpanel
         public static void Alias(this string alias)
         {
             if (alias == DistinctId) return;
-            Track("$create_alias", "alias", alias);
-            Identify(alias);
+            Value properties = ObjectPool.Get();
+            properties["alias"] = alias;
+            properties["original"] = DistinctId;
+            Track("$create_alias", properties);
+            DistinctId = alias;
+            Flush();
         }
 
         /// <summary>
@@ -56,7 +60,12 @@ namespace mixpanel
         /// retention and funnel reporting, so be sure that the given value is globally unique for each
         /// individual user you intend to track.
         /// </param>
-        public static void Identify(string uniqueId) => DistinctId = uniqueId;
+        public static void Identify(string uniqueId)
+        {
+            if (DistinctId == uniqueId) return;
+            Track("$identify", "$anon_distinct_id", DistinctId);
+            DistinctId = uniqueId;
+        }
 
         /// <summary>
         /// Opt out tracking.
@@ -122,6 +131,7 @@ namespace mixpanel
             OnceProperties.OnRecycle();
             TimedEvents.OnRecycle();
             SetPushDeviceToken("");
+            Flush();
         }
 
         /// <summary>

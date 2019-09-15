@@ -64,14 +64,14 @@ namespace mixpanel
                 {"$lib_version", MixpanelUnityVersion},
                 {"$os", SystemInfo.operatingSystemFamily.ToString()},
                 {"$os_version", SystemInfo.operatingSystem},
-                {"$manufacturer", ""},
+                //{"$manufacturer", ""},
                 {"$model", SystemInfo.deviceModel},
                 {"$app_version_string", Application.unityVersion},
                 {"$app_build_number", Application.version},
-                {"$carrier", ""},
+                //{"$carrier", ""},
                 {"$wifi", Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork},
                 {"$radio", GetRadio()},
-                {"$brand", ""},
+                //{"$brand", ""},
                 {"$device", Application.platform.ToString()},
                 {"$screen_dpi", Screen.dpi},
                 {"$has_nfc", false},
@@ -108,8 +108,8 @@ namespace mixpanel
             #if UNITY_ANDROID
             properties["$os"] = "Android";
             properties["$os_version"] = SystemInfo.operatingSystem;
-            properties["$manufacturer"] = "";
-            properties["$brand"] = "";
+            //properties["$manufacturer"] = "";
+            //properties["$brand"] = "";
             properties["$model"] = SystemInfo.deviceModel;
             properties["$app_version_string"] = Application.unityVersion;
             properties["$app_build_number"] = Application.version;
