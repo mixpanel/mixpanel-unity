@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace mixpanel
 {
@@ -135,10 +136,22 @@ namespace mixpanel
         }
 
         /// <summary>
-        /// Get value of super property. if such super property not created yet will return empty
+        /// Returns a Value object of the user's current super properties
         /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
+        /// <returns>The user's current super properties</returns>
+        public static Value GetSuperProperties()
+        {
+            var ret = ObjectPool.Get();
+            ret.Merge(OnceProperties);
+            ret.Merge(SuperProperties);
+            return ret;
+        }
+
+        /// <summary>
+        /// Returns a super property by name if exists. If not will return empty Value object
+        /// </summary>
+        /// <param name="name">Name of property to get value</param>
+        /// <returns>Super property registered with specified key</returns>
         public static Value GetSuperProperty(string name)
         {
             if (SuperProperties.TryGetValue(name, out var value))
