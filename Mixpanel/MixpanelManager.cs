@@ -136,8 +136,11 @@ namespace mixpanel
                     if(data == null)
                         break;
                     var jsonString = Encoding.UTF8.GetString(data).Trim();
-                    if (string.IsNullOrEmpty(jsonString)) 
+                    if (string.IsNullOrEmpty(jsonString))
+                    {
+                        Debug.LogError($"[Mixpanel] empty json in queue");
                         continue;
+                    }
                     try
                     {
                         batch.Add(JsonUtility.FromJson<Value>(jsonString));
@@ -145,7 +148,7 @@ namespace mixpanel
                     }
                     catch (ArgumentException exception)
                     {
-                        Debug.LogError($"Error while deserializing json: {jsonString}\n {exception}");
+                        Debug.LogError($"[Mixpanel] Error while deserializing json: {jsonString}\n {exception}");
                     }
                 }
 
