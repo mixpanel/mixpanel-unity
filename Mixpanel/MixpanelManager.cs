@@ -5,8 +5,6 @@ using System.Text;
 using mixpanel.queue;
 using UnityEngine;
 using UnityEngine.Networking;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace mixpanel
 {
@@ -137,11 +135,18 @@ namespace mixpanel
                     byte[] data = session.Dequeue();
                     if(data == null)
                         break;
-                    var str = Encoding.UTF8.GetString(data);
-                    if (!IsValidJson(str)) 
-                        break;
-                    batch.Add(JsonUtility.FromJson<Value>(str));
-                    ++count;
+                    var jsonString = Encoding.UTF8.GetString(data).Trim();
+                    if (string.IsNullOrEmpty(jsonString)) 
+                        continue;
+                    try
+                    {
+                        batch.Add(JsonUtility.FromJson<Value>(jsonString));
+                        ++count;
+                    }
+                    catch (ArgumentException exception)
+                    {
+                        Debug.LogError($"Error while deserializing json: {jsonString}\n {exception}");
+                    }
                 }
 
                 string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(batch.ToString()));
@@ -181,35 +186,6 @@ namespace mixpanel
         {
             _instance.DoFlush(TrackUrl, Mixpanel.TrackQueue);
             _instance.DoFlush(EngageUrl, Mixpanel.EngageQueue);
-        }
-
-        public static bool IsValidJson(string strInput)
-        {
-            if(strInput == null)
-                return false;
-            strInput = strInput.Trim();
-            if ((strInput.StartsWith("{") && strInput.EndsWith("}")) || //For object
-                (strInput.StartsWith("[") && strInput.EndsWith("]"))) //For array
-            {
-                try
-                {
-                    var obj = JToken.Parse(strInput);
-                    return true;
-                }
-                catch (JsonReaderException jex)
-                {
-                    //Exception in parsing json
-//                    Console.WriteLine(jex.Message);
-                    return false;
-                }
-                catch (Exception ex) //some other exception
-                {
-//                    Console.WriteLine(ex.ToString());
-                    return false;
-                }
-            }
-
-            return false;
         }
 
         #endregion
