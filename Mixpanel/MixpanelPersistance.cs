@@ -178,16 +178,11 @@ namespace mixpanel
         #region TrackQueue
 
 #if UNITY_EDITOR
-#if UNITY_ANDROID
-        private static string TrackQueueFileName = "mixpanel_track_queue_android";
-        private static string EngageQueueFileName = "mixpanel_engage_queue_android";
-#elif UNITY_IOS
-        private static string TrackQueueFileName = "mixpanel_track_queue_ios";
-        private static string EngageQueueFileName = "mixpanel_engage_queue_ios";
-#endif
+        private static readonly string TrackQueueFileName = "mixpanel_track_queue" + UnityEditor.EditorUserBuildSettings.activeBuildTarget;
+        private static readonly string EngageQueueFileName = "mixpanel_engage_queue" + UnityEditor.EditorUserBuildSettings.activeBuildTarget;
 #else
-        private static string TrackQueueFileName = "mixpanel_track_queue";
-        private static string EngageQueueFileName = "mixpanel_engage_queue";
+        private static readonly string TrackQueueFileName = "mixpanel_track_queue";
+        private static readonly string EngageQueueFileName = "mixpanel_engage_queue";
 #endif
 
         public static readonly PersistentQueue TrackQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, TrackQueueFileName));
