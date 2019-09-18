@@ -10,10 +10,10 @@ namespace mixpanel
 {
     internal class MixpanelManager : MonoBehaviour
     {
-        private const string TrackUrl = "https://api.mixpanel.com/track/?ip=1";
-        private const string EngageUrl = "https://api.mixpanel.com/engage/?ip=1";
-
         private const int BatchSize = 50;
+        private const int RetryMaxTries = 10;
+        private const int PoolFillFrames = 50;
+        private const int PoolFillEachFrame = 20;
         
         private List<Value> TrackQueue = new List<Value>(500);
         private List<Value> EngageQueue = new List<Value>(500);
@@ -38,15 +38,10 @@ namespace mixpanel
         
         #endregion
 
-        private bool _isBlocking;
-        private bool _needsFlush;
-        private const int RetryMaxTries = 10;
-
         private IEnumerator Start()
         {
             DontDestroyOnLoad(this);
             StartCoroutine(PopulatePools());
-            StartCoroutine(TrimQueues());
             while (true)
             {
                 yield return new WaitForSecondsRealtime(MixpanelSettings.Instance.FlushInterval);
@@ -54,27 +49,17 @@ namespace mixpanel
             }
         }
         
-        private IEnumerator PopulatePools()
+        private static IEnumerator PopulatePools()
         {
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < PoolFillFrames; i++)
             {
                 Mixpanel.NullPool.Put(Value.Null);
-                for (int j = 0; j < 20; j++)
+                for (int j = 0; j < PoolFillEachFrame; j++)
                 {
                     Mixpanel.ArrayPool.Put(Value.Array);
                     Mixpanel.ObjectPool.Put(Value.Object);
                 }
                 yield return null;
-            }
-        }
-
-        private IEnumerator TrimQueues()
-        {
-            while (true)
-            {
-                yield return new WaitForSecondsRealtime(10);
-                Mixpanel.TrimQueue(Mixpanel.TrackQueue);
-                Mixpanel.TrimQueue(Mixpanel.EngageQueue);
             }
         }
 
@@ -130,7 +115,7 @@ namespace mixpanel
             Value batch = Mixpanel.ArrayPool.Get();
             using (PersistentQueueSession session = queue.OpenSession())
             {
-                while (count < 50)
+                while (count < BatchSize)
                 {
                     byte[] data = session.Dequeue();
                     if(data == null)
@@ -187,8 +172,8 @@ namespace mixpanel
 
         internal static void Flush()
         {
-            _instance.DoFlush(TrackUrl, Mixpanel.TrackQueue);
-            _instance.DoFlush(EngageUrl, Mixpanel.EngageQueue);
+            _instance.DoFlush(MixpanelSettings.Instance.TrackUrl, Mixpanel.TrackQueue);
+            _instance.DoFlush(MixpanelSettings.Instance.EngageUrl, Mixpanel.EngageQueue);
         }
 
         #endregion

@@ -13,12 +13,10 @@ Installation
 
 This library can be installed using the unity package manager system (Unity >= 2018.4) with git
 
-* In your unity project root open `./Packages/manifest.json`
-* Add the following line to the dependencies section `"com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git",`
+* In your unity project root open ./Packages/manifest.json
+* Add the following line to the dependencies section "com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#upm",
 * Open Unity and the package should download automatically
-
-Alternatively you can go to the releases page and down the `.unitypackage` file of the library and have unity that.
-
+Alternatively you can go to the [releases page](https://github.com/mixpanel/mixpanel-unity/releases) and download the .unitypackage file and have unity install that.
 Examples
 --------
 Checkout our Examples by importing the `Examples.unitypackage` file located inside the `Mixpanel` folder after you follow the installation instructions above

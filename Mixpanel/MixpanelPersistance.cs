@@ -194,19 +194,5 @@ namespace mixpanel
         public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, EngageQueueFileName));
 
         #endregion
-        
-        internal static void TrimQueue(PersistentQueue queue)
-        {
-            int overage = queue.CurrentCountOfItemsInQueue - 5000;
-            if (overage <= 0) return;
-            using (PersistentQueueSession session = queue.OpenSession())
-            {
-                for (int i = 0; i < overage; i++)
-                {
-                    session.Dequeue();
-                }
-                session.Flush();
-            }
-        }
     }
 }
