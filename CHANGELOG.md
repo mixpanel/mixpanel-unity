@@ -1,5 +1,5 @@
 ## [v2.0.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.0.0)
-### April 12th - 2018
+### September 24th - 2019
 
 #### This version is a complete rewrite of the library to support ALL platforms that unity can compile to.
 
@@ -8,6 +8,8 @@ The basis for this rewrite was https://github.com/mixpanel/mixpanel-unity/issues
 The API has stayed compliant with the documentation though there maybe a few changes to a few of the mixpanel properties that come though automatically due to unity not having access to certain system/device information easily please reachout to us if there is something missing after you upgrade and we can introspect it
 
 The github repo has also been structured so that it supports the Unity 2018.4 package manager (please see the README for package manager install instructions)
+
+This version of the library should support backwards compatibility with Unity 2018.x but it has only been tested with the 2018 LTS release.
 
 ---
 
