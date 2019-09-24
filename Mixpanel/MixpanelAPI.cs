@@ -22,7 +22,7 @@ namespace mixpanel
         /// Creates a distinct_id alias.
         /// </summary>
         /// <param name="alias">the new distinct_id that should represent original</param>
-        public static void Alias(this string alias)
+        public static void Alias(string alias)
         {
             if (alias == DistinctId) return;
             Value properties = ObjectPool.Get();
@@ -85,7 +85,7 @@ namespace mixpanel
         public static void OptInTracking()
         {
             IsTracking = true;
-            DoTrack("$opt_in", NullPool.Get());
+            DoTrack("$opt_in", ObjectPool.Get());
         }
 
         /// <summary>
@@ -131,6 +131,7 @@ namespace mixpanel
             TimedEvents.OnRecycle();
             SetPushDeviceToken("");
             Flush();
+            DistinctId = "";
         }
 
         /// <summary>
