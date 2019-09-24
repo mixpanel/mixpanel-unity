@@ -29,7 +29,6 @@ namespace mixpanel
             properties["alias"] = alias;
             properties["original"] = DistinctId;
             Track("$create_alias", properties);
-            DistinctId = alias;
             Flush();
         }
 
