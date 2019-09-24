@@ -121,6 +121,13 @@ namespace mixpanel
                 PlayerPrefs.SetString(OncePropertiesName, JsonUtility.ToJson(_onceProperties));
             }
         }
+
+        private static void ResetOnceProperties()
+        {
+            Value properties = OnceProperties;
+            properties.OnRecycle();
+            OnceProperties = properties;
+        }
         
         #endregion
         
@@ -150,6 +157,13 @@ namespace mixpanel
             }
         }
         
+        private static void ResetSuperProperties()
+        {
+            Value properties = SuperProperties;
+            properties.OnRecycle();
+            SuperProperties = properties;
+        }
+        
         #endregion
         
         #region TimedEvents
@@ -176,6 +190,13 @@ namespace mixpanel
                 _timedEvents = value;
                 PlayerPrefs.SetString(TimedEventsName, JsonUtility.ToJson(_timedEvents));
             }
+        }
+        
+        private static void ResetTimedEvents()
+        {
+            Value properties = TimedEvents;
+            properties.OnRecycle();
+            TimedEvents = properties;
         }
         
         #endregion

@@ -24,7 +24,7 @@ namespace mixpanel
             properties["$screen_width"] = Screen.width;
             properties["$screen_height"] = Screen.height;
             properties.Merge(OnceProperties);
-            OnceProperties.OnRecycle();
+            ResetOnceProperties();
             properties.Merge(SuperProperties);
             if (TimedEvents.TryGetValue(eventName, out Value startTime))
             {
