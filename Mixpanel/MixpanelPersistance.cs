@@ -13,15 +13,19 @@ namespace mixpanel
         private const string DistinctIdName = "Mixpanel.DistinctId";
         
         private static string _distinctId;
+        
         public static string DistinctId
         {
             get
             {
                 if (!string.IsNullOrEmpty(_distinctId)) return _distinctId;
-                // Generate a Unique ID for this client
+                if (PlayerPrefs.HasKey(DistinctIdName))
+                {
+                    _distinctId = PlayerPrefs.GetString(DistinctIdName);
+                }
+                // Generate a Unique ID for this client if still null or empty
                 // https://devblogs.microsoft.com/oldnewthing/?p=21823
-                if (!PlayerPrefs.HasKey(DistinctIdName)) DistinctId = Guid.NewGuid().ToString();
-                else _distinctId = PlayerPrefs.GetString(DistinctIdName);
+                if (string.IsNullOrEmpty(_distinctId)) DistinctId = Guid.NewGuid().ToString();
                 return _distinctId;
             }
             set
