@@ -1,6 +1,6 @@
 Latest Version 
 --------------
-##### _July 19th, 2019_ - [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
+##### _September 24th, 2019_ - [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
 
 Supported Unity Version >= 2018.4
 
