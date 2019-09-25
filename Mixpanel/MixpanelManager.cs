@@ -122,7 +122,8 @@ namespace mixpanel
                     batch.Add(JsonUtility.FromJson<Value>(Encoding.UTF8.GetString(data)));
                     ++count;
                 }
-
+                // If the batch is empty don't send the request
+                if (count == 0) yield break;
                 string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(batch.ToString()));
                 if (MixpanelSettings.Instance.ShowDebug) Debug.Log($"[Mixpanel] Sending Request - '{url}' with payload '{payload}'");
                 WWWForm form = new WWWForm();
