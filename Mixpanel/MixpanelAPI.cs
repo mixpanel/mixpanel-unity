@@ -27,7 +27,6 @@ namespace mixpanel
             if (alias == DistinctId) return;
             Value properties = ObjectPool.Get();
             properties["alias"] = alias;
-            properties["original"] = DistinctId;
             Track("$create_alias", properties);
             Flush();
         }
