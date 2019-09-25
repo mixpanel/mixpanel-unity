@@ -1,46 +1,37 @@
 Latest Version 
 --------------
-##### _Aug 7th, 2018_ - [v1.3.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.3.1)
+##### _September 24th, 2019_ - [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
 
-[See the changes](https://github.com/mixpanel/mixpanel-unity/releases/tag/v1.3.0).
+Supported Unity Version >= 2018.4
 
 Getting Started
 ---------------
-Check out our [official documentation](https://mixpanel.com/help/reference/unity) to learn how to install the library in Unity. You will also learn how to make use of all the features we currently support!
+Check out our [official documentation](https://mixpanel.com/help/reference/unity) to learn how to make use of all the features we currently support!
 
-Other links:
-* Full API Reference: http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html
-* Sample application: https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample
+Installation
+------------
+
+This library can be installed using the unity package manager system (Unity >= 2018.4) with git
+
+* In your unity project root open ./Packages/manifest.json
+* Add the following line to the dependencies section "com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#upm",
+* Open Unity and the package should download automatically
+Alternatively you can go to the [releases page](https://github.com/mixpanel/mixpanel-unity/releases) and download the .unitypackage file and have unity install that.
+Examples
+--------
+Checkout our Examples by importing the `Examples.unitypackage` file located inside the `Mixpanel` folder after you follow the installation instructions above
 
 Want to Contribute?
 -------------------
 The Mixpanel library for Unity is an open source project, and we'd love to see your contributions!
 We'd also love for you to come and work with us! Check out http://boards.greenhouse.io/mixpanel/jobs/25078#.U_4BBEhORKU for details.
 
+The best way to work on the Mixpanel library is the clone this repository and use a unity "local" package reference by creating a new unity project and opening the `./Packages/manifest.json` file and adding the following line under the `dependencies` section
+
+```json
+"com.mixpanel.unity": "file:C:/Path/to/cloned/repo/mixpanel-unity",
+```
+
 Changelog
 ---------
-See [wiki page](https://github.com/mixpanel/mixpanel-unity/wiki/Changelog).
-
-
-Building the SDK
-----------------
-
-Add all dependencies of the Mixpanel SDK to your app using the following code in your terminal:
-
-```
-sh ./native/build/install_dependencies.sh
-```
-
-Make sure you've logged in to the Unity app.
-
-Then, run the following build script in your terminal: 
-
-```
-cd build
-python build_all.py # on OS X
-build_all.py # on Windows
-```
-
-Note that Unity must be closed while running build_all.py.
-
-The build script will create all the project files (make, xcode, visual studio), perform the builds and run the tests suites. The test suites are run on: OS X, Windows, iOS Simulator and Android Device (if one is attached).
+See [changelog](https://github.com/mixpanel/mixpanel-unity/tree/master/CHANGELOG.md) for details.
