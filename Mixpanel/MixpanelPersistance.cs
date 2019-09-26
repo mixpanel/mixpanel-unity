@@ -13,15 +13,19 @@ namespace mixpanel
         private const string DistinctIdName = "Mixpanel.DistinctId";
         
         private static string _distinctId;
+        
         public static string DistinctId
         {
             get
             {
                 if (!string.IsNullOrEmpty(_distinctId)) return _distinctId;
-                // Generate a Unique ID for this client
+                if (PlayerPrefs.HasKey(DistinctIdName))
+                {
+                    _distinctId = PlayerPrefs.GetString(DistinctIdName);
+                }
+                // Generate a Unique ID for this client if still null or empty
                 // https://devblogs.microsoft.com/oldnewthing/?p=21823
-                if (!PlayerPrefs.HasKey(DistinctIdName)) DistinctId = Guid.NewGuid().ToString();
-                else _distinctId = PlayerPrefs.GetString(DistinctIdName);
+                if (string.IsNullOrEmpty(_distinctId)) DistinctId = Guid.NewGuid().ToString();
                 return _distinctId;
             }
             set
@@ -116,6 +120,13 @@ namespace mixpanel
                 PlayerPrefs.SetString(OncePropertiesName, JsonUtility.ToJson(_onceProperties));
             }
         }
+
+        private static void ResetOnceProperties()
+        {
+            Value properties = OnceProperties;
+            properties.OnRecycle();
+            OnceProperties = properties;
+        }
         
         #endregion
         
@@ -145,6 +156,13 @@ namespace mixpanel
             }
         }
         
+        private static void ResetSuperProperties()
+        {
+            Value properties = SuperProperties;
+            properties.OnRecycle();
+            SuperProperties = properties;
+        }
+        
         #endregion
         
         #region TimedEvents
@@ -172,7 +190,14 @@ namespace mixpanel
                 PlayerPrefs.SetString(TimedEventsName, JsonUtility.ToJson(_timedEvents));
             }
         }
-
+        
+        private static void ResetTimedEvents()
+        {
+            Value properties = TimedEvents;
+            properties.OnRecycle();
+            TimedEvents = properties;
+        }
+        
         #endregion
 
         #region TrackQueue
@@ -191,7 +216,7 @@ namespace mixpanel
 
         #region EngageQueue
 
-        public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, EngageQueueFileName));
+        public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_engage_queue"));
 
         #endregion
     }

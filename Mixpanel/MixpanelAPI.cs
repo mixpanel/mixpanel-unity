@@ -23,14 +23,12 @@ namespace mixpanel
         /// Creates a distinct_id alias.
         /// </summary>
         /// <param name="alias">the new distinct_id that should represent original</param>
-        public static void Alias(this string alias)
+        public static void Alias(string alias)
         {
             if (alias == DistinctId) return;
             Value properties = ObjectPool.Get();
             properties["alias"] = alias;
-            properties["original"] = DistinctId;
             Track("$create_alias", properties);
-            DistinctId = alias;
             Flush();
         }
 
@@ -39,8 +37,7 @@ namespace mixpanel
         /// </summary>
         public static void ClearTimedEvents()
         {
-            TimedEvents.OnRecycle();
-            TimedEvents = TimedEvents;
+            ResetTimedEvents();
         }
 
         /// <summary>
@@ -49,8 +46,9 @@ namespace mixpanel
         /// <param name="eventName">the name of event to clear event timer</param>
         public static void ClearTimedEvent(string eventName)
         {
-            TimedEvents.Remove(eventName);
-            TimedEvents = TimedEvents;
+            Value properties = TimedEvents;
+            properties.Remove(eventName);
+            TimedEvents = properties;
         }
 
         /// <summary>
@@ -64,8 +62,9 @@ namespace mixpanel
         public static void Identify(string uniqueId)
         {
             if (DistinctId == uniqueId) return;
-            Track("$identify", "$anon_distinct_id", DistinctId);
+            string oldDistinctId = DistinctId;
             DistinctId = uniqueId;
+            Track("$identify", "$anon_distinct_id", oldDistinctId);
         }
 
         /// <summary>
@@ -87,7 +86,7 @@ namespace mixpanel
         public static void OptInTracking()
         {
             IsTracking = true;
-            DoTrack("$opt_in", NullPool.Get());
+            DoTrack("$opt_in", ObjectPool.Get());
         }
 
         /// <summary>
@@ -108,8 +107,9 @@ namespace mixpanel
         /// <param name="value">value of the property to register</param>
         public static void Register(string key, Value value)
         {
-            SuperProperties[key] = value;
-            SuperProperties = SuperProperties;
+            Value properties = SuperProperties;
+            properties[key] = value;
+            SuperProperties = properties;
         }
 
         /// <summary>
@@ -119,8 +119,9 @@ namespace mixpanel
         /// <param name="value">value of the property to register</param>
         public static void RegisterOnce(string key, Value value)
         {
-            OnceProperties[key] = value;
-            OnceProperties = OnceProperties;
+            Value properties = OnceProperties;
+            properties[key] = value;
+            OnceProperties = properties;
         }
 
         /// <summary>
@@ -128,11 +129,12 @@ namespace mixpanel
         /// </summary>
         public static void Reset()
         {
-            SuperProperties.OnRecycle();
-            OnceProperties.OnRecycle();
-            TimedEvents.OnRecycle();
+            ResetSuperProperties();
+            ResetOnceProperties();
+            ResetTimedEvents();
             SetPushDeviceToken("");
             Flush();
+            DistinctId = "";
         }
 
         /// <summary>
@@ -177,7 +179,12 @@ namespace mixpanel
         /// representing the number of seconds between your calls.
         /// </summary>
         /// <param name="eventName">the name of the event to track with timing</param>
-        public static void StartTimedEvent(string eventName) => TimedEvents[eventName] = CurrentTime();
+        public static void StartTimedEvent(string eventName)
+        {
+            Value properties = TimedEvents;
+            properties[eventName] = CurrentTime();
+            TimedEvents = properties;
+        }
 
         /// <summary>
         /// Begin timing of an event, but only if the event has not already been registered as a timed event.
@@ -188,8 +195,9 @@ namespace mixpanel
         {
             if (!TimedEvents.ContainsKey(eventName))
             {
-                TimedEvents[eventName] = CurrentTime();
-                TimedEvents = TimedEvents;
+                Value properties = TimedEvents;
+                properties[eventName] = CurrentTime();
+                TimedEvents = properties;
             }
         }
 
@@ -227,8 +235,9 @@ namespace mixpanel
         /// <param name="key">name of the property to unregister</param>
         public static void Unregister(string key)
         {
-            SuperProperties.Remove(key);
-            SuperProperties = SuperProperties;
+            Value properties = SuperProperties;
+            properties.Remove(key);
+            SuperProperties = properties;
         }
 
         /// <summary>
