@@ -216,7 +216,7 @@ namespace mixpanel
 
         #region EngageQueue
 
-        public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_engage_queue"));
+        public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, EngageQueueFileName));
 
         #endregion
     }
