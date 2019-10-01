@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace mixpanel
 {
@@ -144,6 +145,32 @@ namespace mixpanel
         {
             TrackQueue.Clear();
             EngageQueue.Clear();
+        }
+
+        /// <summary>
+        /// Returns a Value object of the user's current super properties
+        /// </summary>
+        /// <returns>The user's current super properties</returns>
+        public static Value GetSuperProperties()
+        {
+            var ret = ObjectPool.Get();
+            ret.Merge(OnceProperties);
+            ret.Merge(SuperProperties);
+            return ret;
+        }
+
+        /// <summary>
+        /// Returns a super property by name if exists. If not will return empty Value object
+        /// </summary>
+        /// <param name="name">Name of property to get value</param>
+        /// <returns>Super property registered with specified key</returns>
+        public static Value GetSuperProperty(string name)
+        {
+            if (SuperProperties.TryGetValue(name, out var value))
+                return value;
+            if (OnceProperties.TryGetValue(name, out value))
+                return value;
+            return new Value();
         }
 
         /// <summary>
@@ -417,10 +444,17 @@ namespace mixpanel
             /// <summary>
             /// Register the given device to receive push notifications.
             /// </summary>
+            #if UNITY_IOS
             public static byte[] PushDeviceToken
             {
                 set => SetPushDeviceToken(BitConverter.ToString(value).ToLower().Replace("-", ""));
             }
+            #else
+            public static string PushDeviceToken
+            {
+                set => SetPushDeviceToken(value);
+            }
+            #endif
         }
     }
 }

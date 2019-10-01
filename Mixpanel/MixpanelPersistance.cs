@@ -88,7 +88,6 @@ namespace mixpanel
             }
         }
         
-        [Conditional("UNITY_IOS")]
         internal static void SetPushDeviceToken(string token)
         {
             PushDeviceTokenString = token;
@@ -203,13 +202,21 @@ namespace mixpanel
 
         #region TrackQueue
 
-        public static readonly PersistentQueue TrackQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_track_queue"));
+#if UNITY_EDITOR
+        private static readonly string TrackQueueFileName = "mixpanel_track_queue" + UnityEditor.EditorUserBuildSettings.activeBuildTarget;
+        private static readonly string EngageQueueFileName = "mixpanel_engage_queue" + UnityEditor.EditorUserBuildSettings.activeBuildTarget;
+#else
+        private static readonly string TrackQueueFileName = "mixpanel_track_queue";
+        private static readonly string EngageQueueFileName = "mixpanel_engage_queue";
+#endif
+
+        public static readonly PersistentQueue TrackQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, TrackQueueFileName));
 
         #endregion
 
         #region EngageQueue
 
-        public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_engage_queue"));
+        public static readonly PersistentQueue EngageQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, EngageQueueFileName));
 
         #endregion
     }
