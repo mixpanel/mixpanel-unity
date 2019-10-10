@@ -116,7 +116,7 @@ namespace mixpanel
                 case ValueTypes.BOOLEAN:
                     return _bool.ToString();
                 case ValueTypes.NUMBER:
-                    return _number.ToString(CultureInfo.CurrentCulture);
+                    return _number.ToString(CultureInfo.InvariantCulture);
                 case ValueTypes.ARRAY:
                     StringWriter arrayWriter = new StringWriter();
                     Write(arrayWriter);
@@ -328,7 +328,7 @@ namespace mixpanel
             {
                 _valueType = ValueTypes.STRING;
                 _dataType = DataTypes.DATE_TIME;
-                _string = DateTime.SpecifyKind(value, DateTimeKind.Utc).ToString(CultureInfo.CurrentCulture);
+                _string = DateTime.SpecifyKind(value, DateTimeKind.Utc).ToString(CultureInfo.InvariantCulture);
             }
         }
         
@@ -343,7 +343,7 @@ namespace mixpanel
             {
                 _valueType = ValueTypes.STRING;
                 _dataType = DataTypes.DATE_TIME_OFFSET;
-                _string = value.ToString(CultureInfo.CurrentCulture);
+                _string = value.ToString(CultureInfo.InvariantCulture);
             }
         }
         
@@ -725,7 +725,7 @@ namespace mixpanel
                     writer.Write(_bool ? "true" : "false");
                     break;
                 case ValueTypes.NUMBER:
-                    writer.Write(_number);
+                    writer.Write(_number.ToString(CultureInfo.InvariantCulture));
                     break;
                 case ValueTypes.ARRAY:
                     writer.Write("[");
