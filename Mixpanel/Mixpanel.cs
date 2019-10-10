@@ -132,10 +132,10 @@ namespace mixpanel
             return "none";
         }
 
-        private static double CurrentTime()
+        private static int CurrentTime()
         {
             DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            double currentEpochTime = (DateTime.UtcNow - epochStart).TotalSeconds;
+            int currentEpochTime = (int)(DateTime.UtcNow - epochStart).TotalSeconds;
             return currentEpochTime;
         }
 
