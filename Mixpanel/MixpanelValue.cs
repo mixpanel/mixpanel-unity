@@ -116,7 +116,7 @@ namespace mixpanel
                 case ValueTypes.BOOLEAN:
                     return _bool.ToString();
                 case ValueTypes.NUMBER:
-                    return _number.ToString(CultureInfo.CurrentCulture);
+                    return _number.ToString();
                 case ValueTypes.ARRAY:
                     StringWriter arrayWriter = new StringWriter();
                     Write(arrayWriter);
