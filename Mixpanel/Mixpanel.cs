@@ -13,7 +13,6 @@ namespace mixpanel
         
         private static Value _autoTrackProperties;
         private static Value _autoEngageProperties;
-
         private static Int32 _eventCounter = 0, _peopleCounter = 0, _sessionStartEpoch;
         private static String _sessionID;
 
