@@ -131,7 +131,7 @@ namespace mixpanel
                 UnityWebRequest request = UnityWebRequest.Post(url, form);
                 yield return request.SendWebRequest();
                 while (!request.isDone) yield return new WaitForEndOfFrame();
-                if (request.responseCode == 200 && !request.downloadHandler.text.Equals("0") && !request.isNetworkError && !request.isHttpError)
+                if (!request.isNetworkError && !request.isHttpError)
                 {
                     session.Flush();
                     Mixpanel.Put(batch);
