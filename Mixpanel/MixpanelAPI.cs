@@ -131,7 +131,7 @@ namespace mixpanel
             ResetSuperProperties();
             ResetOnceProperties();
             ResetTimedEvents();
-            SetPushDeviceToken("");
+            SavePushDeviceToken("");
             Flush();
             DistinctId = "";
         }
@@ -419,7 +419,16 @@ namespace mixpanel
             /// </summary>
             public static byte[] PushDeviceToken
             {
-                set => SetPushDeviceToken(BitConverter.ToString(value).ToLower().Replace("-", ""));
+                set
+                {
+                    string token = BitConverter.ToString(value).ToLower().Replace("-", "");
+                    SavePushDeviceToken(token);
+                    #if UNITY_IOS
+                        Union("$ios_devices", new string[] {token});
+                    #elif UNITY_ANDROID
+                        Union("$android_devices", new string[] {token});
+                    #endif
+                }
             }
         }
     }
