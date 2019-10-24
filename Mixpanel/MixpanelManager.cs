@@ -38,6 +38,13 @@ namespace mixpanel
         
         #endregion
 
+        void OnApplicationPause(bool pauseStatus)
+        {
+            if (!pauseStatus) {
+                Mixpanel.InitSession();
+            }
+        }
+
         private IEnumerator Start()
         {
             DontDestroyOnLoad(this);
