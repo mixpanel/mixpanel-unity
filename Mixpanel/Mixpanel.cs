@@ -47,40 +47,6 @@ namespace mixpanel
             _sessionStartEpoch = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
         }
 
-        private static Int32 _eventCounter = 0, _peopleCounter = 0, _sessionStartEpoch;
-        private static String _sessionID;
-
-        private static Value GetEventMetadata() {
-            Value eventMetadata = new Value
-            {
-                {"$mp_event_id", Convert.ToString(UnityEngine.Random.Range(0, Int32.MaxValue), 16)},
-                {"$mp_session_id", _sessionID},
-                {"$mp_session_seq_id", _eventCounter},
-                {"$mp_session_start_sec", _sessionStartEpoch}
-            };
-            _eventCounter++;
-            return eventMetadata;
-        }
-
-        private static Value GetPeopleMetadata() {
-            Value peopleMetadata = new Value
-            {
-                {"$mp_event_id", Convert.ToString(UnityEngine.Random.Range(0, Int32.MaxValue), 16)},
-                {"$mp_session_id", _sessionID},
-                {"$mp_session_seq_id", _peopleCounter},
-                {"$mp_session_start_sec", _sessionStartEpoch}
-            };
-            _peopleCounter++;
-            return peopleMetadata;
-        }
-
-        internal static void InitSession() {
-            _eventCounter = 0;
-            _peopleCounter = 0;
-            _sessionID = Convert.ToString(UnityEngine.Random.Range(0, Int32.MaxValue), 16);
-            _sessionStartEpoch = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-        }
-
         private static void DoTrack(string eventName, Value properties)
         {
             if (!IsTracking) return;
