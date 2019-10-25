@@ -699,8 +699,6 @@ namespace mixpanel
         
         #endregion
 
-        #region Serialization
-
         #region Writer
 
         private void Write(StringWriter writer, bool includeTypeInfo = false)
@@ -718,7 +716,7 @@ namespace mixpanel
                     break;
                 case ValueTypes.STRING:
                     writer.Write("\"");
-                    writer.Write(_string);
+                    writer.Write(SanitizeStringForJson(_string));
                     writer.Write("\"");
                     break;
                 case ValueTypes.BOOLEAN:
@@ -780,296 +778,48 @@ namespace mixpanel
         
         #region Reader
 
-        private static Value FromSerialization(Value valueType, Value dataType, Value value)
+        public static string SanitizeStringForJson(string s)
         {
-            value._valueType = (ValueTypes) Enum.Parse(typeof(ValueTypes), valueType);
-            value._dataType = (DataTypes) Enum.Parse(typeof(DataTypes), dataType);
-            return value;
-        }
-                
-        private const string WhiteSpace = " \t\n\r";
-        private const string WordBreak = " \t\n\r{}[],:\"";
-
-        private enum Token
-        {
-            NONE,
-            CURLY_OPEN,
-            CURLY_CLOSE,
-            SQUARED_OPEN,
-            SQUARED_CLOSE,
-            COLON,
-            COMMA,
-            STRING,
-            NUMBER,
-            TRUE,
-            FALSE,
-            NULL
-        };
-        
-        private static char PeekChar(StringReader reader) => Convert.ToChar(reader.Peek());
-
-        private static char NextChar(StringReader reader) => Convert.ToChar(reader.Read());
-
-        private static string NextWord(StringReader reader)
-        {
-            StringBuilder word = new StringBuilder();
-            while (WordBreak.IndexOf(PeekChar(reader)) == -1) {
-                word.Append(NextChar(reader));
-
-                if (reader.Peek() == -1) {
-                    break;
-                }
-            }
-            return word.ToString();
-        }
-
-        private static void EatWhitespace(StringReader reader)
-        {
-            while (WhiteSpace.IndexOf(PeekChar(reader)) != -1) {
-                reader.Read();
-
-                if (reader.Peek() == -1) {
-                    break;
-                }
-            }
-        }
-
-        private static Token NextToken(StringReader reader)
-        {
-            EatWhitespace(reader);
-
-            if (reader.Peek() == -1) {
-                return Token.NONE;
+            if (s == null || s.Length == 0) {
+                return "";
             }
 
-            char c = PeekChar(reader);
-            switch (c) {
-                case '{':
-                    return Token.CURLY_OPEN;
-                case '}':
-                    reader.Read();
-                    return Token.CURLY_CLOSE;
-                case '[':
-                    return Token.SQUARED_OPEN;
-                case ']':
-                    reader.Read();
-                    return Token.SQUARED_CLOSE;
-                case ',':
-                    reader.Read();
-                    return Token.COMMA;
-                case '"':
-                    return Token.STRING;
-                case ':':
-                    return Token.COLON;
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                case '-':
-                    return Token.NUMBER;
-            }
-
-            string word = NextWord(reader);
-
-            switch (word) {
-                case "false":
-                    return Token.FALSE;
-                case "true":
-                    return Token.TRUE;
-                case "null":
-                    return Token.NULL;
-            }
-
-            return Token.NONE;
-        }
-        
-        private static Value ParseValue(StringReader reader)
-        {
-            return ParseByToken(reader, NextToken(reader));
-        }
-        
-        private static Value ParseByToken(StringReader reader, Token token)
-        {
-            switch (token) {
-                case Token.STRING:
-                    return ParseString(reader);
-                case Token.NUMBER:
-                    return ParseNumber(reader);
-                case Token.CURLY_OPEN:
-                    // ditch opening brace
-                    reader.Read();
-                    return ParseObject(reader);
-                case Token.SQUARED_OPEN:
-                    // ditch opening bracket
-                    reader.Read();
-                    return ParseArray(reader);
-                case Token.TRUE:
-                    return true;
-                case Token.FALSE:
-                    return false;
-                case Token.NULL:
-                    return Value.Null;
-                default:
-                    return Value.Null;
-            }
-        }
-        
-        private static string ParseString(StringReader reader)
-        {
-            StringBuilder s = new StringBuilder();
-            
-            // ditch opening quote
-            reader.Read();
-            
-            bool parsing = true;
-            while (parsing) {
-
-                if (reader.Peek() == -1) {
-                    parsing = false;
-                    break;
-                }
-
-                char c = NextChar(reader);
-                switch (c) {
-                case '"':
-                    parsing = false;
-                    break;
-                case '\\':
-                    if (reader.Peek() == -1) {
-                        parsing = false;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < s.Length; i += 1) {
+                char c = s[i];
+                if (c >= 0 && c <= 7 || c == 11 || c >= 14 && c <= 31 || c == 39 || c == 60 || c == 62)
+                    sb.AppendFormat("\\u{0:x4}", (int)c);
+                else switch (c) {
+                    case '\\':
+                    case '"':
+                        sb.Append('\\');
+                        sb.Append(c);
                         break;
-                    }
-
-                    c = NextChar(reader);
-                    switch (c) {
-                        case '"':
-                        case '\\':
-                        case '/':
-                            s.Append(c);
-                            break;
-                        case 'b':
-                            s.Append('\b');
-                            break;
-                        case 'f':
-                            s.Append('\f');
-                            break;
-                        case 'n':
-                            s.Append('\n');
-                            break;
-                        case 'r':
-                            s.Append('\r');
-                            break;
-                        case 't':
-                            s.Append('\t');
-                            break;
-                        case 'u':
-                            StringBuilder hex = new StringBuilder();
-
-                            for (int i=0; i< 4; i++) {
-                                hex.Append(NextChar(reader));
-                            }
-
-                            s.Append((char) Convert.ToInt32(hex.ToString(), 16));
-                            break;
-                    }
-                    break;
-                default:
-                    s.Append(c);
-                    break;
-                }
-            }
-
-            return s.ToString();
-        }
-        
-        private static double ParseNumber(StringReader reader)
-        {
-            string number = NextWord(reader);
-            double.TryParse(number, out double parsedDouble);
-            return parsedDouble;
-        }
-        
-        private static Value ParseArray(StringReader reader)
-        {
-            List<Value> array = new List<Value>();
-
-            bool parsing = true;
-            while (parsing) {
-                Token nextToken = NextToken(reader);
-
-                switch (nextToken) {
-                    case Token.NONE:
-                        return null;
-                    case Token.COMMA:
-                        continue;
-                    case Token.SQUARED_CLOSE:
-                        parsing = false;
+                    case '\b':
+                        sb.Append("\\b");
+                        break;
+                    case '\t':
+                        sb.Append("\\t");
+                        break;
+                    case '\n':
+                        sb.Append("\\n");
+                        break;
+                    case '\f':
+                        sb.Append("\\f");
+                        break;
+                    case '\r':
+                        sb.Append("\\r");
                         break;
                     default:
-                        array.Add(ParseByToken(reader, nextToken));
+                        sb.Append(c);
                         break;
                 }
             }
-
-            return new Value(array);
-        }
-        
-        private static Value ParseObject(StringReader reader)
-        {
-            Dictionary<string, Value> data = new Dictionary<string, Value>();
-
-            while (true) {
-                switch (NextToken(reader)) {
-                    case Token.NONE:
-                        return null;
-                    case Token.COMMA:
-                        continue;
-                    case Token.CURLY_CLOSE when data.ContainsKey("JsonType") && data.ContainsKey("DataType"):
-                        return FromSerialization(data["JsonType"], data["DataType"], data["Value"]);
-                    case Token.CURLY_CLOSE:
-                        return new Value(data);
-                    default:
-                        // key
-                        string key = ParseString(reader);
-                        if (key == null) {
-                            return null;
-                        }
-                        // :
-                        if (NextToken(reader) != Token.COLON) {
-                            return null;
-                        }
-                        // ditch the colon
-                        reader.Read();
-
-                        // value
-                        data[key] = ParseValue(reader);
-                        break;
-                }
-            }
+            return sb.ToString();
         }
 
         #endregion
 
-        public string Serialize()
-        {
-            StringWriter writer = new StringWriter();
-            Write(writer, true);
-            return writer.ToString();
-        }
-        
-        public static Value Deserialize(string json)
-        {
-            return ParseValue(new StringReader(json));
-        }
-        
-        #endregion
-        
         #region UnitySerialization
         public void OnBeforeSerialize()
         {

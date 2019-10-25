@@ -125,12 +125,17 @@ namespace mixpanel
                 // If the batch is empty don't send the request
                 if (count == 0) yield break;
                 string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(batch.ToString()));
-                if (MixpanelSettings.Instance.ShowDebug) Debug.Log($"[Mixpanel] Sending Request - '{url}' with payload '{payload}'");
+                if (MixpanelSettings.Instance.ShowDebug) {
+                    Debug.Log($"[Mixpanel] Sending Request - '{url}' with payload '{payload}'");
+                }
                 WWWForm form = new WWWForm();
                 form.AddField("data", payload);
                 UnityWebRequest request = UnityWebRequest.Post(url, form);
                 yield return request.SendWebRequest();
                 while (!request.isDone) yield return new WaitForEndOfFrame();
+                if (MixpanelSettings.Instance.ShowDebug) {
+                    Debug.Log($"[Mixpanel] Response from request - '{url}':'{request.downloadHandler.text}'");
+                }
                 if (!request.isNetworkError && !request.isHttpError)
                 {
                     session.Flush();
