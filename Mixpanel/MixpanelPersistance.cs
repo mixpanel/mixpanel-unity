@@ -8,6 +8,18 @@ namespace mixpanel
 {
     public static partial class Mixpanel
     {
+        #region HasMigratedFrom1To2
+
+        private const string HasMigratedFrom1To2Name = "Mixpanel.HasMigratedFrom1To2";
+
+        public static bool HasMigratedFrom1To2
+        {
+            get => Convert.ToBoolean(PlayerPrefs.GetInt(HasMigratedFrom1To2Name, 0));
+            set => PlayerPrefs.SetInt(HasMigratedFrom1To2Name, Convert.ToInt32(value));
+        }
+
+        #endregion
+
         #region HasIntegratedLibrary
 
         private const string HasIntegratedLibraryName = "Mixpanel.HasIntegratedLibrary";
@@ -69,7 +81,7 @@ namespace mixpanel
                 else _isTracking = PlayerPrefs.GetInt(IsTrackingName) == 1;
                 return _isTracking;
             }
-            private set
+            set
             {
                 _isTracking = value;
                 PlayerPrefs.SetInt(IsTrackingName, _isTracking ? 1 : 0);
