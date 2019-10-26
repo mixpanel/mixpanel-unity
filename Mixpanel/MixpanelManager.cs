@@ -42,13 +42,31 @@ namespace mixpanel
         {
             DontDestroyOnLoad(this);
             StartCoroutine(PopulatePools());
+            TrackIntegrationEvent();
             while (true)
             {
                 yield return new WaitForSecondsRealtime(MixpanelSettings.Instance.FlushInterval);
                 Mixpanel.Flush();
             }
         }
-        
+
+        private void TrackIntegrationEvent() {
+            if (Mixpanel.HasIntegratedLibrary) {
+                return;
+            }
+            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + MixpanelSettings.Instance.Token +"\"}}";
+            string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
+            WWWForm form = new WWWForm();
+            form.AddField("data", payload);
+            UnityWebRequest request = UnityWebRequest.Post("https://api.mixpanel.com/", form);
+            StartCoroutine(WaitForIntegrationRequest(request));
+        }
+
+        private IEnumerator<UnityWebRequest> WaitForIntegrationRequest(UnityWebRequest request) {
+            yield return request;
+            Mixpanel.HasIntegratedLibrary = true;
+        }
+
         private static IEnumerator PopulatePools()
         {
             for (int i = 0; i < PoolFillFrames; i++)

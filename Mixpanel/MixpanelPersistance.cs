@@ -8,6 +8,18 @@ namespace mixpanel
 {
     public static partial class Mixpanel
     {
+        #region HasIntegratedLibrary
+
+        private const string HasIntegratedLibraryName = "Mixpanel.HasIntegratedLibrary";
+
+        public static bool HasIntegratedLibrary
+        {
+            get => Convert.ToBoolean(PlayerPrefs.GetInt(HasIntegratedLibraryName, 0));
+            set => PlayerPrefs.SetInt(HasIntegratedLibraryName, Convert.ToInt32(value));
+        }
+
+        #endregion
+
         #region DistinctId
         
         private const string DistinctIdName = "Mixpanel.DistinctId";
