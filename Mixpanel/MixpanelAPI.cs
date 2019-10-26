@@ -245,7 +245,7 @@ namespace mixpanel
             {
                 if (!values.IsArray)
                     throw new ArgumentException("Append with values property must be an array", nameof(values));
-                DoEngage(new Value {{"$append", new Value {{property, values}}}});
+                Append(new Value {{property, values}});
             }
 
             /// <summary>
@@ -253,7 +253,7 @@ namespace mixpanel
             /// </summary>
             public static void ClearCharges()
             {
-                DoEngage(new Value {{"$set", new Value {{"$transactions", ""}}}});
+                Unset("$transactions");
             }
 
             /// <summary>
@@ -280,7 +280,7 @@ namespace mixpanel
             /// <param name="by">amount to increment by</param>
             public static void Increment(string property, Value by)
             {
-                DoEngage(new Value {{"$add", new Value {{property, by}}}});
+                Increment(new Value {{property, by}});
             }
 
             /// <summary>
@@ -292,6 +292,7 @@ namespace mixpanel
             /// </param>
             public static void Set(Value properties)
             {
+                properties.Merge(GetEngageDefaultProperties());
                 DoEngage(new Value {{"$set", properties}});
             }
 
@@ -302,7 +303,7 @@ namespace mixpanel
             /// <param name="to">property value</param>
             public static void Set(string property, Value to)
             {
-                DoEngage(new Value {{"$set", new Value {{property, to}}}});
+                Set(new Value {{property, to}});
             }
 
             /// <summary>
@@ -321,7 +322,7 @@ namespace mixpanel
             /// <param name="to">property value</param>
             public static void SetOnce(string property, Value to)
             {
-                DoEngage(new Value {{"$set_once", new Value {{property, to}}}});
+                SetOnce(new Value {{property, to}});
             }
 
             /// <summary>
@@ -330,13 +331,7 @@ namespace mixpanel
             /// <param name="amount">amount of revenue received</param>
             public static void TrackCharge(double amount)
             {
-                DoEngage(new Value
-                {
-                    {
-                        "$append",
-                        new Value {{"$transactions", new Value {{"$time", CurrentDateTime()}, {"$amount", amount}}}}
-                    }
-                });
+                TrackCharge(new Value {{"$amount", amount}});
             }
 
             /// <summary>
@@ -370,7 +365,7 @@ namespace mixpanel
             {
                 if (!values.IsArray)
                     throw new ArgumentException("Union with values property must be an array", nameof(values));
-                DoEngage(new Value {{"$union", new Value {{property, values}}}});
+                Union(new Value {{property, values}});
             }
 
             /// <summary>
@@ -387,7 +382,7 @@ namespace mixpanel
             /// </summary>
             public static string Email
             {
-                set => DoEngage(new Value {{"$set", new Value {{"$email", value}}}});
+                set => Set(new Value {{"$email", value}});
             }
 
             /// <summary>
@@ -395,7 +390,7 @@ namespace mixpanel
             /// </summary>
             public static string FirstName
             {
-                set => DoEngage(new Value {{"$set", new Value {{"$first_name", value}}}});
+                set => Set(new Value {{"$first_name", value}});
             }
 
             /// <summary>
@@ -403,7 +398,7 @@ namespace mixpanel
             /// </summary>
             public static string LastName
             {
-                set => DoEngage(new Value {{"$set", new Value {{"$last_name", value}}}});
+                set => Set(new Value {{"$last_name", value}});
             }
 
             /// <summary>
@@ -411,7 +406,7 @@ namespace mixpanel
             /// </summary>
             public static string Name
             {
-                set => DoEngage(new Value {{"$set", new Value {{"$last_name", value}}}});
+                set => Set(new Value {{"$name", value}});
             }
 
             /// <summary>
