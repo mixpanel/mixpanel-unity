@@ -136,7 +136,6 @@ namespace mixpanel
                     {"$screen_dpi", Screen.dpi},
                     // {"$app_build_number", Application.version},
                     // {"$carrier", ""},
-                    // {"$brand", ""},
                     // {"$has_nfc", false},
                     // {"$has_telephone", false},
                     // {"$bluetooth_enabled", false},
