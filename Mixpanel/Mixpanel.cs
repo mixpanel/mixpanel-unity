@@ -1,9 +1,11 @@
 using System;
 using UnityEngine;
+using mixpanel.platforms;
 
 #if UNITY_IOS
 using UnityEngine.iOS;
 #endif
+
 
 namespace mixpanel
 {
@@ -98,19 +100,16 @@ namespace mixpanel
                         properties["$ios_app_release"] = Application.version;
                         properties["$ios_device_model"] = SystemInfo.deviceModel;
                         properties["$ios_ifa"] = Device.advertisingIdentifier;
-                        // properties["$ios_app_version"] = Application.version;
+                        // properties["$ios_app_version"] = ""; Needs a plug-in
                     #elif UNITY_ANDROID
                         properties["$android_lib_version"] = MixpanelUnityVersion;
                         properties["$android_os"] = "Android";
                         properties["$android_os_version"] = SystemInfo.operatingSystem;
                         properties["$android_model"] = SystemInfo.deviceModel;
                         properties["$android_app_version"] = Application.version;
-                        AndroidJavaClass osBuildClass = new AndroidJavaClass("android.os.Build");
-                        string manufacturer = osBuildClass.GetStatic<string> ("MANUFACTURER");
-                        string brand = osBuildClass.GetStatic<string> ("BRAND");
-                        properties["$android_manufacturer"] = manufacturer != null? manufacturer : "UNKNOWN";
-                        properties["$android_brand"] = brand != null ? brand : "UNKNOWN";
-                        // properties["$android_app_version_code"] = Application.version;
+                        properties["$android_manufacturer"] = Android.GetManufacturer();
+                        properties["$android_brand"] = Android.GetBrand();
+                        properties["$android_app_version_code"] = Android.GetVersionCode();
                     #else
                         properties["$lib_version"] = MixpanelUnityVersion;
                     #endif
@@ -134,7 +133,6 @@ namespace mixpanel
                     {"$radio", GetRadio()},
                     {"$device", Application.platform.ToString()},
                     {"$screen_dpi", Screen.dpi},
-                    // {"$app_build_number", Application.version},
                     // {"$carrier", ""},
                     // {"$has_nfc", false},
                     // {"$has_telephone", false},
@@ -146,14 +144,13 @@ namespace mixpanel
                     properties["$os_version"] = Device.systemVersion;
                     properties["$manufacturer"] = "Apple";
                     properties["$ios_ifa"] = Device.advertisingIdentifier;
+                    // properties["$app_build_number"] = ""; Needs a plug-in
                 #endif
                 #if UNITY_ANDROID
-                    AndroidJavaClass osBuildClass = new AndroidJavaClass("android.os.Build");
-                    string manufacturer = osBuildClass.GetStatic<string> ("MANUFACTURER");
-                    string brand = osBuildClass.GetStatic<string> ("BRAND");
-                    properties["$manufacturer"] = manufacturer != null? manufacturer : "UNKNOWN";
-                    properties["$brand"] = brand != null ? brand : "UNKNOWN";
+                    properties["$manufacturer"] = Android.GetManufacturer();
+                    properties["$brand"] = Android.GetBrand();
                     properties["$os"] = "Android";
+                    properties["$app_build_number"] = Android.GetVersionCode();
                     // properties["$google_play_services"] = "";
                 #endif
                 _autoTrackProperties = properties;
