@@ -25,7 +25,7 @@ namespace mixpanel
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeBeforeSceneLoad()
         {
-            _instance = new GameObject("Mixpanel").AddComponent<MixpanelManager>();
+            GetMixpanelInstance();
             Debug.Log($"[Mixpanel] Track Queue Depth: {Mixpanel.TrackQueue.CurrentCountOfItemsInQueue}");
             Debug.Log($"[Mixpanel] Engage Queue Depth: {Mixpanel.EngageQueue.CurrentCountOfItemsInQueue}");
         }
@@ -36,6 +36,13 @@ namespace mixpanel
             Mixpanel.CollectAutoProperties();
         }
         
+        private static MixpanelManager GetMixpanelInstance() {
+            if (_instance == null) {
+                _instance = new GameObject("Mixpanel").AddComponent<MixpanelManager>();
+            }
+            return _instance;
+        }
+
         #endregion
 
         void OnApplicationPause(bool pauseStatus)
@@ -156,18 +163,19 @@ namespace mixpanel
 
         internal static void EnqueueTrack(Value data)
         {
-            _instance.TrackQueue.Add(data);
+            GetMixpanelInstance().TrackQueue.Add(data);
         }
 
         internal static void EnqueueEngage(Value data)
         {
-            _instance.EngageQueue.Add(data);
+            GetMixpanelInstance().EngageQueue.Add(data);
         }
 
         internal static void Flush()
         {
-            _instance.DoFlush(MixpanelSettings.Instance.TrackUrl, Mixpanel.TrackQueue);
-            _instance.DoFlush(MixpanelSettings.Instance.EngageUrl, Mixpanel.EngageQueue);
+            GetMixpanelInstance().LateUpdate();
+            GetMixpanelInstance().DoFlush(MixpanelSettings.Instance.TrackUrl, Mixpanel.TrackQueue);
+            GetMixpanelInstance().DoFlush(MixpanelSettings.Instance.EngageUrl, Mixpanel.EngageQueue);
         }
         
         #endregion
