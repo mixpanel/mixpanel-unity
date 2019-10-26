@@ -89,7 +89,7 @@ namespace mixpanel
         }
         
         [Conditional("UNITY_IOS")]
-        internal static void SetPushDeviceToken(string token)
+        internal static void SavePushDeviceToken(string token)
         {
             PushDeviceTokenString = token;
         }
