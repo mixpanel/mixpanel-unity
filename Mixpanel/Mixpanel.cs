@@ -51,8 +51,7 @@ namespace mixpanel
         {
             if (!IsTracking) return;
             if (properties == null) properties = ObjectPool.Get();
-            if (_autoTrackProperties == null) _autoTrackProperties = CollectAutoTrackProperties();
-            properties.Merge(_autoTrackProperties);
+            properties.Merge(GetEventsDefaultProperties());
             // These auto properties can change in runtime so we don't bake them into AutoProperties
             properties["$screen_width"] = Screen.width;
             properties["$screen_height"] = Screen.height;
@@ -77,80 +76,83 @@ namespace mixpanel
         private static void DoEngage(Value properties)
         {
             if (!IsTracking) return;
-            if (_autoEngageProperties == null) _autoEngageProperties = CollectAutoEngageProperties();
-            properties.Merge(_autoEngageProperties);
             properties["$token"] = MixpanelSettings.Instance.Token;
             properties["$distinct_id"] = DistinctId;
+            properties["$time"] = CurrentTime();
             properties["$mp_metadata"] = GetPeopleMetadata();
             MixpanelManager.EnqueueEngage(properties);
         }
 
         internal static void CollectAutoProperties()
         {
-            if (_autoTrackProperties == null) _autoTrackProperties = CollectAutoTrackProperties();
-            if (_autoEngageProperties == null) _autoEngageProperties = CollectAutoEngageProperties();
+            GetEngageDefaultProperties();
+            GetEventsDefaultProperties();
         }
 
-        private static Value CollectAutoTrackProperties()
-        {
-            Value properties = new Value
-            {
-                {"mp_lib", "unity"},
-                {"$lib_version", MixpanelUnityVersion},
-                {"$os", SystemInfo.operatingSystemFamily.ToString()},
-                {"$os_version", SystemInfo.operatingSystem},
-                //{"$manufacturer", ""},
-                {"$model", SystemInfo.deviceModel},
-                {"$app_version_string", Application.unityVersion},
-                {"$app_build_number", Application.version},
-                //{"$carrier", ""},
-                {"$wifi", Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork},
-                {"$radio", GetRadio()},
-                //{"$brand", ""},
-                {"$device", Application.platform.ToString()},
-                {"$screen_dpi", Screen.dpi},
-                {"$has_nfc", false},
-                {"$has_telephone", false},
-                {"$bluetooth_enabled", false},
-                {"$bluetooth_version", "none"}
-            };
-            #if UNITY_IOS
-            properties["$os"] = "Apple";
-            properties["$os_version"] = Device.systemVersion;
-            properties["$manufacturer"] = "Apple";
-            properties["$ios_ifa"] = Device.advertisingIdentifier;
-            #endif
-            #if UNITY_ANDROID
-            properties["$os"] = "Android";
-            properties["$google_play_services"] = "";
-            #endif
-            return properties;
+        internal static Value GetEngageDefaultProperties() {
+            if (_autoEngageProperties == null) {
+                Value properties = new Value();
+                    #if UNITY_IOS
+                        properties["$ios_lib_version"] = MixpanelUnityVersion;
+                        properties["$ios_version"] = Device.systemVersion;
+                        properties["$ios_app_release"] = Application.version;
+                        properties["$ios_device_model"] = SystemInfo.deviceModel;
+                        properties["$ios_ifa"] = Device.advertisingIdentifier;
+                        // properties["$ios_app_version"] = Application.version;
+                    #elif UNITY_ANDROID
+                        properties["$android_lib_version"] = MixpanelUnityVersion;
+                        properties["$android_os"] = "Android";
+                        properties["$android_os_version"] = SystemInfo.operatingSystem;
+                        properties["$android_model"] = SystemInfo.deviceModel;
+                        properties["$android_app_version"] = Application.version;
+                        // properties["$android_manufacturer"] = "";
+                        // properties["$android_brand"] = "";
+                        // properties["$android_app_version_code"] = Application.version;
+                    #else
+                        properties["$lib_version"] = MixpanelUnityVersion;
+                    #endif
+                _autoEngageProperties = properties;
+            }
+            return _autoEngageProperties;
         }
 
-        private static Value CollectAutoEngageProperties()
+        private static Value GetEventsDefaultProperties()
         {
-            Value properties = new Value();
-            properties["$lib_version"] = MixpanelUnityVersion;
-            #if UNITY_IOS
-            properties["$os"] = "Apple";
-            properties["$os_version"] = Device.systemVersion;
-            properties["$app_version_string"] = Application.unityVersion;
-            properties["$app_build_number"] = Application.version;
-            properties["$model"] = SystemInfo.deviceModel;
-            properties["$ios_ifa"] = Device.advertisingIdentifier;
-            properties["$ios_devices"] = PushDeviceTokenString;
-            #endif
-            #if UNITY_ANDROID
-            properties["$os"] = "Android";
-            properties["$os_version"] = SystemInfo.operatingSystem;
-            //properties["$manufacturer"] = "";
-            //properties["$brand"] = "";
-            properties["$model"] = SystemInfo.deviceModel;
-            properties["$app_version_string"] = Application.unityVersion;
-            properties["$app_build_number"] = Application.version;
-            properties["$android_devices"] = PushDeviceTokenString;
-            #endif
-            return properties;
+            if (_autoTrackProperties == null) {
+                Value properties = new Value
+                {
+                    {"mp_lib", "unity"},
+                    {"$lib_version", MixpanelUnityVersion},
+                    {"$os", SystemInfo.operatingSystemFamily.ToString()},
+                    {"$os_version", SystemInfo.operatingSystem},
+                    {"$model", SystemInfo.deviceModel},
+                    {"$app_version_string", Application.version},
+                    {"$wifi", Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork},
+                    {"$radio", GetRadio()},
+                    {"$device", Application.platform.ToString()},
+                    {"$screen_dpi", Screen.dpi},
+                    // {"$app_build_number", Application.version},
+                    // {"$manufacturer", ""},
+                    // {"$carrier", ""},
+                    // {"$brand", ""},
+                    // {"$has_nfc", false},
+                    // {"$has_telephone", false},
+                    // {"$bluetooth_enabled", false},
+                    // {"$bluetooth_version", "none"}
+                };
+                #if UNITY_IOS
+                    properties["$os"] = "Apple";
+                    properties["$os_version"] = Device.systemVersion;
+                    properties["$manufacturer"] = "Apple";
+                    properties["$ios_ifa"] = Device.advertisingIdentifier;
+                #endif
+                #if UNITY_ANDROID
+                    properties["$os"] = "Android";
+                    // properties["$google_play_services"] = "";
+                #endif
+                _autoTrackProperties = properties;
+            }
+            return _autoTrackProperties;
         }
 
         private static string GetRadio()
