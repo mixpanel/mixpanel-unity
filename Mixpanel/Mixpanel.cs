@@ -105,8 +105,11 @@ namespace mixpanel
                         properties["$android_os_version"] = SystemInfo.operatingSystem;
                         properties["$android_model"] = SystemInfo.deviceModel;
                         properties["$android_app_version"] = Application.version;
-                        // properties["$android_manufacturer"] = "";
-                        // properties["$android_brand"] = "";
+                        AndroidJavaClass osBuildClass = new AndroidJavaClass("android.os.Build");
+                        string manufacturer = osBuildClass.GetStatic<string> ("MANUFACTURER");
+                        string brand = osBuildClass.GetStatic<string> ("BRAND");
+                        properties["$android_manufacturer"] = manufacturer != null? manufacturer : "UNKNOWN";
+                        properties["$android_brand"] = brand != null ? brand : "UNKNOWN";
                         // properties["$android_app_version_code"] = Application.version;
                     #else
                         properties["$lib_version"] = MixpanelUnityVersion;
@@ -132,7 +135,6 @@ namespace mixpanel
                     {"$device", Application.platform.ToString()},
                     {"$screen_dpi", Screen.dpi},
                     // {"$app_build_number", Application.version},
-                    // {"$manufacturer", ""},
                     // {"$carrier", ""},
                     // {"$brand", ""},
                     // {"$has_nfc", false},
@@ -147,6 +149,11 @@ namespace mixpanel
                     properties["$ios_ifa"] = Device.advertisingIdentifier;
                 #endif
                 #if UNITY_ANDROID
+                    AndroidJavaClass osBuildClass = new AndroidJavaClass("android.os.Build");
+                    string manufacturer = osBuildClass.GetStatic<string> ("MANUFACTURER");
+                    string brand = osBuildClass.GetStatic<string> ("BRAND");
+                    properties["$manufacturer"] = manufacturer != null? manufacturer : "UNKNOWN";
+                    properties["$brand"] = brand != null ? brand : "UNKNOWN";
                     properties["$os"] = "Android";
                     // properties["$google_play_services"] = "";
                 #endif
