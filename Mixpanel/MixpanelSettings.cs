@@ -37,23 +37,28 @@ namespace mixpanel
 
         #region static
         private static MixpanelSettings _instance;
+
+        public static void LoadSettings()
+        {
+            if (!_instance)
+            {
+                _instance = FindOrCreateInstance();
+                string host = _instance.APIHostAddress.EndsWith("/") ? _instance.APIHostAddress : $"{_instance.APIHostAddress}/";
+                MixpanelConfig.TrackUrl = string.Format(TrackUrlTemplate, host);
+                MixpanelConfig.EngageUrl = string.Format(EngageUrlTemplate, host);
+                Debug.Log("Show debug set to " + _instance.ShowDebug);
+                MixpanelConfig.ShowDebug = _instance.ShowDebug;
+                Debug.Log("Flush interval set to " + _instance.FlushInterval);
+                MixpanelConfig.FlushInterval = _instance.FlushInterval;
+            }
+        }
     
         public static MixpanelSettings Instance {
             get {
-                if (!_instance)
-                {
-                    _instance = FindOrCreateInstance();
-                    string host = _instance.APIHostAddress.EndsWith("/") ? _instance.APIHostAddress : $"{_instance.APIHostAddress}/";
-                    _instance.TrackUrl = string.Format(TrackUrlTemplate, host);
-                    _instance.EngageUrl = string.Format(EngageUrlTemplate, host);
-                }
+                LoadSettings();
                 return _instance;
             }
         }
-        
-        public string TrackUrl { get; private set; }
-        
-        public string EngageUrl { get; private set;  }
 
         private static MixpanelSettings FindOrCreateInstance()
         {

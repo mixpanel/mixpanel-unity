@@ -12,11 +12,14 @@ namespace mixpanel
     public static partial class Mixpanel
     {
         private const string MixpanelUnityVersion = "2.0.0";
-        
+
         private static Value _autoTrackProperties;
         private static Value _autoEngageProperties;
         private static Int32 _eventCounter = 0, _peopleCounter = 0, _sessionStartEpoch;
         private static String _sessionID;
+
+        // TODO: For Testing Only - REMOVE
+        public static bool UseCoroutines, UseThreads, UseThreadPool, UseLongRunningWorkerThread;
 
         private static Value GetEventMetadata() {
             Value eventMetadata = new Value
@@ -53,26 +56,26 @@ namespace mixpanel
         {
             if (!IsTracking) return;
             if (properties == null) properties = ObjectPool.Get();
-            properties.Merge(GetEventsDefaultProperties());
-            // These auto properties can change in runtime so we don't bake them into AutoProperties
-            properties["$screen_width"] = Screen.width;
-            properties["$screen_height"] = Screen.height;
-            properties.Merge(OnceProperties);
-            ResetOnceProperties();
-            properties.Merge(SuperProperties);
-            if (TimedEvents.TryGetValue(eventName, out Value startTime))
-            {
-                properties["$duration"] = CurrentTime() - (double)startTime;
-                TimedEvents.Remove(eventName);
-            }
+            // properties.Merge(GetEventsDefaultProperties());
+            // // These auto properties can change in runtime so we don't bake them into AutoProperties
+            // properties["$screen_width"] = Screen.width;
+            // properties["$screen_height"] = Screen.height;
+            // properties.Merge(OnceProperties);
+            // ResetOnceProperties();
+            // properties.Merge(SuperProperties);
+            // if (TimedEvents.TryGetValue(eventName, out Value startTime))
+            // {
+            //     properties["$duration"] = CurrentTime() - (double)startTime;
+            //     TimedEvents.Remove(eventName);
+            // }
             properties["token"] = MixpanelSettings.Instance.Token;
             properties["distinct_id"] = DistinctId;
-            properties["time"] = CurrentTime();
+            // properties["time"] = CurrentTime();
             Value data = ObjectPool.Get();
             data["event"] = eventName;
             data["properties"] = properties;
-            data["$mp_metadata"] = GetEventMetadata();
-            MixpanelManager.EnqueueTrack(data);
+            // data["$mp_metadata"] = GetEventMetadata();
+            MixpanelManager.AddTrack(data);
         }
 
         private static void DoEngage(Value properties)
@@ -82,7 +85,7 @@ namespace mixpanel
             properties["$distinct_id"] = DistinctId;
             properties["$time"] = CurrentTime();
             properties["$mp_metadata"] = GetPeopleMetadata();
-            MixpanelManager.EnqueueEngage(properties);
+            MixpanelManager.AddEngageUpdate(properties);
         }
 
         internal static void CollectAutoProperties()

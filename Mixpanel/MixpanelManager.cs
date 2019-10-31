@@ -5,18 +5,17 @@ using System.Text;
 using mixpanel.queue;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Profiling;
+using System.Threading;
+using Unity.Jobs;
+using Unity.Collections;
 
 namespace mixpanel
 {
     internal class MixpanelManager : MonoBehaviour
-    {
-        private const int BatchSize = 50;
-        private const int RetryMaxTries = 10;
-        private const int PoolFillFrames = 50;
-        private const int PoolFillEachFrame = 20;
-        
-        private List<Value> TrackQueue = new List<Value>(500);
-        private List<Value> EngageQueue = new List<Value>(500);
+    {   
+        public List<Value> TrackQueue = new List<Value>(500);
+        public List<Value> EngageQueue = new List<Value>(500);
         
         #region Singleton
         
@@ -40,6 +39,7 @@ namespace mixpanel
             if (_instance == null)
             {
                 _instance = new GameObject("Mixpanel").AddComponent<MixpanelManager>();
+                new GameObject("Mixpanel").AddComponent<MixpanelThread>();
             }
             return _instance;
         }
@@ -59,20 +59,23 @@ namespace mixpanel
             MigrateFrom1To2();
             DontDestroyOnLoad(this);
             StartCoroutine(PopulatePools());
+            MixpanelSettings.LoadSettings();
             TrackIntegrationEvent();
             while (true)
             {
-                yield return new WaitForSecondsRealtime(MixpanelSettings.Instance.FlushInterval);
-                Mixpanel.Flush();
+                float flushInterval = MixpanelConfig.FlushInterval;
+                Debug.Log("Flush interval " + flushInterval);
+                yield return new WaitForSecondsRealtime(flushInterval);
+                MixpanelThread.FlushOp();
             }
         }
 
         private static IEnumerator PopulatePools()
         {
-            for (int i = 0; i < PoolFillFrames; i++)
+            for (int i = 0; i < MixpanelConfig.PoolFillFrames; i++)
             {
                 Mixpanel.NullPool.Put(Value.Null);
-                for (int j = 0; j < PoolFillEachFrame; j++)
+                for (int j = 0; j < MixpanelConfig.PoolFillEachFrame; j++)
                 {
                     Mixpanel.ArrayPool.Put(Value.Array);
                     Mixpanel.ObjectPool.Put(Value.Object);
@@ -90,40 +93,90 @@ namespace mixpanel
         private void LateUpdateTrackQueue()
         {
             if (TrackQueue.Count == 0) return;
-            using (PersistentQueueSession session = Mixpanel.TrackQueue.OpenSession())
+            if (Mixpanel.UseCoroutines && !Mixpanel.UseThreads && !Mixpanel.UseThreadPool && !Mixpanel.UseLongRunningWorkerThread)
             {
-                foreach (Value item in TrackQueue)
+                int queueCount = TrackQueue.Count;
+                PersistentQueueSession session = Mixpanel.TrackQueue.OpenSession();
+                for (int itemIdx = 0; itemIdx < queueCount; itemIdx++)
                 {
-                    session.Enqueue(Encoding.UTF8.GetBytes(JsonUtility.ToJson(item)));
-                    Mixpanel.Put(item);
+                    Value item = TrackQueue[itemIdx];
+                    StartCoroutine(StoreQueueInSession(session, item, itemIdx == queueCount - 1));
                 }
-                session.Flush();
+                TrackQueue.Clear();
             }
-            TrackQueue.Clear();
+            else if (Mixpanel.UseThreads && !Mixpanel.UseThreadPool && !Mixpanel.UseLongRunningWorkerThread)
+            {
+                Thread t1 = new Thread(UpdateTrackThread);
+                t1.Start();
+            }
+            else if (Mixpanel.UseThreadPool && !Mixpanel.UseLongRunningWorkerThread)
+            {
+                ThreadPool.QueueUserWorkItem(new WaitCallback(UpdateTrackThreadCallBack));
+            }
+            else if (Mixpanel.UseLongRunningWorkerThread)
+            {
+                MixpanelThread.EnqueueEventOp();
+            }
+            else
+            {
+                MixpanelThread.EnqueueMixpanelQueue(Mixpanel.TrackQueue, TrackQueue);
+            }
+
+        }
+
+        private void UpdateTrackThread()
+        {
+            MixpanelThread.EnqueueMixpanelQueue(Mixpanel.TrackQueue, TrackQueue);
+        }
+
+        private void UpdateTrackThreadCallBack(object callback)
+        {
+            MixpanelThread.EnqueueMixpanelQueue(Mixpanel.TrackQueue, TrackQueue);
+        }
+
+        private IEnumerator StoreQueueInSession(PersistentQueueSession session, Value item, bool isLast)
+        {
+            string itemJson = JsonUtility.ToJson(item);
+            yield return new WaitForEndOfFrame();
+            byte[] itemBytes = Encoding.UTF8.GetBytes(itemJson);
+            yield return new WaitForEndOfFrame();
+            session.Enqueue(itemBytes);
+            yield return new WaitForEndOfFrame();
+            Mixpanel.Put(item);
+
+            if (isLast)
+            {
+                yield return new WaitForEndOfFrame();
+                session.Flush();
+                yield return new WaitForEndOfFrame();
+                session.Dispose();
+                yield return null;
+            }
         }
 
         private void LateUpdateEngageQueue()
         {
             if (EngageQueue.Count == 0) return;
-            using (PersistentQueueSession session = Mixpanel.EngageQueue.OpenSession())
+            if (Mixpanel.UseLongRunningWorkerThread)
             {
-                foreach (Value item in EngageQueue)
-                {
-                    session.Enqueue(Encoding.UTF8.GetBytes(JsonUtility.ToJson(item)));
-                    Mixpanel.Put(item);
-                }
-                session.Flush();
+                MixpanelThread.EnqueuePeopleOp();
             }
-            EngageQueue.Clear();
+            else
+            {
+                MixpanelThread.EnqueueMixpanelQueue(Mixpanel.EngageQueue, EngageQueue);
+            }
         }
 
         private void DoFlush(string url, PersistentQueue queue)
         {
-            int depth = queue.CurrentCountOfItemsInQueue;
-            int count = (depth / BatchSize) + (depth % BatchSize != 0 ? 1 : 0);
-            for (int i = 0; i < count; i++)
+            lock (queue)
             {
-                StartCoroutine(DoRequest(url, queue));
+                int depth = queue.CurrentCountOfItemsInQueue;
+                int count = (depth / MixpanelConfig.BatchSize) + (depth % MixpanelConfig.BatchSize != 0 ? 1 : 0);
+                for (int i = 0; i < count; i++)
+                {
+                    StartCoroutine(DoRequest(url, queue));
+                }
             }
         }
 
@@ -133,17 +186,19 @@ namespace mixpanel
             Value batch = Mixpanel.ArrayPool.Get();
             using (PersistentQueueSession session = queue.OpenSession())
             {
-                while (count < BatchSize)
+                while (count < MixpanelConfig.BatchSize)
                 {
                     byte[] data = session.Dequeue();
                     if (data == null) break;
-                    batch.Add(JsonUtility.FromJson<Value>(Encoding.UTF8.GetString(data)));
+                    Value s = JsonUtility.FromJson<Value>(Encoding.UTF8.GetString(data));
+                    batch.Add(s);
+                    Debug.Log(s.ToString());
                     ++count;
                 }
                 // If the batch is empty don't send the request
                 if (count == 0) yield break;
                 string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(batch.ToString()));
-                if (MixpanelSettings.Instance.ShowDebug) {
+                if (MixpanelConfig.ShowDebug) {
                     Debug.Log($"[Mixpanel] Sending Request - '{url}' with payload '{payload}'");
                 }
                 WWWForm form = new WWWForm();
@@ -151,7 +206,7 @@ namespace mixpanel
                 UnityWebRequest request = UnityWebRequest.Post(url, form);
                 yield return request.SendWebRequest();
                 while (!request.isDone) yield return new WaitForEndOfFrame();
-                if (MixpanelSettings.Instance.ShowDebug) {
+                if (MixpanelConfig.ShowDebug) {
                     Debug.Log($"[Mixpanel] Response from request - '{url}':'{request.downloadHandler.text}'");
                 }
                 if (!request.isNetworkError && !request.isHttpError)
@@ -160,7 +215,7 @@ namespace mixpanel
                     Mixpanel.Put(batch);
                     yield break;
                 }
-                if (retryCount > RetryMaxTries) yield break;
+                if (retryCount > 10) yield break;
             }
             retryCount += 1;
             // 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 = 2046 seconds total
@@ -168,23 +223,31 @@ namespace mixpanel
             StartCoroutine(DoRequest(url, queue, retryCount));
         }
 
+        public static void AddTrack(Value item)
+        {
+            lock (GetMixpanelInstance().TrackQueue)
+            {
+                GetMixpanelInstance().TrackQueue.Add(item);
+            }
+            // GetMixpanelInstance().TrackQueue.Add(item);
+        }
+
+        public static void AddEngageUpdate(Value item)
+        {
+            lock (GetMixpanelInstance().EngageQueue)
+            {
+                GetMixpanelInstance().EngageQueue.Add(item);
+            }
+            // GetMixpanelInstance().EngageQueue.Add(item);
+        }
+
         #region Static
-
-        internal static void EnqueueTrack(Value data)
-        {
-            GetMixpanelInstance().TrackQueue.Add(data);
-        }
-
-        internal static void EnqueueEngage(Value data)
-        {
-            GetMixpanelInstance().EngageQueue.Add(data);
-        }
 
         internal static void Flush()
         {
             GetMixpanelInstance().LateUpdate();
-            GetMixpanelInstance().DoFlush(MixpanelSettings.Instance.TrackUrl, Mixpanel.TrackQueue);
-            GetMixpanelInstance().DoFlush(MixpanelSettings.Instance.EngageUrl, Mixpanel.EngageQueue);
+            GetMixpanelInstance().DoFlush(MixpanelConfig.TrackUrl, Mixpanel.TrackQueue);
+            GetMixpanelInstance().DoFlush(MixpanelConfig.EngageUrl, Mixpanel.EngageQueue);
         }
         
         #endregion
