@@ -13,7 +13,7 @@ using Unity.Collections;
 namespace mixpanel
 {
     internal class MixpanelManager : MonoBehaviour
-    {   
+    {
         public List<Value> TrackQueue = new List<Value>(500);
         public List<Value> EngageQueue = new List<Value>(500);
         
@@ -63,9 +63,7 @@ namespace mixpanel
             TrackIntegrationEvent();
             while (true)
             {
-                float flushInterval = MixpanelConfig.FlushInterval;
-                Debug.Log("Flush interval " + flushInterval);
-                yield return new WaitForSecondsRealtime(flushInterval);
+                yield return new WaitForSecondsRealtime(MixpanelConfig.FlushInterval);
                 MixpanelThread.FlushOp();
             }
         }
@@ -115,6 +113,7 @@ namespace mixpanel
             }
             else if (Mixpanel.UseLongRunningWorkerThread)
             {
+                Debug.Log("Using thread...");
                 MixpanelThread.EnqueueEventOp();
             }
             else
