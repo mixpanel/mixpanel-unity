@@ -18,6 +18,11 @@ namespace mixpanel
     /// </code>
     public static partial class Mixpanel
     {
+        private const string MixpanelUnityVersion = "2.0.0";
+
+        // TODO TESTING ONLY
+        public static bool UseCoroutines, UseThreads, UseThreadPool, UseLongRunningWorkerThread;
+
         /// <summary>
         /// Creates a distinct_id alias.
         /// </summary>
@@ -218,7 +223,7 @@ namespace mixpanel
         /// </summary>
         public static void Flush()
         {
-            MixpanelManager.Flush();
+            MixpanelWorker.FlushOp();
         }
 
         /// <summary>
