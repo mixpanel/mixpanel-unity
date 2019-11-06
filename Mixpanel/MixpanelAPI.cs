@@ -18,7 +18,7 @@ namespace mixpanel
     /// </code>
     public static partial class Mixpanel
     {
-        private const string MixpanelUnityVersion = "2.0.0";
+        internal const string MixpanelUnityVersion = "2.0.0";
 
         // TODO TESTING ONLY
         public static bool UseCoroutines, UseThreads, UseThreadPool, UseLongRunningWorkerThread;
@@ -29,7 +29,7 @@ namespace mixpanel
         /// <param name="alias">the new distinct_id that should represent original</param>
         public static void Alias(string alias)
         {
-            if (alias == DistinctId) return;
+            if (alias == Persistance.DistinctId) return;
             Value properties = ObjectPool.Get();
             properties["alias"] = alias;
             Track("$create_alias", properties);
@@ -41,7 +41,7 @@ namespace mixpanel
         /// </summary>
         public static void ClearTimedEvents()
         {
-            ResetTimedEvents();
+            Persistance.ResetTimedEvents();
         }
 
         /// <summary>
@@ -50,9 +50,9 @@ namespace mixpanel
         /// <param name="eventName">the name of event to clear event timer</param>
         public static void ClearTimedEvent(string eventName)
         {
-            Value properties = TimedEvents;
+            Value properties = Persistance.TimedEvents;
             properties.Remove(eventName);
-            TimedEvents = properties;
+            Persistance.TimedEvents = properties;
         }
 
         /// <summary>
@@ -65,10 +65,19 @@ namespace mixpanel
         /// </param>
         public static void Identify(string uniqueId)
         {
-            if (DistinctId == uniqueId) return;
+            if (Persistance.DistinctId == uniqueId) return;
             string oldDistinctId = DistinctId;
-            DistinctId = uniqueId;
+            Persistance.DistinctId = uniqueId;
             Track("$identify", "$anon_distinct_id", oldDistinctId);
+        }
+
+        [Obsolete("Please use 'DistinctId' instead!")]
+        public static string DistinctID {
+            get => Persistance.DistinctId;
+        }
+
+        public static string DistinctId {
+            get => Persistance.DistinctId;
         }
 
         /// <summary>
@@ -81,7 +90,7 @@ namespace mixpanel
             People.DeleteUser();
             Flush();
             Reset();
-            IsTracking = false;
+            Persistance.IsTracking = false;
         }
 
         /// <summary>
@@ -89,8 +98,8 @@ namespace mixpanel
         /// </summary>
         public static void OptInTracking()
         {
-            IsTracking = true;
-            DoTrack("$opt_in", ObjectPool.Get());
+            Persistance.IsTracking = true;
+            Controller.DoTrack("$opt_in", ObjectPool.Get());
         }
 
         /// <summary>
@@ -111,9 +120,9 @@ namespace mixpanel
         /// <param name="value">value of the property to register</param>
         public static void Register(string key, Value value)
         {
-            Value properties = SuperProperties;
+            Value properties = Persistance.SuperProperties;
             properties[key] = value;
-            SuperProperties = properties;
+            Persistance.SuperProperties = properties;
         }
 
         /// <summary>
@@ -123,9 +132,9 @@ namespace mixpanel
         /// <param name="value">value of the property to register</param>
         public static void RegisterOnce(string key, Value value)
         {
-            Value properties = OnceProperties;
+            Value properties = Persistance.OnceProperties;
             properties[key] = value;
-            OnceProperties = properties;
+            Persistance.OnceProperties = properties;
         }
 
         /// <summary>
@@ -133,12 +142,12 @@ namespace mixpanel
         /// </summary>
         public static void Reset()
         {
-            ResetSuperProperties();
-            ResetOnceProperties();
-            ResetTimedEvents();
-            SavePushDeviceToken("");
+            Persistance.ResetSuperProperties();
+            Persistance.ResetOnceProperties();
+            Persistance.ResetTimedEvents();
+            Persistance.SavePushDeviceToken("");
             Flush();
-            DistinctId = "";
+            Persistance.DistinctId = "";
         }
 
         /// <summary>
@@ -147,8 +156,8 @@ namespace mixpanel
         /// </summary>
         public static void Clear()
         {
-            TrackQueue.Clear();
-            EngageQueue.Clear();
+            TrackPersistentQueue.Clear();
+            EngagePersistentQueue.Clear();
         }
 
         /// <summary>
@@ -159,9 +168,9 @@ namespace mixpanel
         /// <param name="eventName">the name of the event to track with timing</param>
         public static void StartTimedEvent(string eventName)
         {
-            Value properties = TimedEvents;
-            properties[eventName] = CurrentTime();
-            TimedEvents = properties;
+            Value properties = Persistance.TimedEvents;
+            properties[eventName] = Util.CurrentTime();
+            Persistance.TimedEvents = properties;
         }
 
         /// <summary>
@@ -173,9 +182,9 @@ namespace mixpanel
         {
             if (!TimedEvents.ContainsKey(eventName))
             {
-                Value properties = TimedEvents;
-                properties[eventName] = CurrentTime();
-                TimedEvents = properties;
+                Value properties = Persistance.TimedEvents;
+                properties[eventName] = Util.CurrentTime();
+                Persistance.TimedEvents = properties;
             }
         }
 
@@ -195,7 +204,7 @@ namespace mixpanel
         {
             Value properties = ObjectPool.Get();
             properties[key] = value;
-            DoTrack(eventName, properties);
+            Controller.DoTrack(eventName, properties);
         }
 
         /// <summary>
@@ -213,9 +222,9 @@ namespace mixpanel
         /// <param name="key">name of the property to unregister</param>
         public static void Unregister(string key)
         {
-            Value properties = SuperProperties;
+            Value properties = Persistance.SuperProperties;
             properties.Remove(key);
-            SuperProperties = properties;
+            Persistance.SuperProperties = properties;
         }
 
         /// <summary>
@@ -223,7 +232,7 @@ namespace mixpanel
         /// </summary>
         public static void Flush()
         {
-            MixpanelWorker.FlushOp();
+            Controller.DoFlush();
         }
 
         /// <summary>
@@ -238,7 +247,7 @@ namespace mixpanel
             /// <param name="properties">mapping of list property names to values to append</param>
             public static void Append(Value properties)
             {
-                DoEngage(new Value {{"$append", properties}});
+                Controller.DoEngage(new Value {{"$append", properties}});
             }
 
             /// <summary>
@@ -266,7 +275,7 @@ namespace mixpanel
             /// </summary>
             public static void DeleteUser()
             {
-                DoEngage(new Value {{"$delete", ""}});
+                Controller.DoEngage(new Value {{"$delete", ""}});
             }
 
             /// <summary>
@@ -275,7 +284,7 @@ namespace mixpanel
             /// <param name="properties"> A map of String properties names to Long amounts. Each property associated with a name in the map </param>
             public static void Increment(Value properties)
             {
-                DoEngage(new Value {{"$add", properties}});
+                Controller.DoEngage(new Value {{"$add", properties}});
             }
 
             /// <summary>
@@ -285,7 +294,7 @@ namespace mixpanel
             /// <param name="by">amount to increment by</param>
             public static void Increment(string property, Value by)
             {
-                Increment(new Value {{property, by}});
+                Controller.Increment(new Value {{property, by}});
             }
 
             /// <summary>
@@ -297,8 +306,8 @@ namespace mixpanel
             /// </param>
             public static void Set(Value properties)
             {
-                properties.Merge(GetEngageDefaultProperties());
-                DoEngage(new Value {{"$set", properties}});
+                properties.Merge(Controller.GetEngageDefaultProperties());
+                Controller.DoEngage(new Value {{"$set", properties}});
             }
 
             /// <summary>
@@ -317,7 +326,7 @@ namespace mixpanel
             /// <param name="properties">a JSONObject containing the collection of properties you wish to apply to the identified user. Each key in the JSONObject will be associated with a property name, and the value of that key will be assigned to the property.</param>
             public static void SetOnce(Value properties)
             {
-                DoEngage(new Value {{"$set_once", properties}});
+                Controller.DoEngage(new Value {{"$set_once", properties}});
             }
 
             /// <summary>
@@ -345,8 +354,8 @@ namespace mixpanel
             /// <param name="properties">a JSONObject containing the collection of properties you wish to apply</param>
             public static void TrackCharge(Value properties)
             {
-                properties["$time"] = CurrentDateTime();
-                DoEngage(new Value {{"$append", new Value {{"$transactions", properties}}}});
+                properties["$time"] = Util.CurrentDateTime();
+                Controller.DoEngage(new Value {{"$append", new Value {{"$transactions", properties}}}});
             }
 
             /// <summary>
@@ -357,7 +366,7 @@ namespace mixpanel
             /// <param name="properties">mapping of list property names to lists to union</param>
             public static void Union(Value properties)
             {
-                DoEngage(new Value {{"$union", properties}});
+                Controller.DoEngage(new Value {{"$union", properties}});
             }
 
             /// <summary>
@@ -379,7 +388,7 @@ namespace mixpanel
             /// <param name="property">property</param>
             public static void Unset(string property)
             {
-                DoEngage(new Value {{"$unset", property}});
+                Controller.DoEngage(new Value {{"$unset", property}});
             }
 
             /// <summary>
@@ -422,7 +431,7 @@ namespace mixpanel
                 set
                 {
                     string token = BitConverter.ToString(value).ToLower().Replace("-", "");
-                    SavePushDeviceToken(token);
+                    Persistence.SavePushDeviceToken(token);
                     #if UNITY_IOS
                         Union("$ios_devices", new string[] {token});
                     #elif UNITY_ANDROID

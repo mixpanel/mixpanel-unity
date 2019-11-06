@@ -399,16 +399,19 @@ namespace mixpanel
             return "none";
         }
 
-        private static double CurrentTime()
+        internal static class Util
         {
-            DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            double currentEpochTime = (DateTime.UtcNow - epochStart).TotalSeconds;
-            return currentEpochTime;
-        }
+            private static double CurrentTime()
+            {
+                DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                double currentEpochTime = (DateTime.UtcNow - epochStart).TotalSeconds;
+                return currentEpochTime;
+            }
 
-        private static string CurrentDateTime()
-        {
-            return DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
+            private static string CurrentDateTime()
+            {
+                return DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
+            }
         }
     }
 }

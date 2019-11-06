@@ -1,0 +1,4 @@
+- Try Mixpanel.DistinctId and Mixpanel.DistinctID
+- same for everything that is on persistence
+properties.Merge(Controller.GetEngageDefaultProperties()); --> move this to controller and make $set to add it not from MIxpanelAPI
+- modify file prefix
