@@ -37,7 +37,8 @@ namespace mixpanel
         }
         
         private static MixpanelManager GetMixpanelInstance() {
-            if (_instance == null) {
+            if (_instance == null)
+            {
                 _instance = new GameObject("Mixpanel").AddComponent<MixpanelManager>();
             }
             return _instance;
@@ -47,13 +48,15 @@ namespace mixpanel
 
         void OnApplicationPause(bool pauseStatus)
         {
-            if (!pauseStatus) {
+            if (!pauseStatus)
+            {
                 Mixpanel.InitSession();
             }
         }
 
         private IEnumerator Start()
         {
+            MigrateFrom1To2();
             DontDestroyOnLoad(this);
             StartCoroutine(PopulatePools());
             TrackIntegrationEvent();
@@ -62,23 +65,6 @@ namespace mixpanel
                 yield return new WaitForSecondsRealtime(MixpanelSettings.Instance.FlushInterval);
                 Mixpanel.Flush();
             }
-        }
-
-        private void TrackIntegrationEvent() {
-            if (Mixpanel.HasIntegratedLibrary) {
-                return;
-            }
-            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + MixpanelSettings.Instance.Token +"\"}}";
-            string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
-            WWWForm form = new WWWForm();
-            form.AddField("data", payload);
-            UnityWebRequest request = UnityWebRequest.Post("https://api.mixpanel.com/", form);
-            StartCoroutine(WaitForIntegrationRequest(request));
-        }
-
-        private IEnumerator<UnityWebRequest> WaitForIntegrationRequest(UnityWebRequest request) {
-            yield return request;
-            Mixpanel.HasIntegratedLibrary = true;
         }
 
         private static IEnumerator PopulatePools()
@@ -201,6 +187,98 @@ namespace mixpanel
             GetMixpanelInstance().DoFlush(MixpanelSettings.Instance.EngageUrl, Mixpanel.EngageQueue);
         }
         
+        #endregion
+
+        #region InternalSDK
+
+        private void MigrateFrom1To2() {
+            if (!Mixpanel.HasMigratedFrom1To2)
+            {
+                string stateFile = Application.persistentDataPath + "/mp_state.json";
+                try
+                {
+                    if (System.IO.File.Exists(stateFile))
+                    {
+                        string state = System.IO.File.ReadAllText(stateFile);
+                        Value stateValue = Value.Deserialize(state);
+                        string distinctIdKey = "distinct_id";
+                        if (stateValue.ContainsKey(distinctIdKey) && !stateValue[distinctIdKey].IsNull)
+                        {
+                            string distinctId = stateValue[distinctIdKey];
+                            Mixpanel.DistinctId = distinctId;
+                        }
+                        string optedOutKey = "opted_out";
+                        if (stateValue.ContainsKey(optedOutKey) && !stateValue[optedOutKey].IsNull)
+                        {
+                            bool optedOut = stateValue[optedOutKey];
+                            Mixpanel.IsTracking = !optedOut;
+                        }
+                        string trackedIntegrationKey = "tracked_integration";
+                        if (stateValue.ContainsKey(trackedIntegrationKey) && !stateValue[trackedIntegrationKey].IsNull)
+                        {
+                            bool trackedIntegration = stateValue[trackedIntegrationKey];
+                            Mixpanel.HasIntegratedLibrary = trackedIntegration;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    Debug.LogError("Error migrating state from v1 to v2");
+                }
+                finally
+                {
+                    System.IO.File.Delete(stateFile);
+                }
+
+                string superPropertiesFile = Application.persistentDataPath + "/mp_super_properties.json";
+                try
+                {
+                    if (System.IO.File.Exists(superPropertiesFile))
+                    {
+                        string superProperties = System.IO.File.ReadAllText(superPropertiesFile);
+                        Value superPropertiesValue = Value.Deserialize(superProperties);
+                        foreach (KeyValuePair<string, Value> kvp in superPropertiesValue)
+                        {
+                            if (!kvp.Key.StartsWith("$"))
+                            {
+                                Mixpanel.Register(kvp.Key, kvp.Value);
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    Debug.LogError("Error migrating super properties from v1 to v2");
+                }
+                finally
+                {
+                    System.IO.File.Delete(superPropertiesFile);
+                }
+
+                Mixpanel.HasMigratedFrom1To2 = true;
+            }
+        }
+
+        private void TrackIntegrationEvent()
+        {
+            if (Mixpanel.HasIntegratedLibrary)
+            {
+                return;
+            }
+            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + MixpanelSettings.Instance.Token +"\"}}";
+            string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
+            WWWForm form = new WWWForm();
+            form.AddField("data", payload);
+            UnityWebRequest request = UnityWebRequest.Post("https://api.mixpanel.com/", form);
+            StartCoroutine(WaitForIntegrationRequest(request));
+        }
+
+        private IEnumerator<UnityWebRequest> WaitForIntegrationRequest(UnityWebRequest request)
+        {
+            yield return request;
+            Mixpanel.HasIntegratedLibrary = true;
+        }
+
         #endregion
     }
 }
