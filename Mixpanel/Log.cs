@@ -6,7 +6,7 @@ namespace mixpanel
     {
         public static void Log(string s)
         {
-            if (MixpanelConfig.ShowDebug)
+            if (Config.ShowDebug)
             {
                 Debug.Log("[Mixpanel] " + s);
             }
@@ -14,7 +14,7 @@ namespace mixpanel
 
         public static void LogError(string s)
         {
-            if (MixpanelConfig.ShowDebug)
+            if (Config.ShowDebug)
             {
                 Debug.LogError("[Mixpanel] " + s);
             }

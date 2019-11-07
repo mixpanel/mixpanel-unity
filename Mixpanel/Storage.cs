@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace mixpanel
 {
-    internal static class Persistance
+    public static class MixpanelStorage
     {
         #region HasMigratedFrom1To2
 
@@ -38,7 +38,7 @@ namespace mixpanel
         
         private static string _distinctId;
         
-        internal static string DistinctId
+        public static string DistinctId
         {
             get
             {
@@ -67,7 +67,7 @@ namespace mixpanel
         
         private static bool _isTracking;
 
-        internal static bool IsTracking
+        public static bool IsTracking
         {
             get
             {
@@ -125,10 +125,10 @@ namespace mixpanel
             get
             {
                 if (_onceProperties != null) return _onceProperties;
-                if (!PlayerPrefs.HasKey(OncePropertiesName)) OnceProperties = ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(OncePropertiesName)) OnceProperties = Mixpanel.ObjectPool.Get();
                 else
                 {
-                    _onceProperties = ObjectPool.Get();
+                    _onceProperties = Mixpanel.ObjectPool.Get();
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(OncePropertiesName), _onceProperties);
                 }
                 return _onceProperties;
@@ -140,7 +140,7 @@ namespace mixpanel
             }
         }
 
-        private static void ResetOnceProperties()
+        internal static void ResetOnceProperties()
         {
             Value properties = OnceProperties;
             properties.OnRecycle();
@@ -160,10 +160,10 @@ namespace mixpanel
             get
             {
                 if (_superProperties != null) return _superProperties;
-                if (!PlayerPrefs.HasKey(SuperPropertiesName)) SuperProperties = ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(SuperPropertiesName)) SuperProperties = Mixpanel.ObjectPool.Get();
                 else
                 {
-                    _superProperties = ObjectPool.Get(); 
+                    _superProperties = Mixpanel.ObjectPool.Get(); 
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(SuperPropertiesName), _superProperties);
                 }
                 return _superProperties;
@@ -195,10 +195,10 @@ namespace mixpanel
             get
             {
                 if (_timedEvents != null) return _timedEvents;
-                if (!PlayerPrefs.HasKey(TimedEventsName)) TimedEvents = ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(TimedEventsName)) TimedEvents = Mixpanel.ObjectPool.Get();
                 else 
                 {
-                    _timedEvents = ObjectPool.Get();
+                    _timedEvents = Mixpanel.ObjectPool.Get();
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(TimedEventsName), _timedEvents);
                 }
                 return _timedEvents;

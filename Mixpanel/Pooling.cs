@@ -8,12 +8,12 @@ namespace mixpanel
         void OnRecycle();
     }
     
-    internal class MixpanelPool<T> where T : IMixpanelPoolable
+    internal class Pool<T> where T : IMixpanelPoolable
     {
         private readonly Func<T> _objectGenerator;
         private readonly ConcurrentBag<T> _objects;
 
-        public MixpanelPool(Func<T> objectGenerator)
+        public Pool(Func<T> objectGenerator)
         {
             _objectGenerator = objectGenerator ?? throw new ArgumentNullException(nameof(objectGenerator));
             _objects = new ConcurrentBag<T>();
@@ -35,9 +35,9 @@ namespace mixpanel
     
     public static partial class Mixpanel
     {
-        internal static readonly MixpanelPool<Value> NullPool = new MixpanelPool<Value> (() => Value.Null);
-        internal static readonly MixpanelPool<Value> ArrayPool = new MixpanelPool<Value> (() => Value.Array);
-        internal static readonly MixpanelPool<Value> ObjectPool = new MixpanelPool<Value> (() => Value.Object);
+        internal static readonly Pool<Value> NullPool = new Pool<Value> (() => Value.Null);
+        internal static readonly Pool<Value> ArrayPool = new Pool<Value> (() => Value.Array);
+        internal static readonly Pool<Value> ObjectPool = new Pool<Value> (() => Value.Object);
 
         internal static void Put(Value value)
         {

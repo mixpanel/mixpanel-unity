@@ -1,6 +1,6 @@
 namespace mixpanel
 {
-    internal static class MixpanelConfig
+    internal static class Config
     {
         // Can be overriden by MixpanelSettings
         internal static string TrackUrl = "https://api.mixpanel.com/track/?ip=1";
