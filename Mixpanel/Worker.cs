@@ -18,15 +18,43 @@ namespace mixpanel
 {
     public static partial class Worker
     {
-        private enum ThreadOperation
+        internal class ThreadOperation
         {
-            UNDEFINED,
-            ENQUEUE_EVENTS,
-            ENQUEUE_PEOPLE,
-            KILL_THREAD,
-            FLUSH,
-            RETRY_FLUSH,
+            internal enum ThreadOperationAction
+            {
+                UNDEFINED,
+                ENQUEUE_EVENTS,
+                ENQUEUE_PEOPLE,
+                KILL_THREAD,
+                FLUSH,
+                RETRY_FLUSH,
+            }
+
+            ThreadOperationAction action;
+            Value what;
+
+            internal ThreadOperation(ThreadOperationAction action)
+            {
+                this.action = action;
+            }
+
+            internal ThreadOperation(ThreadOperationAction action, Value what)
+            {
+                this.action = action;
+                this.what = what;
+            }
+
+            internal ThreadOperationAction GetAction()
+            {
+                return this.action;
+            }
+
+            internal Value GetWhat()
+            {
+                return this.what;
+            }
         }
+
         private static Queue<ThreadOperation> _ops = new Queue<ThreadOperation>();
         private static readonly HttpClient _client = new HttpClient();
         private static Thread _bgThread;
@@ -59,7 +87,7 @@ namespace mixpanel
 
         private static void ForceStop()
         {
-            _ops.Enqueue(ThreadOperation.KILL_THREAD);
+            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.KILL_THREAD));
         }
 
         #endregion
@@ -68,7 +96,7 @@ namespace mixpanel
 
         internal static void EnqueueEventOp()
         {
-            _ops.Enqueue(ThreadOperation.ENQUEUE_EVENTS);
+            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.ENQUEUE_EVENTS));
             if (!_isBgThreadRunning)
             {
                 DispatchOperations();
@@ -77,7 +105,7 @@ namespace mixpanel
 
         internal static void EnqueuePeopleOp()
         {
-            _ops.Enqueue(ThreadOperation.ENQUEUE_PEOPLE);
+            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.ENQUEUE_PEOPLE));
             if (!_isBgThreadRunning)
             {
                 DispatchOperations();
@@ -92,7 +120,7 @@ namespace mixpanel
 
         private static void ForceFlushOp()
         {
-            _ops.Enqueue(ThreadOperation.FLUSH);
+            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.FLUSH));
             if (!_isBgThreadRunning)
             {
                 DispatchOperations();
@@ -122,15 +150,15 @@ namespace mixpanel
         {
             if (_ops.Count == 0) return;
             ThreadOperation operation = _ops.Dequeue();
-            switch (operation)
+            switch (operation.GetAction())
             {
-                case ThreadOperation.ENQUEUE_EVENTS:
+                case ThreadOperation.ThreadOperationAction.ENQUEUE_EVENTS:
                     EnqueueMixpanelQueue(MixpanelStorage.TrackPersistentQueue, Controller.GetInstance().TrackQueue);
                     break;
-                case ThreadOperation.ENQUEUE_PEOPLE:
+                case ThreadOperation.ThreadOperationAction.ENQUEUE_PEOPLE:
                     EnqueueMixpanelQueue(MixpanelStorage.EngagePersistentQueue, Controller.GetInstance().EngageQueue);
                     break;
-                case ThreadOperation.FLUSH:
+                case ThreadOperation.ThreadOperationAction.FLUSH:
                     if (_isBgThreadRunning)
                     {
                         IEnumerator trackEnum = SendData(MixpanelStorage.TrackPersistentQueue, Config.TrackUrl);
@@ -144,7 +172,7 @@ namespace mixpanel
                         Controller.GetInstance().StartCoroutine(SendData(MixpanelStorage.EngagePersistentQueue, Config.EngageUrl));
                     }
                     break;
-                case ThreadOperation.KILL_THREAD:
+                case ThreadOperation.ThreadOperationAction.KILL_THREAD:
                     _isBgThreadRunning = false;
                     _bgThread.Abort(); // Will throw an exception
                     break;
