@@ -14,9 +14,6 @@ namespace mixpanel
 {
     internal class Controller : MonoBehaviour
     {
-        public List<Value> TrackQueue = new List<Value>(500); // Need to syncrhonize access
-        public List<Value> EngageQueue = new List<Value>(500); // Need to syncrhonize access
-
         private static Value _autoTrackProperties;
         private static Value _autoEngageProperties;
         
@@ -100,89 +97,6 @@ namespace mixpanel
                     Mixpanel.ArrayPool.Put(Value.Array);
                     Mixpanel.ObjectPool.Put(Value.Object);
                 }
-                yield return null;
-            }
-        }
-
-        private void LateUpdate()
-        {
-            LateUpdateTrackQueue();
-            LateUpdateEngageQueue();
-        }
-
-        private void LateUpdateTrackQueue()
-        {
-            if (TrackQueue.Count == 0) return;
-            if (Mixpanel.UseCoroutines && !Mixpanel.UseThreads && !Mixpanel.UseThreadPool && !Mixpanel.UseLongRunningWorkerThread)
-            {
-                int queueCount = TrackQueue.Count;
-                PersistentQueueSession session = MixpanelStorage.TrackPersistentQueue.OpenSession();
-                for (int itemIdx = 0; itemIdx < queueCount; itemIdx++)
-                {
-                    Value item = TrackQueue[itemIdx];
-                    StartCoroutine(StoreQueueInSession(session, item, itemIdx == queueCount - 1));
-                }
-                TrackQueue.Clear();
-            }
-            else if (Mixpanel.UseThreads && !Mixpanel.UseThreadPool && !Mixpanel.UseLongRunningWorkerThread)
-            {
-                Thread t1 = new Thread(UpdateTrackThread);
-                t1.Start();
-            }
-            else if (Mixpanel.UseThreadPool && !Mixpanel.UseLongRunningWorkerThread)
-            {
-                ThreadPool.QueueUserWorkItem(new WaitCallback(UpdateTrackThreadCallBack));
-            }
-            else if (Mixpanel.UseLongRunningWorkerThread)
-            {
-                Debug.Log("Using thread...");
-                Worker.EnqueueEventOp();
-            }
-            else
-            {
-                Worker.EnqueueMixpanelQueue(MixpanelStorage.TrackPersistentQueue, TrackQueue);
-            }
-        }
-
-        private void LateUpdateEngageQueue()
-        {
-            if (EngageQueue.Count == 0) return;
-            if (Mixpanel.UseLongRunningWorkerThread)
-            {
-                Worker.EnqueuePeopleOp();
-            }
-            else
-            {
-                Worker.EnqueueMixpanelQueue(MixpanelStorage.EngagePersistentQueue, EngageQueue);
-            }
-        }
-
-        private void UpdateTrackThread()
-        {
-            Worker.EnqueueMixpanelQueue(MixpanelStorage.TrackPersistentQueue, TrackQueue);
-        }
-
-        private void UpdateTrackThreadCallBack(object callback)
-        {
-            Worker.EnqueueMixpanelQueue(MixpanelStorage.TrackPersistentQueue, TrackQueue);
-        }
-
-        private IEnumerator StoreQueueInSession(PersistentQueueSession session, Value item, bool isLast)
-        {
-            string itemJson = JsonUtility.ToJson(item);
-            yield return new WaitForEndOfFrame();
-            byte[] itemBytes = Encoding.UTF8.GetBytes(itemJson);
-            yield return new WaitForEndOfFrame();
-            session.Enqueue(itemBytes);
-            yield return new WaitForEndOfFrame();
-            Mixpanel.Put(item);
-
-            if (isLast)
-            {
-                yield return new WaitForEndOfFrame();
-                session.Flush();
-                yield return new WaitForEndOfFrame();
-                session.Dispose();
                 yield return null;
             }
         }
@@ -346,11 +260,8 @@ namespace mixpanel
             data["event"] = eventName;
             data["properties"] = properties;
             data["$mp_metadata"] = Metadata.GetEventMetadata();
-            
-            lock (GetInstance().TrackQueue)
-            {
-                GetInstance().TrackQueue.Add(data);
-            }
+
+            Worker.EnqueueEventOp(data);
         }
 
         internal static void DoEngage(Value properties)
@@ -361,10 +272,7 @@ namespace mixpanel
             properties["$time"] = Util.CurrentTime();
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
-            lock (GetInstance().EngageQueue)
-            {
-                GetInstance().EngageQueue.Add(properties);
-            }
+            Worker.EnqueuePeopleOp(properties);
         }
 
         internal static void DoFlush()

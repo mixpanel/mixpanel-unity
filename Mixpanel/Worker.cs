@@ -94,18 +94,18 @@ namespace mixpanel
 
         #region Operations
 
-        internal static void EnqueueEventOp()
+        internal static void EnqueueEventOp(Value data)
         {
-            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.ENQUEUE_EVENTS));
+            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.ENQUEUE_EVENTS, data));
             if (!_isBgThreadRunning)
             {
                 DispatchOperations();
             }
         }
 
-        internal static void EnqueuePeopleOp()
+        internal static void EnqueuePeopleOp(Value data)
         {
-            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.ENQUEUE_PEOPLE));
+            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.ENQUEUE_PEOPLE, data));
             if (!_isBgThreadRunning)
             {
                 DispatchOperations();
@@ -150,13 +150,14 @@ namespace mixpanel
         {
             if (_ops.Count == 0) return;
             ThreadOperation operation = _ops.Dequeue();
+            Value data = operation.GetWhat();
             switch (operation.GetAction())
             {
                 case ThreadOperation.ThreadOperationAction.ENQUEUE_EVENTS:
-                    EnqueueMixpanelQueue(MixpanelStorage.TrackPersistentQueue, Controller.GetInstance().TrackQueue);
+                    EnqueueMixpanelQueue(MixpanelStorage.TrackPersistentQueue, data);
                     break;
                 case ThreadOperation.ThreadOperationAction.ENQUEUE_PEOPLE:
-                    EnqueueMixpanelQueue(MixpanelStorage.EngagePersistentQueue, Controller.GetInstance().EngageQueue);
+                    EnqueueMixpanelQueue(MixpanelStorage.EngagePersistentQueue, data);
                     break;
                 case ThreadOperation.ThreadOperationAction.FLUSH:
                     if (_isBgThreadRunning)
@@ -260,20 +261,13 @@ namespace mixpanel
             }
         }
 
-        internal static void EnqueueMixpanelQueue(PersistentQueue persistentQueue, List<Value> queue)
+        internal static void EnqueueMixpanelQueue(PersistentQueue persistentQueue, Value data)
         {
-            lock (queue)
+            using (PersistentQueueSession session = persistentQueue.OpenSession())
             {
-                using (PersistentQueueSession session = persistentQueue.OpenSession())
-                {
-                    foreach (Value item in queue)
-                    {
-                        session.Enqueue(Encoding.UTF8.GetBytes(JsonUtility.ToJson(item)));
-                        Mixpanel.Put(item);
-                    }
-                    session.Flush();
-                }
-                queue.Clear();
+                session.Enqueue(Encoding.UTF8.GetBytes(JsonUtility.ToJson(data)));
+                Mixpanel.Put(data);
+                session.Flush();
             }
         }
     }
