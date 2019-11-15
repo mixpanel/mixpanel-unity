@@ -536,7 +536,6 @@ namespace mixpanel.queue
 
 			foreach (int i in filesToRemove)
 			{
-				Debug.Log("[SERGIO] Removing file  " + i);
 				_countOfItemsPerFile.Remove(i);
 			}
 

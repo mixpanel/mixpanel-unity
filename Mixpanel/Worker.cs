@@ -28,6 +28,7 @@ namespace mixpanel
                 KILL_THREAD,
                 FLUSH,
                 RETRY_FLUSH,
+                CLEAR_QUEUE,
             }
 
             ThreadOperationAction action;
@@ -75,14 +76,13 @@ namespace mixpanel
             }
         }
 
-        private static void StopWorkerThread()
+        internal static void StopWorkerThread()
         {
             _stopThread = true;
             if (_retryTimer != null)
             {
                 _retryTimer.Dispose();
             }
-            ForceStop();
         }
 
         private static void ForceStop()
@@ -121,6 +121,15 @@ namespace mixpanel
         private static void ForceFlushOp()
         {
             _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.FLUSH));
+            if (!_isBgThreadRunning)
+            {
+                DispatchOperations();
+            }
+        }
+
+        internal static void ClearOp()
+        {
+            _ops.Enqueue(new ThreadOperation(ThreadOperation.ThreadOperationAction.CLEAR_QUEUE));
             if (!_isBgThreadRunning)
             {
                 DispatchOperations();
@@ -173,6 +182,10 @@ namespace mixpanel
                         Controller.GetInstance().StartCoroutine(SendData(MixpanelStorage.EngagePersistentQueue, Config.EngageUrl));
                     }
                     break;
+                case ThreadOperation.ThreadOperationAction.CLEAR_QUEUE:
+                    MixpanelStorage.TrackPersistentQueue.Clear();
+                    MixpanelStorage.EngagePersistentQueue.Clear();
+                    break;
                 case ThreadOperation.ThreadOperationAction.KILL_THREAD:
                     _isBgThreadRunning = false;
                     _bgThread.Abort(); // Will throw an exception
@@ -216,7 +229,7 @@ namespace mixpanel
                             var content = new StringContent("data=" + payload, Encoding.UTF8, "application/json");
                             var responseRequest = _client.PostAsync(url, content).Result;
                             responseCode = (int) responseRequest.StatusCode;
-                            response = responseRequest.Content.ToString();
+                            response = responseRequest.Content.ReadAsStringAsync().Result;
                         }
                         catch (Exception e)
                         {

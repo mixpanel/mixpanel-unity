@@ -20,9 +20,6 @@ namespace mixpanel
     {
         internal const string MixpanelUnityVersion = "2.0.0";
 
-        // TODO TESTING ONLY
-        public static bool UseCoroutines, UseThreads, UseThreadPool, UseLongRunningWorkerThread;
-
         /// <summary>
         /// Creates a distinct_id alias.
         /// </summary>
@@ -156,8 +153,7 @@ namespace mixpanel
         /// </summary>
         public static void Clear()
         {
-            MixpanelStorage.TrackPersistentQueue.Clear();
-            MixpanelStorage.EngagePersistentQueue.Clear();
+            Controller.DoClear();
         }
 
         /// <summary>
@@ -256,8 +252,6 @@ namespace mixpanel
             /// <param name="values">the new value that will appear at the end of the property's list</param>
             public static void Append(string property, Value values)
             {
-                if (!values.IsArray)
-                    throw new ArgumentException("Append with values property must be an array", nameof(values));
                 Append(new Value {{property, values}});
             }
 
@@ -376,8 +370,6 @@ namespace mixpanel
             /// <param name="values">an array of values to add to the property value if not already present</param>
             public static void Union(string property, Value values)
             {
-                if (!values.IsArray)
-                    throw new ArgumentException("Union with values property must be an array", nameof(values));
                 Union(new Value {{property, values}});
             }
 

@@ -47,6 +47,11 @@ namespace mixpanel
 
         #endregion
 
+        void OnDestroy()
+        {
+            Worker.StopWorkerThread();
+        }
+
         void OnApplicationPause(bool pauseStatus)
         {
             if (!pauseStatus)
@@ -278,6 +283,11 @@ namespace mixpanel
         internal static void DoFlush()
         {
             Worker.FlushOp();
+        }
+
+        internal static void DoClear()
+        {
+            Worker.ClearOp();
         }
 
         #endregion
