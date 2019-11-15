@@ -128,6 +128,9 @@ namespace mixpanel.queue
 	    
 	    /// <summary> 32MiB in bytes </summary>
 	    public const int _32Megabytes = 32 * 1024 * 1024;
+
+		/// <summary> 5MiB in bytes </summary>
+	    public const int _5Megabytes = 5 * 1042 * 1024;
 	    
 	    /// <summary> 1MiB in bytes </summary>
 	    public const int _1Megabytes = 1042 * 1024;

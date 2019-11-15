@@ -37,23 +37,26 @@ namespace mixpanel
 
         #region static
         private static MixpanelSettings _instance;
+
+        public static void LoadSettings()
+        {
+            if (!_instance)
+            {
+                _instance = FindOrCreateInstance();
+                string host = _instance.APIHostAddress.EndsWith("/") ? _instance.APIHostAddress : $"{_instance.APIHostAddress}/";
+                Config.TrackUrl = string.Format(TrackUrlTemplate, host);
+                Config.EngageUrl = string.Format(EngageUrlTemplate, host);
+                Config.ShowDebug = _instance.ShowDebug;
+                Config.FlushInterval = _instance.FlushInterval;
+            }
+        }
     
         public static MixpanelSettings Instance {
             get {
-                if (!_instance)
-                {
-                    _instance = FindOrCreateInstance();
-                    string host = _instance.APIHostAddress.EndsWith("/") ? _instance.APIHostAddress : $"{_instance.APIHostAddress}/";
-                    _instance.TrackUrl = string.Format(TrackUrlTemplate, host);
-                    _instance.EngageUrl = string.Format(EngageUrlTemplate, host);
-                }
+                LoadSettings();
                 return _instance;
             }
         }
-        
-        public string TrackUrl { get; private set; }
-        
-        public string EngageUrl { get; private set;  }
 
         private static MixpanelSettings FindOrCreateInstance()
         {
@@ -70,9 +73,12 @@ namespace mixpanel
             T instance = CreateInstance<T>();
 #if UNITY_EDITOR
             //Saving during Awake() will crash Unity, delay saving until next editor frame
-            if(EditorApplication.isPlayingOrWillChangePlaymode){
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
                 EditorApplication.delayCall += () => SaveAsset(instance);
-            } else{
+            }
+            else
+            {
                 SaveAsset(instance);
             }
 #endif
@@ -84,12 +90,12 @@ namespace mixpanel
         {
 
             string dirName = "Assets/Resources";
-            if(!Directory.Exists(dirName)){
+            if (!Directory.Exists(dirName))
+            {
                 Directory.CreateDirectory(dirName);
             }
             AssetDatabase.CreateAsset(obj, "Assets/Resources/Mixpanel.asset");
             AssetDatabase.SaveAssets();
-            Debug.Log("Created Mixpanel settings.");
         }
 #endif
         #endregion

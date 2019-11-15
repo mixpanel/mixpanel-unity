@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using UnityEngine;
 
 namespace mixpanel.queue
 {
@@ -49,7 +50,7 @@ namespace mixpanel.queue
 		private volatile bool _disposed;
 		private FileStream _fileLock;
 
-		public PersistentQueue(string path, int maxFileSize = PersistentQueueUtils._16Megabytes)
+		public PersistentQueue(string path, int maxFileSize = PersistentQueueUtils._5Megabytes)
 		{
 			lock (ConfigLock)
 			{
@@ -427,6 +428,7 @@ namespace mixpanel.queue
 
 				foreach (var entry in listedEntries)
 				{
+					// TODO Use Jobs here
 					WriteEntryToTransactionLog(ms, entry, PersistentQueueOperationTypes.ENQUEUE);
 				}
 
