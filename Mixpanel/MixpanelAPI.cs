@@ -370,6 +370,8 @@ namespace mixpanel
             /// <param name="values">an array of values to add to the property value if not already present</param>
             public static void Union(string property, Value values)
             {
+                if (!values.IsArray)
+                    throw new ArgumentException("Union with values property must be an array", nameof(values));
                 Union(new Value {{property, values}});
             }
 
@@ -379,7 +381,7 @@ namespace mixpanel
             /// <param name="property">property</param>
             public static void Unset(string property)
             {
-                Controller.DoEngage(new Value {{"$unset", property}});
+                Controller.DoEngage(new Value {{"$unset", new string[]{property}}});
             }
 
             /// <summary>
