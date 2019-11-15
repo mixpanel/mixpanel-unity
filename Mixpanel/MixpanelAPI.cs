@@ -18,7 +18,7 @@ namespace mixpanel
     /// </code>
     public static partial class Mixpanel
     {
-        internal const string MixpanelUnityVersion = "2.0.0";
+        internal const string MixpanelUnityVersion = "2.1.0";
 
         /// <summary>
         /// Creates a distinct_id alias.

@@ -1,18 +1,19 @@
 {
   "name": "com.mixpanel.unity",
   "displayName":  "Mixpanel",
-  "version": "2.0.0",
-  "description": "",
+  "version": "2.1.0",
+  "description": "Official Mixpanel library for Unity.",
   "repository": {
     "type": "git",
     "url": "https://github.com/mixpanel/mixpanel-unity"
   },
-  "author": "Kyle Rockman",
+  "author": "Mixpanel",
   "license": "Apache V2",
   "keywords": [
     "unity3d",
     "unity3d-package",
-    "analytics"
+    "analytics",
+    "mixpanel"
   ],
   "category": "Mixpanel"
 }

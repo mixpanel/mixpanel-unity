@@ -1,3 +1,22 @@
+## [v2.1.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.1.0)
+### November 14th - 2019
+
+## Fixes
+- API Error: Invalid JSON Encoding for numbers (https://github.com/mixpanel/mixpanel-unity/issues/74)
+- Default people properties not been set properly
+- `PushDeviceToken` not working (https://github.com/mixpanel/mixpanel-unity/issues/73)
+- JSON encoding of special characters like `\"` or `\t`, etc...
+- A flush operation now sends everything that happened until just right before the API is called.
+- Properly migrate state from SDK 1.X to 2.X to preserve super properties and distinct ids.
+- Major performance improvements
+
+## New features
+- Added de-duplication logic to prevent duplicated events to exist in your project
+- Added an integration event
+- Added new default event and people properties
+
+---
+
 ## [v2.0.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.0.0)
 ### September 24th - 2019
 
