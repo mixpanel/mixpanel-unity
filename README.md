@@ -2,7 +2,7 @@ Latest Version
 --------------
 ##### _November 14th, 2019_ - [v2.1.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.0)
 
-Supported Unity Version >= 2018.4
+Supported Unity Version >= 2018.3
 
 Getting Started
 ---------------
@@ -11,7 +11,7 @@ Check out our [official documentation](https://mixpanel.com/help/reference/unity
 Installation
 ------------
 
-This library can be installed using the unity package manager system (Unity >= 2018.4) with git
+This library can be installed using the unity package manager system (Unity >= 2018.3) with git
 
 1. In your unity project root open `./Packages/manifest.json`
 2. Add the following line to the dependencies section:
