@@ -10,10 +10,6 @@ using System.Net;
 using System.Net.Http;
 using System.Web;
 
-#if UNITY_IOS
-using UnityEngine.iOS;
-#endif
-
 namespace mixpanel
 {
     public static partial class Worker

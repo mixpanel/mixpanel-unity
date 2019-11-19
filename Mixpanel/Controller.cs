@@ -10,6 +10,10 @@ using System.Threading;
 using Unity.Jobs;
 using Unity.Collections;
 
+#if UNITY_IOS
+using UnityEngine.iOS;
+#endif
+
 namespace mixpanel
 {
     internal class Controller : MonoBehaviour
