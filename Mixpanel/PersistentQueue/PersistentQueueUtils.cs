@@ -46,7 +46,10 @@ namespace mixpanel.queue
 		/// <summary>
 		/// Aggregate causing exceptions
 		/// </summary>
-		public PendingWriteException(Exception[] pendingWritesExceptions) : base("Error during pending writes") => this._pendingWritesExceptions = pendingWritesExceptions;
+		public PendingWriteException(Exception[] pendingWritesExceptions) : base("Error during pending writes")
+		{
+			this._pendingWritesExceptions = pendingWritesExceptions;
+		}
 
 		/// <summary>
 		/// Gets a message that describes the current exception.

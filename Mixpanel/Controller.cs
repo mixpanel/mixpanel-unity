@@ -253,7 +253,8 @@ namespace mixpanel
             properties.Merge(MixpanelStorage.OnceProperties);
             MixpanelStorage.ResetOnceProperties();
             properties.Merge(MixpanelStorage.SuperProperties);
-            if (MixpanelStorage.TimedEvents.TryGetValue(eventName, out Value startTime))
+            Value startTime;
+            if (MixpanelStorage.TimedEvents.TryGetValue(eventName, out startTime))
             {
                 properties["$duration"] = Util.CurrentTime() - (double)startTime;
                 MixpanelStorage.TimedEvents.Remove(eventName);
