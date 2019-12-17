@@ -15,13 +15,18 @@ namespace mixpanel
 
         public Pool(Func<T> objectGenerator)
         {
-            _objectGenerator = objectGenerator ?? throw new ArgumentNullException(nameof(objectGenerator));
+            if (objectGenerator == null)
+            {
+                throw new ArgumentNullException(nameof(objectGenerator));
+            }
+            _objectGenerator = objectGenerator;
             _objects = new ConcurrentBag<T>();
         }
 
         public T Get()
         {
-            return !_objects.TryTake(out T item) ? _objectGenerator() : item;
+            T item;
+            return !_objects.TryTake(out item) ? _objectGenerator() : item;
         }
 
         public void Put(T item)

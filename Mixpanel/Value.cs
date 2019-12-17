@@ -1002,7 +1002,8 @@ namespace mixpanel
         private static double ParseNumber(StringReader reader)
         {
             string number = NextWord(reader);
-            double.TryParse(number, out double parsedDouble);
+            double parsedDouble;
+            double.TryParse(number, out parsedDouble);
             return parsedDouble;
         }
         
@@ -1041,9 +1042,11 @@ namespace mixpanel
                         return null;
                     case Token.COMMA:
                         continue;
-                    case Token.CURLY_CLOSE when data.ContainsKey("JsonType") && data.ContainsKey("DataType"):
-                        return FromSerialization(data["JsonType"], data["DataType"], data["Value"]);
                     case Token.CURLY_CLOSE:
+                        if (data.ContainsKey("JsonType") && data.ContainsKey("DataType"))
+                        {
+                            return FromSerialization(data["JsonType"], data["DataType"], data["Value"]);
+                        }
                         return new Value(data);
                     default:
                         // key

@@ -1,5 +1,6 @@
 using UnityEditor;
 
+#if UNITY_2018_3_OR_NEWER
 namespace mixpanel.editor
 {
     internal class MixpanelSettingsEditor
@@ -25,3 +26,4 @@ namespace mixpanel.editor
         }
     }
 }
+#endif
