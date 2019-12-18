@@ -831,8 +831,8 @@ namespace mixpanel
         {
             if (_array == null) _array = new List<Value>(0);
             int count = _array.Count;
-            if (count <= 0) return;
             _arrayData = new string[count];
+            if (count <= 0) return;
             for (int i = 0; i < count; i++)
             {
                 _arrayData[i] = JsonUtility.ToJson(_array[i]); 
@@ -843,9 +843,9 @@ namespace mixpanel
         {
             if (_container == null) _container = new Dictionary<string, Value>(0);
             int count = _container.Count;
-            if (count <= 0) return;
             _containerKeys = new string[count];
             _containerValues = new string[count];
+            if (count <= 0) return;
             using (Dictionary<string, Value>.Enumerator e = _container.GetEnumerator())
             {
                 for (int i = 0; i < count; i++)
@@ -867,8 +867,8 @@ namespace mixpanel
         {
             if (_arrayData == null) return;
             int count = _arrayData.Length;
-            if (count == 0) return;
             _array = new List<Value>(count);
+            if (count == 0) return;
             foreach (string data in _arrayData)
             {
                 Value item = Mixpanel.ObjectPool.Get();
@@ -881,8 +881,8 @@ namespace mixpanel
         {
             if (_containerKeys == null) return;
             int count = _containerKeys.Length;
-            if (count == 0) return;
             _container = new Dictionary<string, Value>(count);
+            if (count == 0) return;
             for (int i = 0; i < count; i++)
             {
                 Value item = Mixpanel.ObjectPool.Get();
