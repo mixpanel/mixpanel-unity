@@ -1,3 +1,12 @@
+## [v2.1.1](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.1.1)
+### December 17th - 2019
+
+## Fixes
+- Added support for older Unity versions if .NET 4.x equivalent is the selected scripting runtime version
+- Fix value serialize/deserialize bug (#93)
+
+---
+
 ## [v2.1.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.1.0)
 ### November 14th - 2019
 
