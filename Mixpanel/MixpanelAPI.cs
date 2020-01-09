@@ -232,6 +232,15 @@ namespace mixpanel
         }
 
         /// <summary>
+        /// Sets the project token to be used. This setting will override what it is set in the Unity Project Settings.
+        /// </summary>
+        public static void SetToken(string token)
+        {
+            MixpanelSettings.Instance.DebugToken = token;
+            MixpanelSettings.Instance.RuntimeToken = token;
+        }
+
+        /// <summary>
         /// Core interface for using %Mixpanel %People Analytics features. You can get an instance by calling Mixpanel.people
         /// </summary>
         public static class People
