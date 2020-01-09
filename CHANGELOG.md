@@ -1,4 +1,12 @@
-## [v2.1.1](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.1.1)
+## [v2.1.2](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.2)
+### January 9th - 2020
+
+## New features
+- Add `SetToken()` method to set project token programatically
+
+---
+
+## [v2.1.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.1)
 ### December 17th - 2019
 
 ## Fixes
@@ -7,7 +15,7 @@
 
 ---
 
-## [v2.1.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.1.0)
+## [v2.1.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.0)
 ### November 14th - 2019
 
 ## Fixes
@@ -26,7 +34,7 @@
 
 ---
 
-## [v2.0.0](https://github.com/rocktavious/mixpanel-unity/releases/tag/v2.0.0)
+## [v2.0.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.0.0)
 ### September 24th - 2019
 
 #### This version is a complete rewrite of the library to support ALL platforms that unity can compile to.
