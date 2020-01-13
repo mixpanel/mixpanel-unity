@@ -153,7 +153,7 @@ namespace mixpanel
 
         private static void DispatchOperations()
         {
-            if (_ops.Count == 0) return;
+            if (_ops == null || _ops.Count == 0) return;
             ThreadOperation operation = _ops.Dequeue();
             Value data = operation.GetWhat();
             switch (operation.GetAction())
