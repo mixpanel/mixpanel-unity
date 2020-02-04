@@ -82,8 +82,6 @@ namespace mixpanel
         /// </summary>
         public static void OptOutTracking()
         {
-            People.ClearCharges();
-            Flush();
             People.DeleteUser();
             Flush();
             Reset();
