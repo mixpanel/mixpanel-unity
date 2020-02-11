@@ -1,6 +1,6 @@
 Latest Version 
 --------------
-##### _January 9th, 2020_ - [v2.1.2](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.2)
+##### _February 10th, 2020_ - [v2.1.2](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.3)
 
 Supported Unity Version >= 2018.3. For older versions, you need to have `.NET 4.x Equivalent` selected as the scripting runtime version in your editor settings.
 
