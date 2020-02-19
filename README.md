@@ -16,7 +16,7 @@ This library can be installed using the unity package manager system (Unity >= 2
 1. In your unity project root open `./Packages/manifest.json`
 2. Add the following line to the dependencies section:
 ```
-"com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#v2.1.2"
+"com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#v2.1.4"
 ```
 3. Open Unity and the package should download automatically
 
