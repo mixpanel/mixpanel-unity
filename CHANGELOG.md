@@ -1,3 +1,20 @@
+## [v2.1.4](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.4)
+### February 18th - 2020
+
+## Fixes
+- Performance improvements.
+- Fix set `PushDeviceToken` for Android where an string is used.
+
+---
+
+## [v2.1.3](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.3)
+### February 10th - 2020
+
+## Fixes
+- Remove `ClearCharges` from `OptOutTracking` to avoid having orphan profiles at mixpanel
+
+---
+
 ## [v2.1.2](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.2)
 ### January 9th - 2020
 
