@@ -52,7 +52,62 @@ namespace mixpanel
             }
         }
 
-        private static Queue<ThreadOperation> _ops = new Queue<ThreadOperation>();
+        internal class BlockingQueue<T> where T : class
+        {
+            readonly int _Size = 0;
+            readonly Queue<T> _Queue = new Queue<T>();
+            readonly object _Key = new object();
+            bool _Quit = false;
+
+            public BlockingQueue(int size)
+            {
+                _Size = size;
+            }
+
+            public void Quit()
+            {
+                lock (_Key)
+                {
+                    _Quit = true;
+                    Monitor.PulseAll(_Key);
+                }
+            }
+
+            public bool Enqueue(T t)
+            {
+                lock (_Key)
+                {
+                    while (!_Quit && _Queue.Count >= _Size) Monitor.Wait(_Key);
+
+                    if (_Quit) return false;
+
+                    _Queue.Enqueue(t);
+
+                    Monitor.PulseAll(_Key);
+                }
+
+                return true;
+            }
+
+            public T Dequeue()
+            {
+                T t;
+                lock (_Key)
+                {
+                    while (!_Quit && _Queue.Count == 0) Monitor.Wait(_Key);
+
+                    if (_Queue.Count == 0) return null;
+
+                    t = _Queue.Dequeue();
+
+                    Monitor.PulseAll(_Key);
+                }
+
+                return t;
+            }
+        }
+
+        private static BlockingQueue<ThreadOperation> _ops = new BlockingQueue<ThreadOperation>(16);
         private static readonly HttpClient _client = new HttpClient();
         private static Thread _bgThread;
 
@@ -75,6 +130,7 @@ namespace mixpanel
         internal static void StopWorkerThread()
         {
             _stopThread = true;
+            _ops.Quit();
             if (_retryTimer != null)
             {
                 _retryTimer.Dispose();
@@ -153,8 +209,8 @@ namespace mixpanel
 
         private static void DispatchOperations()
         {
-            if (_ops.Count == 0) return;
             ThreadOperation operation = _ops.Dequeue();
+            if (operation == null) return;
             Value data = operation.GetWhat();
             switch (operation.GetAction())
             {
