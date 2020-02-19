@@ -426,15 +426,17 @@ namespace mixpanel
             /// <summary>
             /// Register the given device to receive push notifications.
             /// </summary>
-            public static byte[] PushDeviceToken
+            public static object PushDeviceToken
             {
                 set
                 {
-                    string token = BitConverter.ToString(value).ToLower().Replace("-", "");
-                    MixpanelStorage.SavePushDeviceToken(token);
                     #if UNITY_IOS
+                        string token = BitConverter.ToString((byte [])value).ToLower().Replace("-", "");
+                        MixpanelStorage.SavePushDeviceToken(token);
                         Union("$ios_devices", new string[] {token});
                     #elif UNITY_ANDROID
+                        string token = value.ToString();
+                        MixpanelStorage.SavePushDeviceToken(token);
                         Union("$android_devices", new string[] {token});
                     #endif
                 }
