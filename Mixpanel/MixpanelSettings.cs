@@ -54,6 +54,13 @@ namespace mixpanel
         public static MixpanelSettings Instance {
             get {
                 LoadSettings();
+                
+                // Be sure to respect the programmatic setting of values over the Unity UI's version of the settings (since they are set later)
+                if (Config.ShowDebug != _instance.ShowDebug) {
+                    Mixpanel.Log($"Mixpanel: Overriding ShowDebug from editor setting [{Config.ShowDebug}] with MixpanelSettings ShowDebug setting [{_instance.ShowDebug}]");
+                    Config.ShowDebug = _instance.ShowDebug;
+                }
+                
                 return _instance;
             }
         }
