@@ -264,7 +264,12 @@ namespace mixpanel
                     {
                         byte[] data = session.Dequeue();
                         if (data == null) break;
-                        batch.Add(JsonUtility.FromJson<Value>(Encoding.UTF8.GetString(data)));
+                        try {
+                            batch.Add(JsonUtility.FromJson<Value>(Encoding.UTF8.GetString(data)));
+                        }
+                        catch (Exception e) {
+                            Mixpanel.LogError($"There was an error processing event [{count}] from the internal object pool: " + e);
+                        }
                         ++count;
                     }
                     if (count == 0) yield break;
