@@ -297,11 +297,19 @@ namespace mixpanel
                     {
                         WWWForm form = new WWWForm();
                         form.AddField("data", payload);
-                        UnityWebRequest request = UnityWebRequest.Post(url, form);
-                        yield return request.SendWebRequest();
-                        while (!request.isDone) yield return new WaitForEndOfFrame();
-                        responseCode = (int) request.responseCode;
-                        response = request.downloadHandler.text;
+                        UnityWebRequest request = null;
+                        try {
+                            request = UnityWebRequest.Post(url, form);
+                        }
+                        catch (Exception e) {
+                            Mixpanel.LogError($"There was an error sending information to mixpanel servers: " + e);
+                        }
+                        if (request != null) {
+                            yield return request.SendWebRequest();
+                            while (!request.isDone) yield return new WaitForEndOfFrame();
+                            responseCode = (int) request.responseCode;
+                            response = request.downloadHandler.text;
+                        }
                     }
 
                     Mixpanel.Log($"Response - '{url}' was '{response}'");
