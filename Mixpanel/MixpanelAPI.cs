@@ -21,11 +21,33 @@ namespace mixpanel
         internal const string MixpanelUnityVersion = "2.1.4";
 
         /// <summary>
+        /// Creates an Mixpanel instance. Use only if you have enabled "Manual Initialization" from your Project Settings.
+        /// Do not forget to call Disable() when you want to dispose your object.
+        /// </summary>
+        public static void Init()
+        {
+            Controller.Initialize();
+        }
+
+        /// <summary>
+        /// Checks whether Mixpanel is initialized or not. If it is not, every API will be no-op.
+        /// </summary>
+        public static bool IsInitialized()
+        {
+            bool initialized = Controller.IsInitialized();
+            if (!initialized) {
+                Mixpanel.Log("Mixpanel is not initialized");
+            }
+            return initialized;
+        }
+
+        /// <summary>
         /// Creates a distinct_id alias.
         /// </summary>
         /// <param name="alias">the new distinct_id that should represent original</param>
         public static void Alias(string alias)
         {
+            if (!IsInitialized()) return;
             if (alias == MixpanelStorage.DistinctId) return;
             Value properties = ObjectPool.Get();
             properties["alias"] = alias;
@@ -38,6 +60,7 @@ namespace mixpanel
         /// </summary>
         public static void ClearTimedEvents()
         {
+            if (!IsInitialized()) return;
             MixpanelStorage.ResetTimedEvents();
         }
 
@@ -47,6 +70,7 @@ namespace mixpanel
         /// <param name="eventName">the name of event to clear event timer</param>
         public static void ClearTimedEvent(string eventName)
         {
+            if (!IsInitialized()) return;
             Value properties = MixpanelStorage.TimedEvents;
             properties.Remove(eventName);
             MixpanelStorage.TimedEvents = properties;
@@ -62,6 +86,7 @@ namespace mixpanel
         /// </param>
         public static void Identify(string uniqueId)
         {
+            if (!IsInitialized()) return;
             if (MixpanelStorage.DistinctId == uniqueId) return;
             string oldDistinctId = MixpanelStorage.DistinctId;
             MixpanelStorage.DistinctId = uniqueId;
@@ -82,6 +107,7 @@ namespace mixpanel
         /// </summary>
         public static void OptOutTracking()
         {
+            if (!IsInitialized()) return;
             People.DeleteUser();
             Flush();
             Reset();
@@ -93,6 +119,7 @@ namespace mixpanel
         /// </summary>
         public static void OptInTracking()
         {
+            if (!IsInitialized()) return;
             MixpanelStorage.IsTracking = true;
             Controller.DoTrack("$opt_in", ObjectPool.Get());
         }
@@ -104,6 +131,7 @@ namespace mixpanel
         /// <code>Identify</code> will be called by using this distinct id.</param>
         public static void OptInTracking(string distinctId)
         {
+            if (!IsInitialized()) return;
             Identify(distinctId);
             OptInTracking();
         }
@@ -115,6 +143,7 @@ namespace mixpanel
         /// <param name="value">value of the property to register</param>
         public static void Register(string key, Value value)
         {
+            if (!IsInitialized()) return;
             Value properties = MixpanelStorage.SuperProperties;
             properties[key] = value;
             MixpanelStorage.SuperProperties = properties;
@@ -127,6 +156,7 @@ namespace mixpanel
         /// <param name="value">value of the property to register</param>
         public static void RegisterOnce(string key, Value value)
         {
+            if (!IsInitialized()) return;
             Value properties = MixpanelStorage.OnceProperties;
             properties[key] = value;
             MixpanelStorage.OnceProperties = properties;
@@ -137,6 +167,7 @@ namespace mixpanel
         /// </summary>
         public static void Reset()
         {
+            if (!IsInitialized()) return;
             MixpanelStorage.ResetSuperProperties();
             MixpanelStorage.ResetOnceProperties();
             MixpanelStorage.ResetTimedEvents();
@@ -151,6 +182,7 @@ namespace mixpanel
         /// </summary>
         public static void Clear()
         {
+            if (!IsInitialized()) return;
             Controller.DoClear();
         }
 
@@ -162,6 +194,7 @@ namespace mixpanel
         /// <param name="eventName">the name of the event to track with timing</param>
         public static void StartTimedEvent(string eventName)
         {
+            if (!IsInitialized()) return;
             Value properties = MixpanelStorage.TimedEvents;
             properties[eventName] = Util.CurrentTime();
             MixpanelStorage.TimedEvents = properties;
@@ -174,6 +207,7 @@ namespace mixpanel
         /// <param name="eventName">the name of the event to track with timing</param>
         public static void StartTimedEventOnce(string eventName)
         {
+            if (!IsInitialized()) return;
             if (!MixpanelStorage.TimedEvents.ContainsKey(eventName))
             {
                 Value properties = MixpanelStorage.TimedEvents;
@@ -186,7 +220,11 @@ namespace mixpanel
         /// Tracks an event.
         /// </summary>
         /// <param name="eventName">the name of the event to send</param>
-        public static void Track(string eventName) => Controller.DoTrack(eventName, null);
+        public static void Track(string eventName)
+        {
+            if (!IsInitialized()) return;
+            Controller.DoTrack(eventName, null);
+        }
 
         /// <summary>
         /// Tracks an event with properties of key=value.
@@ -196,6 +234,7 @@ namespace mixpanel
         /// <param name="value">The value to use for the key</param>
         public static void Track(string eventName, string key, Value value)
         {
+            if (!IsInitialized()) return;
             Value properties = ObjectPool.Get();
             properties[key] = value;
             Controller.DoTrack(eventName, properties);
@@ -208,7 +247,10 @@ namespace mixpanel
         /// <param name="properties">A Value containing the key value pairs of the properties
         /// to include in this event. Pass null if no extra properties exist.
         /// </param>
-        public static void Track(string eventName, Value properties) => Controller.DoTrack(eventName, properties);
+        public static void Track(string eventName, Value properties) {
+            if (!IsInitialized()) return;
+            Controller.DoTrack(eventName, properties);
+        }
 
         /// <summary>
         /// Removes a single superProperty.
@@ -216,6 +258,7 @@ namespace mixpanel
         /// <param name="key">name of the property to unregister</param>
         public static void Unregister(string key)
         {
+            if (!IsInitialized()) return;
             Value properties = MixpanelStorage.SuperProperties;
             properties.Remove(key);
             MixpanelStorage.SuperProperties = properties;
@@ -226,6 +269,7 @@ namespace mixpanel
         /// </summary>
         public static void Flush()
         {
+            if (!IsInitialized()) return;
             Controller.DoFlush();
         }
 
@@ -234,8 +278,18 @@ namespace mixpanel
         /// </summary>
         public static void SetToken(string token)
         {
+            if (!IsInitialized()) return;
             MixpanelSettings.Instance.DebugToken = token;
             MixpanelSettings.Instance.RuntimeToken = token;
+        }
+
+        /// <summary>
+        /// Disables Mixpanel Component. Useful if you have "Manual Initialization" enabled under your Project Settings.
+        /// </summary>
+        public static void Disable()
+        {
+            if (!IsInitialized()) return;
+            Controller.Disable();
         }
 
         /// <summary>
@@ -249,6 +303,7 @@ namespace mixpanel
             /// <param name="properties">mapping of list property names to values to append</param>
             public static void Append(Value properties)
             {
+                if (!IsInitialized()) return;
                 Controller.DoEngage(new Value {{"$append", properties}});
             }
 
@@ -275,6 +330,7 @@ namespace mixpanel
             /// </summary>
             public static void DeleteUser()
             {
+                if (!IsInitialized()) return;
                 Controller.DoEngage(new Value {{"$delete", ""}});
             }
 
@@ -284,6 +340,7 @@ namespace mixpanel
             /// <param name="properties"> A map of String properties names to Long amounts. Each property associated with a name in the map </param>
             public static void Increment(Value properties)
             {
+                if (!IsInitialized()) return;
                 Controller.DoEngage(new Value {{"$add", properties}});
             }
 
@@ -306,6 +363,7 @@ namespace mixpanel
             /// </param>
             public static void Set(Value properties)
             {
+                if (!IsInitialized()) return;
                 properties.Merge(Controller.GetEngageDefaultProperties());
                 Controller.DoEngage(new Value {{"$set", properties}});
             }
@@ -326,6 +384,7 @@ namespace mixpanel
             /// <param name="properties">a JSONObject containing the collection of properties you wish to apply to the identified user. Each key in the JSONObject will be associated with a property name, and the value of that key will be assigned to the property.</param>
             public static void SetOnce(Value properties)
             {
+                if (!IsInitialized()) return;
                 Controller.DoEngage(new Value {{"$set_once", properties}});
             }
 
@@ -354,6 +413,7 @@ namespace mixpanel
             /// <param name="properties">a JSONObject containing the collection of properties you wish to apply</param>
             public static void TrackCharge(Value properties)
             {
+                if (!IsInitialized()) return;
                 properties["$time"] = Util.CurrentDateTime();
                 Controller.DoEngage(new Value {{"$append", new Value {{"$transactions", properties}}}});
             }
@@ -366,6 +426,7 @@ namespace mixpanel
             /// <param name="properties">mapping of list property names to lists to union</param>
             public static void Union(Value properties)
             {
+                if (!IsInitialized()) return;
                 Controller.DoEngage(new Value {{"$union", properties}});
             }
 
@@ -388,6 +449,7 @@ namespace mixpanel
             /// <param name="property">property</param>
             public static void Unset(string property)
             {
+                if (!IsInitialized()) return;
                 Controller.DoEngage(new Value {{"$unset", new string[]{property}}});
             }
 

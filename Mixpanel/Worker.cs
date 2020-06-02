@@ -211,6 +211,7 @@ namespace mixpanel
         {
             ThreadOperation operation = _ops.Dequeue();
             if (operation == null) return;
+            Mixpanel.Log($"Dispatching new operation: {operation.GetAction()}");
             Value data = operation.GetWhat();
             switch (operation.GetAction())
             {

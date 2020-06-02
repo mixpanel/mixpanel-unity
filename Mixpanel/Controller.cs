@@ -28,7 +28,9 @@ namespace mixpanel
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeBeforeSceneLoad()
         {
-            GetInstance();
+            MixpanelSettings.LoadSettings();
+            if (Config.ManualInitialization) return;
+            Initialize();
             Mixpanel.Log($"Track Queue Depth: {MixpanelStorage.TrackPersistentQueue.CurrentCountOfItemsInQueue}");
             Mixpanel.Log($"Engage Queue Depth: {MixpanelStorage.EngagePersistentQueue.CurrentCountOfItemsInQueue}");
         }
@@ -36,10 +38,25 @@ namespace mixpanel
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void InitializeAfterSceneLoad()
         {
+            if (Config.ManualInitialization) return;
             GetEngageDefaultProperties();
             GetEventsDefaultProperties();
         }
-        
+
+        internal static void Initialize() {
+            GetInstance();
+        }
+
+        internal static bool IsInitialized() {
+            return _instance != null;
+        }
+
+        internal static void Disable() {
+            if (_instance != null) {
+                Destroy(_instance);
+            }
+        }
+
         internal static Controller GetInstance()
         {
             if (_instance == null)
@@ -53,6 +70,7 @@ namespace mixpanel
 
         void OnDestroy()
         {
+            Mixpanel.Log($"Mixpanel Component Destroyed");
             Worker.StopWorkerThread();
         }
 
@@ -69,9 +87,9 @@ namespace mixpanel
             MigrateFrom1To2();
             DontDestroyOnLoad(this);
             StartCoroutine(PopulatePools());
-            MixpanelSettings.LoadSettings();
             Worker.StartWorkerThread();
             TrackIntegrationEvent();
+            Mixpanel.Log($"Mixpanel Component Started");
             while (true)
             {
                 yield return new WaitForSecondsRealtime(Config.FlushInterval);

@@ -16,6 +16,8 @@ namespace mixpanel
         //TODO: Convert to log level
         [Tooltip("If true will print helpful debugging messages")] 
         public bool ShowDebug;
+        [Tooltip("If true, you need to manually initialize the library")]
+        public bool ManualInitialization;
         [Tooltip("The api host of where to send the requests to. Useful when you need to proxy all the request to somewhere else.'")]
         public string APIHostAddress = "https://api.mixpanel.com/";
         [Tooltip("The token of the Mixpanel project.")]
@@ -47,6 +49,7 @@ namespace mixpanel
                 Config.TrackUrl = string.Format(TrackUrlTemplate, host);
                 Config.EngageUrl = string.Format(EngageUrlTemplate, host);
                 Config.ShowDebug = _instance.ShowDebug;
+                Config.ManualInitialization = _instance.ManualInitialization;
                 Config.FlushInterval = _instance.FlushInterval;
             }
         }
