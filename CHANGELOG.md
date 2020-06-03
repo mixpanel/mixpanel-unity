@@ -1,3 +1,16 @@
+## [v2.2.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.0)
+### June 2nd - 2020
+
+## Features
+- You can now manually initialize the library. You first need to enable this setting 
+from your Project Settings menu. To use the library, call `Mixpanel.Init()` before you interact with it 
+and `Mixpanel.Disable()` to dispose the component. 
+
+## Fixes
+- Fix fatal errror in `Mixpanel.Reset()` at app boot (thanks @RedHatJef!)
+
+---
+
 ## [v2.1.4](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.4)
 ### February 18th - 2020
 
