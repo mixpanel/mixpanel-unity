@@ -1,6 +1,6 @@
 Latest Version 
 --------------
-##### _February 18th, 2020_ - [v2.1.4](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.1.4)
+##### _June 2nd, 2020_ - [v2.2.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.0)
 
 Supported Unity Version >= 2018.3. For older versions, you need to have `.NET 4.x Equivalent` selected as the scripting runtime version in your editor settings.
 
@@ -16,7 +16,7 @@ This library can be installed using the unity package manager system (Unity >= 2
 1. In your unity project root open `./Packages/manifest.json`
 2. Add the following line to the dependencies section:
 ```
-"com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#v2.1.4"
+"com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#v2.2.0"
 ```
 3. Open Unity and the package should download automatically
 
