@@ -73,6 +73,15 @@ namespace mixpanel
                 }
             }
 
+            public void Start()
+            {
+                lock (_Key)
+                {
+                    _Quit = false;
+                    Monitor.PulseAll(_Key);
+                }
+            }
+
             public bool Enqueue(T t)
             {
                 lock (_Key)
@@ -122,6 +131,8 @@ namespace mixpanel
         {
             if (_bgThread == null)
             {
+                _stopThread = false;
+                _ops.Start();
                 _bgThread = new Thread(RunBackgroundThread);
                 _bgThread.Start();
             }
@@ -204,6 +215,7 @@ namespace mixpanel
                     Mixpanel.LogError(e.ToString());
                 }  
             }
+            _bgThread = null;
             _isBgThreadRunning = false;
         }
 
