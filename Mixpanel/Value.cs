@@ -69,11 +69,14 @@ namespace mixpanel
                 Mixpanel.Put(item);
             }
             _array.Clear();
+            _arrayData = null;
             foreach (Value value in _container.Values)
             {
                 Mixpanel.Put(value); 
             }
             _container.Clear();
+            _containerKeys = null;
+            _containerValues = null;
         }
 
         public Value this[int index]
