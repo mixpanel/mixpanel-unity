@@ -1,3 +1,13 @@
+## [v2.2.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.1)
+### July 31st - 2020
+
+- Remove `$ios_ifa` user property for iOS devices: iOS 14 will not allow to read the IDFA value without permission.
+
+## Fixes
+- Improve objects re-utilization.
+
+---
+
 ## [v2.2.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.0)
 ### June 2nd - 2020
 
