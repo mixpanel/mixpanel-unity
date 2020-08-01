@@ -206,7 +206,6 @@ namespace mixpanel
                         properties["$ios_version"] = Device.systemVersion;
                         properties["$ios_app_release"] = Application.version;
                         properties["$ios_device_model"] = SystemInfo.deviceModel;
-                        properties["$ios_ifa"] = Device.advertisingIdentifier;
                         // properties["$ios_app_version"] = Application.version;
                     #elif UNITY_ANDROID
                         properties["$android_lib_version"] = Mixpanel.MixpanelUnityVersion;
