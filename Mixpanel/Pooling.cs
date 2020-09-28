@@ -25,14 +25,18 @@ namespace mixpanel
 
         public T Get()
         {
-            T item;
-            return !_objects.TryTake(out item) ? _objectGenerator() : item;
+            return _objectGenerator();
+        
+            // FIXIT: disable the object pooling due to the issues that incorrect object being reused
+            // T item;
+            // return !_objects.TryTake(out item) ? _objectGenerator() : item;
         }
 
         public void Put(T item)
         {
-            item.OnRecycle();
-            _objects.Add(item);
+            // FIXIT: disable the object pooling due to the issues that incorrect object being reused
+            //item.OnRecycle();
+            //_objects.Add(item);
         }
 
         public int Count => _objects.Count;
