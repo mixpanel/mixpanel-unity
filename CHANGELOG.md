@@ -1,3 +1,11 @@
+## [v2.2.2](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.2)
+### October 26st - 2020
+
+## Fixes
+- Fix in some rare cases, event payload being sent incorrectly formatted or with changed values
+
+---
+
 ## [v2.2.1](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.1)
 ### July 31st - 2020
 
