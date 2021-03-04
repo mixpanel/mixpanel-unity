@@ -252,7 +252,6 @@ namespace mixpanel
                     properties["$os"] = "Apple";
                     properties["$os_version"] = Device.systemVersion;
                     properties["$manufacturer"] = "Apple";
-                    properties["$ios_ifa"] = Device.advertisingIdentifier;
                 #endif
                 #if UNITY_ANDROID
                     properties["$os"] = "Android";
