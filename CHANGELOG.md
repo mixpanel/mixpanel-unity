@@ -1,5 +1,12 @@
+## [v2.2.3](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.3)
+### Mar 8 - 2020
+## Fixes
+- Remove `$ios_ifa`
+
+---
+
 ## [v2.2.2](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.2)
-### October 26st - 2020
+### October 26 - 2020
 
 ## Fixes
 - Fix in some rare cases, event payload being sent incorrectly formatted or with changed values
