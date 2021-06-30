@@ -97,7 +97,7 @@ See [changelog](https://github.com/mixpanel/mixpanel-unity/tree/master/CHANGELOG
 ## Want to Contribute?
 
 The Mixpanel library for Unity is an open source project, and we'd love to see your contributions!
-We'd also love for you to come and work with us! Check out our **[opening positions](https://mixpanel.com/jobs/#openings)** for details.
+We'd also love for you to come and work with us! Check out our **[open positions](https://mixpanel.com/jobs/#openings)** for details.
 
 The best way to work on the Mixpanel library is the clone this repository and use a unity "local" package reference by creating a new unity project and opening the `./Packages/manifest.json` file and adding the following line under the `dependencies` section
 
