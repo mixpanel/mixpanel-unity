@@ -62,14 +62,6 @@ Yes, in Lexicon, you can intercept and drop incoming events or properties. Mixpa
 
 Mixpanel’s client-side tracking library contains the  OptOutTracking() method, which will set the user’s local opt-out state to “true” and will prevent data from being sent from a user’s device. More detailed instructions can be found in the section.
 
-**Why aren't my events showing up?**
-
-You can call Flush() manually if you want to force a flush at a particular moment.
-
-```
-Mixpanel.Flush();
-```
-If your events are still not showing up after 60 seconds, check if you have opted out of tracking. 
 
 **Starting with iOS 14.5, do I need to request the user’s permission through the AppTrackingTransparency framework to use Mixpanel?**
 
