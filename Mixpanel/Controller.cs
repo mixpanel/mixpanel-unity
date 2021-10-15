@@ -9,6 +9,8 @@ using UnityEngine.Profiling;
 using System.Threading;
 using Unity.Jobs;
 using Unity.Collections;
+using System.Net;
+using System.Net.Http;
 
 #if UNITY_IOS
 using UnityEngine.iOS;
@@ -20,6 +22,9 @@ namespace mixpanel
     {
         private static Value _autoTrackProperties;
         private static Value _autoEngageProperties;
+
+        private static int _retryCount = 0;
+        private static DateTime _retryTime;
         
         #region Singleton
         
@@ -282,13 +287,18 @@ namespace mixpanel
             properties["token"] = MixpanelSettings.Instance.Token;
             properties["distinct_id"] = MixpanelStorage.DistinctId;
             properties["time"] = Util.CurrentTime();
+
             Value data = Mixpanel.ObjectPool.Get();
+            
             data["event"] = eventName;
             data["properties"] = properties;
             data["$mp_metadata"] = Metadata.GetEventMetadata();
 
-            Worker.EnqueueEventOp(data);
+
+            MixpanelStorage.EnqueueTrackingData(data, MixpanelStorage.FlushType.EVENTS);
+           // Worker.EnqueueEventOp(data);
         }
+
 
         internal static void DoEngage(Value properties)
         {
@@ -298,12 +308,61 @@ namespace mixpanel
             properties["$time"] = Util.CurrentTime();
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
-            Worker.EnqueuePeopleOp(properties);
+          //  Worker.EnqueuePeopleOp(properties);
+            MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
         }
 
         internal static void DoFlush()
         {
-            Worker.FlushOp();
+            IEnumerator trackEventsEnum = SendData(MixpanelStorage.FlushType.EVENTS);
+            IEnumerator trackPeopleEnum = SendData(MixpanelStorage.FlushType.PEOPLE);
+            while (trackEventsEnum.MoveNext()) {};
+            while (trackPeopleEnum.MoveNext()) {};
+        }
+
+        internal static IEnumerator SendData(MixpanelStorage.FlushType flushType)
+        {
+            if (_retryTime > DateTime.Now && _retryCount > 0) {
+                yield break;
+            }
+
+            int responseCode = -1;
+            string response = null;
+            bool successful = false;
+            string url = (flushType == MixpanelStorage.FlushType.EVENTS) ? Config.TrackUrl : Config.EngageUrl;
+            Value batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
+            while (batch.Count > 0) {
+                string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(batch.ToString()));
+
+                WWWForm form = new WWWForm();
+                form.AddField("data", payload);
+                UnityWebRequest request = UnityWebRequest.Post(url, form);
+                yield return request.SendWebRequest();
+                while (!request.isDone) yield return new WaitForEndOfFrame();
+                responseCode = (int) request.responseCode;
+                response = request.downloadHandler.text;
+
+                Mixpanel.Log($"Response - '{url}' was '{response}'");
+                successful = responseCode == (int) HttpStatusCode.OK;
+
+                if (successful)
+                {
+                    _retryCount = 0;
+                    MixpanelStorage.DeleteBatchTrackingData(batch);
+                    batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
+                }
+                else
+                {
+                    _retryCount += 1;
+                    double retryIn = Math.Pow(2, _retryCount) * 60000;
+                    retryIn = Math.Min(retryIn, 10 * 60 * 1000); // limit 10 min
+                    _retryTime = DateTime.Now;
+                    _retryTime = _retryTime.AddSeconds(retryIn);
+                    Mixpanel.Log("Retrying request in " + retryIn / 1000 + " seconds (retryCount=" + _retryCount + ")");
+                    
+                    yield break;
+                }
+            }
         }
 
         internal static void DoClear()
@@ -346,7 +405,6 @@ namespace mixpanel
                 };
                 _peopleCounter++;
                 return peopleMetadata;
-
             }
         }
     }

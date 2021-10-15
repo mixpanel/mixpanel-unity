@@ -213,7 +213,7 @@ namespace mixpanel
                 catch (Exception e)
                 {
                     Mixpanel.LogError(e.ToString());
-                }  
+                }
             }
             _bgThread = null;
             _isBgThreadRunning = false;

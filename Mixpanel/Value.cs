@@ -12,6 +12,8 @@ namespace mixpanel
     [Serializable]
     public class Value : IEnumerable, ISerializationCallbackReceiver, IMixpanelPoolable
     {
+
+
         private enum ValueTypes
         {
             UNDEFINED,

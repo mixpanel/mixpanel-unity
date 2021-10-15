@@ -168,6 +168,8 @@ namespace mixpanel
         public static void Reset()
         {
             if (!IsInitialized()) return;
+            MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.EVENTS);
+            MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.PEOPLE);
             MixpanelStorage.ResetSuperProperties();
             MixpanelStorage.ResetOnceProperties();
             MixpanelStorage.ResetTimedEvents();
