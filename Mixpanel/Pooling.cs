@@ -50,21 +50,21 @@ namespace mixpanel
 
         internal static void Put(Value value)
         {
-            if (value.IsObject)
-            {
-                if (ObjectPool.Count < 5000) ObjectPool.Put(value);
-                return;
-            }
-            if (value.IsArray)
-            {
-                if (ArrayPool.Count < 5000) ArrayPool.Put(value);
-                return;
-            }
-            if (value.IsNull)
-            {
-                if (NullPool.Count < 100) NullPool.Put(value);
-                return;
-            }
+            // if (value.IsObject)
+            // {
+            //     if (ObjectPool.Count < 5000) ObjectPool.Put(value);
+            //     return;
+            // }
+            // if (value.IsArray)
+            // {
+            //     if (ArrayPool.Count < 5000) ArrayPool.Put(value);
+            //     return;
+            // }
+            // if (value.IsNull)
+            // {
+            //     if (NullPool.Count < 100) NullPool.Put(value);
+            //     return;
+            // }
         }
     }
 }

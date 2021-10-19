@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using mixpanel.queue;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Profiling;
@@ -36,8 +35,6 @@ namespace mixpanel
             MixpanelSettings.LoadSettings();
             if (Config.ManualInitialization) return;
             Initialize();
-            Mixpanel.Log($"Track Queue Depth: {MixpanelStorage.TrackPersistentQueue.CurrentCountOfItemsInQueue}");
-            Mixpanel.Log($"Engage Queue Depth: {MixpanelStorage.EngagePersistentQueue.CurrentCountOfItemsInQueue}");
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -76,7 +73,6 @@ namespace mixpanel
         void OnDestroy()
         {
             Mixpanel.Log($"Mixpanel Component Destroyed");
-            Worker.StopWorkerThread();
         }
 
         void OnApplicationPause(bool pauseStatus)
@@ -87,14 +83,17 @@ namespace mixpanel
             }
         }
 
-        private IEnumerator Start()
+        private void Start()
         {
             MigrateFrom1To2();
             DontDestroyOnLoad(this);
-            StartCoroutine(PopulatePools());
-            Worker.StartWorkerThread();
-            TrackIntegrationEvent();
+            StartCoroutine(TrackIntegrationEvent());
             Mixpanel.Log($"Mixpanel Component Started");
+            StartCoroutine(WaitAndFlush());
+        }
+
+        private IEnumerator WaitAndFlush()
+        {
             while (true)
             {
                 yield return new WaitForSecondsRealtime(Config.FlushInterval);
@@ -102,34 +101,69 @@ namespace mixpanel
             }
         }
 
-        private void TrackIntegrationEvent()
+        internal void DoFlush()
         {
-            if (MixpanelStorage.HasIntegratedLibrary) return;
+            StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS));
+            StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE));
+        }
+
+        private IEnumerator SendData(MixpanelStorage.FlushType flushType)
+        {
+            if (_retryTime > DateTime.Now && _retryCount > 0) {
+                yield break;
+            }
+
+            string url = (flushType == MixpanelStorage.FlushType.EVENTS) ? Config.TrackUrl : Config.EngageUrl;
+            Value batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
+            while (batch.Count > 0) {
+                WWWForm form = new WWWForm();
+                // add payload
+                form.AddField("data", batch.ToString());
+                using (UnityWebRequest request = UnityWebRequest.Post(url, form))
+                {
+                    yield return request.SendWebRequest();
+                    if (request.result != UnityWebRequest.Result.Success)
+                    {
+                        Mixpanel.Log("error");
+                        _retryCount += 1;
+                        double retryIn = Math.Pow(2, _retryCount - 1) * 60;
+                        retryIn = Math.Min(retryIn, 10 * 60); // limit 10 min
+                        _retryTime = DateTime.Now;
+                        _retryTime = _retryTime.AddSeconds(retryIn);
+                        Mixpanel.Log("Retrying request in " + retryIn + " seconds (retryCount=" + _retryCount + ")");
+                        yield break;
+                    }
+                    else
+                    {
+                         _retryCount = 0;
+                        MixpanelStorage.DeleteBatchTrackingData(batch);
+                        batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
+                        Mixpanel.Log("Form upload complete!");
+                    }
+                }
+            }
+        }
+
+        private IEnumerator TrackIntegrationEvent()
+        {
+            if (MixpanelStorage.HasIntegratedLibrary) {
+                yield break;
+            }
             string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + MixpanelSettings.Instance.Token +"\"}}";
             string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
             WWWForm form = new WWWForm();
             form.AddField("data", payload);
-            UnityWebRequest request = UnityWebRequest.Post("https://api.mixpanel.com/", form);
-            StartCoroutine(WaitForIntegrationRequest(request));
-        }
-
-        private IEnumerator<UnityWebRequest> WaitForIntegrationRequest(UnityWebRequest request)
-        {
-            yield return request;
-            MixpanelStorage.HasIntegratedLibrary = true;
-        }
-
-        private static IEnumerator PopulatePools()
-        {
-            for (int i = 0; i < Config.PoolFillFrames; i++)
-            {
-                Mixpanel.NullPool.Put(Value.Null);
-                for (int j = 0; j < Config.PoolFillEachFrame; j++)
+              
+            using (UnityWebRequest request = UnityWebRequest.Post("https://api.mixpanel.com/track/?ip=1", form)) {
+                yield return request.SendWebRequest();
+                if (request.result != UnityWebRequest.Result.Success) 
                 {
-                    Mixpanel.ArrayPool.Put(Value.Array);
-                    Mixpanel.ObjectPool.Put(Value.Object);
+                    Mixpanel.Log(request.error);
                 }
-                yield return null;
+                else
+                {
+                    MixpanelStorage.HasIntegratedLibrary = true;
+                }
             }
         }
 
@@ -211,16 +245,12 @@ namespace mixpanel
                         properties["$ios_version"] = Device.systemVersion;
                         properties["$ios_app_release"] = Application.version;
                         properties["$ios_device_model"] = SystemInfo.deviceModel;
-                        // properties["$ios_app_version"] = Application.version;
                     #elif UNITY_ANDROID
                         properties["$android_lib_version"] = Mixpanel.MixpanelUnityVersion;
                         properties["$android_os"] = "Android";
                         properties["$android_os_version"] = SystemInfo.operatingSystem;
                         properties["$android_model"] = SystemInfo.deviceModel;
                         properties["$android_app_version"] = Application.version;
-                        // properties["$android_manufacturer"] = "";
-                        // properties["$android_brand"] = "";
-                        // properties["$android_app_version_code"] = Application.version;
                     #else
                         properties["$lib_version"] = Mixpanel.MixpanelUnityVersion;
                     #endif
@@ -244,14 +274,6 @@ namespace mixpanel
                     {"$radio", Util.GetRadio()},
                     {"$device", Application.platform.ToString()},
                     {"$screen_dpi", Screen.dpi},
-                    // {"$app_build_number", Application.version},
-                    // {"$manufacturer", ""},
-                    // {"$carrier", ""},
-                    // {"$brand", ""},
-                    // {"$has_nfc", false},
-                    // {"$has_telephone", false},
-                    // {"$bluetooth_enabled", false},
-                    // {"$bluetooth_version", "none"}
                 };
                 #if UNITY_IOS
                     properties["$os"] = "Apple";
@@ -260,7 +282,6 @@ namespace mixpanel
                 #endif
                 #if UNITY_ANDROID
                     properties["$os"] = "Android";
-                    // properties["$google_play_services"] = "";
                 #endif
                 _autoTrackProperties = properties;
             }
@@ -294,11 +315,8 @@ namespace mixpanel
             data["properties"] = properties;
             data["$mp_metadata"] = Metadata.GetEventMetadata();
 
-
             MixpanelStorage.EnqueueTrackingData(data, MixpanelStorage.FlushType.EVENTS);
-           // Worker.EnqueueEventOp(data);
         }
-
 
         internal static void DoEngage(Value properties)
         {
@@ -308,66 +326,13 @@ namespace mixpanel
             properties["$time"] = Util.CurrentTime();
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
-          //  Worker.EnqueuePeopleOp(properties);
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
         }
 
-        internal static void DoFlush()
-        {
-            IEnumerator trackEventsEnum = SendData(MixpanelStorage.FlushType.EVENTS);
-            IEnumerator trackPeopleEnum = SendData(MixpanelStorage.FlushType.PEOPLE);
-            while (trackEventsEnum.MoveNext()) {};
-            while (trackPeopleEnum.MoveNext()) {};
-        }
-
-        internal static IEnumerator SendData(MixpanelStorage.FlushType flushType)
-        {
-            if (_retryTime > DateTime.Now && _retryCount > 0) {
-                yield break;
-            }
-
-            int responseCode = -1;
-            string response = null;
-            bool successful = false;
-            string url = (flushType == MixpanelStorage.FlushType.EVENTS) ? Config.TrackUrl : Config.EngageUrl;
-            Value batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
-            while (batch.Count > 0) {
-                string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(batch.ToString()));
-
-                WWWForm form = new WWWForm();
-                form.AddField("data", payload);
-                UnityWebRequest request = UnityWebRequest.Post(url, form);
-                yield return request.SendWebRequest();
-                while (!request.isDone) yield return new WaitForEndOfFrame();
-                responseCode = (int) request.responseCode;
-                response = request.downloadHandler.text;
-
-                Mixpanel.Log($"Response - '{url}' was '{response}'");
-                successful = responseCode == (int) HttpStatusCode.OK;
-
-                if (successful)
-                {
-                    _retryCount = 0;
-                    MixpanelStorage.DeleteBatchTrackingData(batch);
-                    batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
-                }
-                else
-                {
-                    _retryCount += 1;
-                    double retryIn = Math.Pow(2, _retryCount) * 60000;
-                    retryIn = Math.Min(retryIn, 10 * 60 * 1000); // limit 10 min
-                    _retryTime = DateTime.Now;
-                    _retryTime = _retryTime.AddSeconds(retryIn);
-                    Mixpanel.Log("Retrying request in " + retryIn / 1000 + " seconds (retryCount=" + _retryCount + ")");
-                    
-                    yield break;
-                }
-            }
-        }
+        
 
         internal static void DoClear()
         {
-            Worker.ClearOp();
         }
 
         #endregion

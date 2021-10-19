@@ -1,4 +1,3 @@
-using mixpanel.queue;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -316,14 +315,6 @@ namespace mixpanel
             TimedEvents = properties;
         }
         
-        #endregion
-
-        #region PersistentQueue
-
-        public static readonly PersistentQueue TrackPersistentQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_track_queue"));
-
-        public static readonly PersistentQueue EngagePersistentQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_engage_queue"));
-
         #endregion
     }
 }

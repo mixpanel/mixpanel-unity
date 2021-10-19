@@ -272,7 +272,7 @@ namespace mixpanel
         public static void Flush()
         {
             if (!IsInitialized()) return;
-            Controller.DoFlush();
+            Controller.GetInstance().DoFlush();
         }
 
         /// <summary>
