@@ -108,7 +108,7 @@ namespace mixpanel
 
         internal static Value DequeueBatchTrackingData(FlushType flushType, int batchSize)
         {
-            Value batch = Mixpanel.ArrayPool.Get();
+            Value batch = Value.Array;
             int dataIndex = 0;
             int maxIndex = (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() - 1 : PeopleAutoIncrementingID() - 1;
             while (batch.Count < batchSize && dataIndex <= maxIndex) {
@@ -223,10 +223,10 @@ namespace mixpanel
             get
             {
                 if (_onceProperties != null) return _onceProperties;
-                if (!PlayerPrefs.HasKey(OncePropertiesName)) OnceProperties = Mixpanel.ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(OncePropertiesName)) OnceProperties = new Value();
                 else
                 {
-                    _onceProperties = Mixpanel.ObjectPool.Get();
+                    _onceProperties = new Value();
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(OncePropertiesName), _onceProperties);
                 }
                 return _onceProperties;
@@ -258,10 +258,10 @@ namespace mixpanel
             get
             {
                 if (_superProperties != null) return _superProperties;
-                if (!PlayerPrefs.HasKey(SuperPropertiesName)) SuperProperties = Mixpanel.ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(SuperPropertiesName)) SuperProperties = new Value();
                 else
                 {
-                    _superProperties = Mixpanel.ObjectPool.Get(); 
+                    _superProperties = new Value();
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(SuperPropertiesName), _superProperties);
                 }
                 return _superProperties;
@@ -293,10 +293,10 @@ namespace mixpanel
             get
             {
                 if (_timedEvents != null) return _timedEvents;
-                if (!PlayerPrefs.HasKey(TimedEventsName)) TimedEvents = Mixpanel.ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(TimedEventsName)) TimedEvents = new Value();
                 else 
                 {
-                    _timedEvents = Mixpanel.ObjectPool.Get();
+                    _timedEvents = new Value();
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(TimedEventsName), _timedEvents);
                 }
                 return _timedEvents;

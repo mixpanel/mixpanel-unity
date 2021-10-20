@@ -291,7 +291,7 @@ namespace mixpanel
         internal static void DoTrack(string eventName, Value properties)
         {
             if (!MixpanelStorage.IsTracking) return;
-            if (properties == null) properties = Mixpanel.ObjectPool.Get();
+            if (properties == null) properties = new Value();
             properties.Merge(GetEventsDefaultProperties());
             // These auto properties can change in runtime so we don't bake them into AutoProperties
             properties["$screen_width"] = Screen.width;
@@ -309,7 +309,7 @@ namespace mixpanel
             properties["distinct_id"] = MixpanelStorage.DistinctId;
             properties["time"] = Util.CurrentTime();
 
-            Value data = Mixpanel.ObjectPool.Get();
+            Value data = new Value();
             
             data["event"] = eventName;
             data["properties"] = properties;
