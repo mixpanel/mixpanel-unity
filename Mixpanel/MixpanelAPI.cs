@@ -187,6 +187,14 @@ namespace mixpanel
             if (!IsInitialized()) return;
             Controller.DoClear();
         }
+        
+        /// <summary>
+        /// Clears all super properties
+        /// </summary>
+        public static void ClearSuperProperties()
+        {
+            MixpanelStorage.ResetSuperProperties();
+        }
 
         /// <summary>
         /// Start timing of an event. Calling Mixpanel.StartTimedEvent(string eventName) will not send an event,
@@ -398,6 +406,17 @@ namespace mixpanel
             public static void SetOnce(string property, Value to)
             {
                 SetOnce(new Value {{property, to}});
+            }
+
+            /// <summary>
+            /// Track a revenue transaction for the identified people profile.
+            /// </summary>
+            /// <param name="amount">amount of revenue received</param>
+            /// <param name="properties">a JSONObject containing the collection of properties you wish to apply</param>
+            public static void TrackCharge(double amount, Value properties)
+            {
+                properties["$amount"] = amount;
+                TrackCharge(properties);
             }
 
             /// <summary>
