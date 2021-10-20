@@ -117,14 +117,15 @@ namespace mixpanel
             Value batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
             while (batch.Count > 0) {
                 WWWForm form = new WWWForm();
-                // add payload
-                form.AddField("data", batch.ToString());
+                String payload = batch.ToString();
+                form.AddField("data", payload);
+                Mixpanel.Log("Sending batch of data: " + payload);
                 using (UnityWebRequest request = UnityWebRequest.Post(url, form))
                 {
                     yield return request.SendWebRequest();
                     if (request.result != UnityWebRequest.Result.Success)
                     {
-                        Mixpanel.Log("error");
+                        Mixpanel.Log("API request to " + url + "has failed with reason " + request.error);
                         _retryCount += 1;
                         double retryIn = Math.Pow(2, _retryCount - 1) * 60;
                         retryIn = Math.Min(retryIn, 10 * 60); // limit 10 min
@@ -138,7 +139,7 @@ namespace mixpanel
                          _retryCount = 0;
                         MixpanelStorage.DeleteBatchTrackingData(batch);
                         batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
-                        Mixpanel.Log("Form upload complete!");
+                        Mixpanel.Log("Successfully posted to " + url);
                     }
                 }
             }
@@ -154,7 +155,7 @@ namespace mixpanel
             WWWForm form = new WWWForm();
             form.AddField("data", payload);
               
-            using (UnityWebRequest request = UnityWebRequest.Post("https://api.mixpanel.com/track/?ip=1", form)) {
+            using (UnityWebRequest request = UnityWebRequest.Post(Config.TrackUrl, form)) {
                 yield return request.SendWebRequest();
                 if (request.result != UnityWebRequest.Result.Success) 
                 {
@@ -329,10 +330,10 @@ namespace mixpanel
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
         }
 
-        
-
         internal static void DoClear()
         {
+            MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.EVENTS);
+            MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.PEOPLE);
         }
 
         #endregion
