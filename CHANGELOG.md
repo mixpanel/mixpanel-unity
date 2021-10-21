@@ -1,3 +1,37 @@
+#
+
+## [v3.0.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.0.0) (2021-10-21)
+
+### Enhancements
+
+- Android Push Notifications  [\#42](https://github.com/mixpanel/mixpanel-unity/issues/42)
+- Tracking persistence layer refactor [\#119](https://github.com/mixpanel/mixpanel-unity/pull/119)
+
+### Fixes
+
+- `OnApplicationQuit` possible race condition with tracking [\#69](https://github.com/mixpanel/mixpanel-unity/issues/69)
+
+**Closed issues:**
+
+- Expose Mixpanel.ClearSuperProperties? [\#118](https://github.com/mixpanel/mixpanel-unity/issues/118)
+- Mixpanel doesn't work with IL2CPP build on windows.  [\#117](https://github.com/mixpanel/mixpanel-unity/issues/117)
+- TrackCharge  doc is out of date? [\#116](https://github.com/mixpanel/mixpanel-unity/issues/116)
+- IL2CPP error building for Android in Unity 2020.2.2f1 [\#112](https://github.com/mixpanel/mixpanel-unity/issues/112)
+- v2.2.2 still referencing IDFA [\#111](https://github.com/mixpanel/mixpanel-unity/issues/111)
+- Mixpanel prevents opening the same Unity project open twice [\#110](https://github.com/mixpanel/mixpanel-unity/issues/110)
+- Standalone builds\(IL2CPP\) won't send Mixpanel events [\#108](https://github.com/mixpanel/mixpanel-unity/issues/108)
+- \[Mixpanel\] There was an error sending the request. System.AggregateException: One or more errors occurred. [\#106](https://github.com/mixpanel/mixpanel-unity/issues/106)
+- \[Mixpanel\] System.NotSupportedException: linked away [\#105](https://github.com/mixpanel/mixpanel-unity/issues/105)
+- WebGL freezing on v2.1.0 [\#90](https://github.com/mixpanel/mixpanel-unity/issues/90)
+- NullReferenceException on low performance devices [\#89](https://github.com/mixpanel/mixpanel-unity/issues/89)
+- JSON parse error on empty object [\#87](https://github.com/mixpanel/mixpanel-unity/issues/87)
+- End of file reached while trying to read queue item on UWP [\#85](https://github.com/mixpanel/mixpanel-unity/issues/85)
+
+**Merged pull requests:**
+
+- Improve README for quick start guide [\#115](https://github.com/mixpanel/mixpanel-unity/pull/115)
+- Add github workflow for auto release [\#114](https://github.com/mixpanel/mixpanel-unity/pull/114)
+
 ## [v2.2.3](https://github.com/mixpanel/mixpanel-unity/releases/tag/v2.2.3)
 ### Mar 8 - 2020
 ## Fixes
@@ -147,3 +181,5 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
