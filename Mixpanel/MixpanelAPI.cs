@@ -49,7 +49,7 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             if (alias == MixpanelStorage.DistinctId) return;
-            Value properties = ObjectPool.Get();
+            Value properties = new Value();
             properties["alias"] = alias;
             Track("$create_alias", properties);
             Flush();
@@ -121,7 +121,7 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             MixpanelStorage.IsTracking = true;
-            Controller.DoTrack("$opt_in", ObjectPool.Get());
+            Controller.DoTrack("$opt_in", null);
         }
 
         /// <summary>
@@ -168,6 +168,8 @@ namespace mixpanel
         public static void Reset()
         {
             if (!IsInitialized()) return;
+            MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.EVENTS);
+            MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.PEOPLE);
             MixpanelStorage.ResetSuperProperties();
             MixpanelStorage.ResetOnceProperties();
             MixpanelStorage.ResetTimedEvents();
@@ -184,6 +186,14 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             Controller.DoClear();
+        }
+        
+        /// <summary>
+        /// Clears all super properties
+        /// </summary>
+        public static void ClearSuperProperties()
+        {
+            MixpanelStorage.ResetSuperProperties();
         }
 
         /// <summary>
@@ -235,7 +245,7 @@ namespace mixpanel
         public static void Track(string eventName, string key, Value value)
         {
             if (!IsInitialized()) return;
-            Value properties = ObjectPool.Get();
+            Value properties = new Value();
             properties[key] = value;
             Controller.DoTrack(eventName, properties);
         }
@@ -270,7 +280,7 @@ namespace mixpanel
         public static void Flush()
         {
             if (!IsInitialized()) return;
-            Controller.DoFlush();
+            Controller.GetInstance().DoFlush();
         }
 
         /// <summary>
@@ -396,6 +406,17 @@ namespace mixpanel
             public static void SetOnce(string property, Value to)
             {
                 SetOnce(new Value {{property, to}});
+            }
+
+            /// <summary>
+            /// Track a revenue transaction for the identified people profile.
+            /// </summary>
+            /// <param name="amount">amount of revenue received</param>
+            /// <param name="properties">a JSONObject containing the collection of properties you wish to apply</param>
+            public static void TrackCharge(double amount, Value properties)
+            {
+                properties["$amount"] = amount;
+                TrackCharge(properties);
             }
 
             /// <summary>

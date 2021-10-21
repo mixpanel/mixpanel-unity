@@ -10,8 +10,10 @@ using UnityEngine.Assertions;
 namespace mixpanel
 {
     [Serializable]
-    public class Value : IEnumerable, ISerializationCallbackReceiver, IMixpanelPoolable
+    public class Value : IEnumerable, ISerializationCallbackReceiver
     {
+
+
         private enum ValueTypes
         {
             UNDEFINED,
@@ -64,16 +66,8 @@ namespace mixpanel
             _string = "";
             _bool = false;
             _number = 0;
-            foreach (Value item in _array)
-            {
-                Mixpanel.Put(item);
-            }
             _array.Clear();
             _arrayData = null;
-            foreach (Value value in _container.Values)
-            {
-                Mixpanel.Put(value); 
-            }
             _container.Clear();
             _containerKeys = null;
             _containerValues = null;
@@ -95,7 +89,7 @@ namespace mixpanel
         {
             get
             {
-                if (!_container.ContainsKey(key)) _container[key] = Mixpanel.ObjectPool.Get();
+                if (!_container.ContainsKey(key)) _container[key] = new Value();
                 return _container[key];
             }
             set
@@ -874,7 +868,7 @@ namespace mixpanel
             if (count == 0) return;
             foreach (string data in _arrayData)
             {
-                Value item = Mixpanel.ObjectPool.Get();
+                Value item = new Value();
                 JsonUtility.FromJsonOverwrite(data, item);
                 _array.Add(item);
             }
@@ -888,7 +882,7 @@ namespace mixpanel
             if (count == 0) return;
             for (int i = 0; i < count; i++)
             {
-                Value item = Mixpanel.ObjectPool.Get();
+                Value item = new Value();
                 JsonUtility.FromJsonOverwrite(_containerValues[i], item);
                 _container[_containerKeys[i]] = item;
             }

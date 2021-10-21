@@ -1,8 +1,16 @@
-using mixpanel.queue;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using UnityEngine;
+using System.Net;
+using System.Net.Http;
+using System.Web;
+using UnityEngine.Networking;
+using Unity.Jobs;
+using Unity.Collections;
 
 namespace mixpanel
 {
@@ -59,6 +67,96 @@ namespace mixpanel
             }
         }
         
+        #endregion
+
+        #region Track
+
+
+        internal enum FlushType
+        {
+            EVENTS,
+            PEOPLE,
+        }
+
+        internal static void EnqueueTrackingData(Value data, FlushType flushType)
+        {
+            int eventId = EventAutoIncrementingID();
+            int peopleId = PeopleAutoIncrementingID();
+            String trackingKey = (flushType == FlushType.EVENTS)? "Event" + eventId.ToString() : "People" + peopleId.ToString();
+            data["id"] = trackingKey;
+            PlayerPrefs.SetString(trackingKey, JsonUtility.ToJson(data));
+            IncreaseTrackingDataID(flushType);
+        }
+
+        internal static int EventAutoIncrementingID()
+        {
+            return PlayerPrefs.HasKey("EventAutoIncrementingID") ? PlayerPrefs.GetInt("EventAutoIncrementingID") : 0;
+        }
+
+        internal static int PeopleAutoIncrementingID()
+        {
+            return PlayerPrefs.HasKey("PeopleAutoIncrementingID") ? PlayerPrefs.GetInt("PeopleAutoIncrementingID") : 0;
+        }
+
+        private static void IncreaseTrackingDataID(FlushType flushType)
+        {
+            int id = (flushType == FlushType.EVENTS)? EventAutoIncrementingID() : PeopleAutoIncrementingID();
+            id += 1;
+            String trackingIdKey = (flushType == FlushType.EVENTS)? "EventAutoIncrementingID" : "PeopleAutoIncrementingID";
+            PlayerPrefs.SetInt(trackingIdKey, id);
+        }
+
+        internal static Value DequeueBatchTrackingData(FlushType flushType, int batchSize)
+        {
+            Value batch = Value.Array;
+            int dataIndex = 0;
+            int maxIndex = (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() - 1 : PeopleAutoIncrementingID() - 1;
+            while (batch.Count < batchSize && dataIndex <= maxIndex) {
+                String trackingKey = (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();
+                if (PlayerPrefs.HasKey(trackingKey)) {
+                    try {
+                        batch.Add(JsonUtility.FromJson<Value>(PlayerPrefs.GetString(trackingKey)));
+                    }
+                    catch (Exception e) {
+                        Mixpanel.LogError($"There was an error processing '{trackingKey}' from the internal object pool: " + e);
+                        PlayerPrefs.DeleteKey(trackingKey);
+                    }
+                }
+                dataIndex++;
+            }
+            
+            return batch;
+        }
+
+        internal static void DeleteBatchTrackingData(FlushType flushType, int batchSize)
+        {
+            int deletedCount = 0;
+            int dataIndex = 0;
+            int maxIndex = (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() - 1 : PeopleAutoIncrementingID() - 1;
+            while (deletedCount < batchSize && dataIndex <= maxIndex) {
+                String trackingKey = (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();    
+                if (PlayerPrefs.HasKey(trackingKey)) {
+                    PlayerPrefs.DeleteKey(trackingKey);
+                    deletedCount++;
+                }
+                dataIndex++;
+            }
+        }
+
+        internal static void DeleteBatchTrackingData(Value batch) {
+            foreach(Value data in batch) {
+                String id = data["id"];
+                if (id != null && PlayerPrefs.HasKey(id)) {
+                    PlayerPrefs.DeleteKey(id);
+                }
+            }
+        }
+
+        internal static void DeleteAllTrackingData(FlushType flushType)
+        {
+            DeleteBatchTrackingData(flushType, int.MaxValue);
+        }
+
         #endregion
 
         #region IsTracking
@@ -125,10 +223,10 @@ namespace mixpanel
             get
             {
                 if (_onceProperties != null) return _onceProperties;
-                if (!PlayerPrefs.HasKey(OncePropertiesName)) OnceProperties = Mixpanel.ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(OncePropertiesName)) OnceProperties = new Value();
                 else
                 {
-                    _onceProperties = Mixpanel.ObjectPool.Get();
+                    _onceProperties = new Value();
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(OncePropertiesName), _onceProperties);
                 }
                 return _onceProperties;
@@ -160,10 +258,10 @@ namespace mixpanel
             get
             {
                 if (_superProperties != null) return _superProperties;
-                if (!PlayerPrefs.HasKey(SuperPropertiesName)) SuperProperties = Mixpanel.ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(SuperPropertiesName)) SuperProperties = new Value();
                 else
                 {
-                    _superProperties = Mixpanel.ObjectPool.Get(); 
+                    _superProperties = new Value();
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(SuperPropertiesName), _superProperties);
                 }
                 return _superProperties;
@@ -195,10 +293,10 @@ namespace mixpanel
             get
             {
                 if (_timedEvents != null) return _timedEvents;
-                if (!PlayerPrefs.HasKey(TimedEventsName)) TimedEvents = Mixpanel.ObjectPool.Get();
+                if (!PlayerPrefs.HasKey(TimedEventsName)) TimedEvents = new Value();
                 else 
                 {
-                    _timedEvents = Mixpanel.ObjectPool.Get();
+                    _timedEvents = new Value();
                     JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(TimedEventsName), _timedEvents);
                 }
                 return _timedEvents;
@@ -217,14 +315,6 @@ namespace mixpanel
             TimedEvents = properties;
         }
         
-        #endregion
-
-        #region PersistentQueue
-
-        public static readonly PersistentQueue TrackPersistentQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_track_queue"));
-
-        public static readonly PersistentQueue EngagePersistentQueue = new PersistentQueue(Path.Combine(Application.persistentDataPath, "mixpanel_engage_queue"));
-
         #endregion
     }
 }
