@@ -123,7 +123,11 @@ namespace mixpanel
                 using (UnityWebRequest request = UnityWebRequest.Post(url, form))
                 {
                     yield return request.SendWebRequest();
+                    #if UNITY_2020_1_OR_NEWER
                     if (request.result != UnityWebRequest.Result.Success)
+                    #else
+                    if (request.isHttpError || request.isNetworkError)
+                    #endif
                     {
                         Mixpanel.Log("API request to " + url + "has failed with reason " + request.error);
                         _retryCount += 1;
@@ -157,7 +161,11 @@ namespace mixpanel
               
             using (UnityWebRequest request = UnityWebRequest.Post(Config.TrackUrl, form)) {
                 yield return request.SendWebRequest();
-                if (request.result != UnityWebRequest.Result.Success) 
+                #if UNITY_2020_1_OR_NEWER
+                if (request.result != UnityWebRequest.Result.Success)
+                #else
+                if (request.isHttpError || request.isNetworkError)
+                #endif
                 {
                     Mixpanel.Log(request.error);
                 }
