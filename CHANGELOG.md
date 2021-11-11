@@ -1,5 +1,17 @@
 #
 
+## [v3.0.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.0.1) (2021-11-11)
+
+**Closed issues:**
+
+- Error with Controller.cs with earlier unity versions \( 2019.4\) [\#120](https://github.com/mixpanel/mixpanel-unity/issues/120)
+
+**Merged pull requests:**
+
+- backward compatibility  with earlier version than 2020.1 [\#121](https://github.com/mixpanel/mixpanel-unity/pull/121)
+
+#
+
 ## [v3.0.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.0.0) (2021-10-21)
 
 ### Enhancements
@@ -181,5 +193,7 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
