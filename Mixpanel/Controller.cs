@@ -235,7 +235,7 @@ namespace mixpanel
                 }
                 catch (Exception)
                 {
-                    Debug.LogError("Error migrating super properties from v1 to v2");
+                    Mixpanel.LogError("Error migrating super properties from v1 to v2");
                 }
                 finally
                 {
