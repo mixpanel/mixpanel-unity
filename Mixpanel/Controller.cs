@@ -63,7 +63,9 @@ namespace mixpanel
         {
             if (_instance == null)
             {
-                _instance = new GameObject("Mixpanel").AddComponent<Controller>();
+                GameObject g = new GameObject ("Mixpanel");
+                _instance = g.AddComponent<Controller>();
+                DontDestroyOnLoad(g);
             }
             return _instance;
         }
@@ -86,7 +88,6 @@ namespace mixpanel
         private void Start()
         {
             MigrateFrom1To2();
-            DontDestroyOnLoad(this);
             StartCoroutine(TrackIntegrationEvent());
             Mixpanel.Log($"Mixpanel Component Started");
             StartCoroutine(WaitAndFlush());
