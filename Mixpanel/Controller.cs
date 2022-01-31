@@ -351,17 +351,18 @@ namespace mixpanel
         {
             private static Int32 _eventCounter = 0, _peopleCounter = 0, _sessionStartEpoch;
             private static String _sessionID;
+            private static System.Random _random = new System.Random(Guid.NewGuid().GetHashCode());
 
             internal static void InitSession() {
                 _eventCounter = 0;
                 _peopleCounter = 0;
-                _sessionID = Convert.ToString(UnityEngine.Random.Range(0, Int32.MaxValue), 16);
+                _sessionID = Convert.ToString(_random.Next(0, Int32.MaxValue), 16);
                 _sessionStartEpoch = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             }
             internal static Value GetEventMetadata() {
                 Value eventMetadata = new Value
                 {
-                    {"$mp_event_id", Convert.ToString(UnityEngine.Random.Range(0, Int32.MaxValue), 16)},
+                    {"$mp_event_id", Convert.ToString(_random.Next(0, Int32.MaxValue), 16)},
                     {"$mp_session_id", _sessionID},
                     {"$mp_session_seq_id", _eventCounter},
                     {"$mp_session_start_sec", _sessionStartEpoch}
@@ -373,7 +374,7 @@ namespace mixpanel
             internal static Value GetPeopleMetadata() {
                 Value peopleMetadata = new Value
                 {
-                    {"$mp_event_id", Convert.ToString(UnityEngine.Random.Range(0, Int32.MaxValue), 16)},
+                    {"$mp_event_id", Convert.ToString(_random.Next(0, Int32.MaxValue), 16)},
                     {"$mp_session_id", _sessionID},
                     {"$mp_session_seq_id", _peopleCounter},
                     {"$mp_session_start_sec", _sessionStartEpoch}
