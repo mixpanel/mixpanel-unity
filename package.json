@@ -1,7 +1,7 @@
 {
   "name": "com.mixpanel.unity",
   "displayName":  "Mixpanel",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "description": "Official Mixpanel library for Unity.",
   "repository": {
     "type": "git",
