@@ -16,14 +16,24 @@ namespace mixpanel
 {
     public static class MixpanelStorage
     {
+        #region Preferences
+        private static IPreferences PreferencesSource = new PlayerPreferences();
+
+        public static void SetPreferencesSource(IPreferences preferences)
+        {
+            PreferencesSource = preferences;
+        }
+
+        #endregion
+
         #region HasMigratedFrom1To2
 
         private const string HasMigratedFrom1To2Name = "Mixpanel.HasMigratedFrom1To2";
 
         internal static bool HasMigratedFrom1To2
         {
-            get => Convert.ToBoolean(PlayerPrefs.GetInt(HasMigratedFrom1To2Name, 0));
-            set => PlayerPrefs.SetInt(HasMigratedFrom1To2Name, Convert.ToInt32(value));
+            get => Convert.ToBoolean(PreferencesSource.GetInt(HasMigratedFrom1To2Name, 0));
+            set => PreferencesSource.SetInt(HasMigratedFrom1To2Name, Convert.ToInt32(value));
         }
 
         #endregion
@@ -34,8 +44,8 @@ namespace mixpanel
 
         internal static bool HasIntegratedLibrary
         {
-            get => Convert.ToBoolean(PlayerPrefs.GetInt(HasIntegratedLibraryName, 0));
-            set => PlayerPrefs.SetInt(HasIntegratedLibraryName, Convert.ToInt32(value));
+            get => Convert.ToBoolean(PreferencesSource.GetInt(HasIntegratedLibraryName, 0));
+            set => PreferencesSource.SetInt(HasIntegratedLibraryName, Convert.ToInt32(value));
         }
 
         #endregion
@@ -51,9 +61,9 @@ namespace mixpanel
             get
             {
                 if (!string.IsNullOrEmpty(_distinctId)) return _distinctId;
-                if (PlayerPrefs.HasKey(DistinctIdName))
+                if (PreferencesSource.HasKey(DistinctIdName))
                 {
-                    _distinctId = PlayerPrefs.GetString(DistinctIdName);
+                    _distinctId = PreferencesSource.GetString(DistinctIdName);
                 }
                 // Generate a Unique ID for this client if still null or empty
                 // https://devblogs.microsoft.com/oldnewthing/?p=21823
@@ -63,7 +73,7 @@ namespace mixpanel
             set
             {
                 _distinctId = value;
-                PlayerPrefs.SetString(DistinctIdName, _distinctId);
+                PreferencesSource.SetString(DistinctIdName, _distinctId);
             }
         }
         
@@ -84,18 +94,18 @@ namespace mixpanel
             int peopleId = PeopleAutoIncrementingID();
             String trackingKey = (flushType == FlushType.EVENTS)? "Event" + eventId.ToString() : "People" + peopleId.ToString();
             data["id"] = trackingKey;
-            PlayerPrefs.SetString(trackingKey, JsonUtility.ToJson(data));
+            PreferencesSource.SetString(trackingKey, JsonUtility.ToJson(data));
             IncreaseTrackingDataID(flushType);
         }
 
         internal static int EventAutoIncrementingID()
         {
-            return PlayerPrefs.HasKey("EventAutoIncrementingID") ? PlayerPrefs.GetInt("EventAutoIncrementingID") : 0;
+            return PreferencesSource.HasKey("EventAutoIncrementingID") ? PreferencesSource.GetInt("EventAutoIncrementingID") : 0;
         }
 
         internal static int PeopleAutoIncrementingID()
         {
-            return PlayerPrefs.HasKey("PeopleAutoIncrementingID") ? PlayerPrefs.GetInt("PeopleAutoIncrementingID") : 0;
+            return PreferencesSource.HasKey("PeopleAutoIncrementingID") ? PreferencesSource.GetInt("PeopleAutoIncrementingID") : 0;
         }
 
         private static void IncreaseTrackingDataID(FlushType flushType)
@@ -103,7 +113,7 @@ namespace mixpanel
             int id = (flushType == FlushType.EVENTS)? EventAutoIncrementingID() : PeopleAutoIncrementingID();
             id += 1;
             String trackingIdKey = (flushType == FlushType.EVENTS)? "EventAutoIncrementingID" : "PeopleAutoIncrementingID";
-            PlayerPrefs.SetInt(trackingIdKey, id);
+            PreferencesSource.SetInt(trackingIdKey, id);
         }
 
         internal static Value DequeueBatchTrackingData(FlushType flushType, int batchSize)
@@ -113,13 +123,13 @@ namespace mixpanel
             int maxIndex = (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() - 1 : PeopleAutoIncrementingID() - 1;
             while (batch.Count < batchSize && dataIndex <= maxIndex) {
                 String trackingKey = (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();
-                if (PlayerPrefs.HasKey(trackingKey)) {
+                if (PreferencesSource.HasKey(trackingKey)) {
                     try {
-                        batch.Add(JsonUtility.FromJson<Value>(PlayerPrefs.GetString(trackingKey)));
+                        batch.Add(JsonUtility.FromJson<Value>(PreferencesSource.GetString(trackingKey)));
                     }
                     catch (Exception e) {
                         Mixpanel.LogError($"There was an error processing '{trackingKey}' from the internal object pool: " + e);
-                        PlayerPrefs.DeleteKey(trackingKey);
+                        PreferencesSource.DeleteKey(trackingKey);
                     }
                 }
                 dataIndex++;
@@ -135,8 +145,8 @@ namespace mixpanel
             int maxIndex = (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() - 1 : PeopleAutoIncrementingID() - 1;
             while (deletedCount < batchSize && dataIndex <= maxIndex) {
                 String trackingKey = (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();    
-                if (PlayerPrefs.HasKey(trackingKey)) {
-                    PlayerPrefs.DeleteKey(trackingKey);
+                if (PreferencesSource.HasKey(trackingKey)) {
+                    PreferencesSource.DeleteKey(trackingKey);
                     deletedCount++;
                 }
                 dataIndex++;
@@ -146,8 +156,8 @@ namespace mixpanel
         internal static void DeleteBatchTrackingData(Value batch) {
             foreach(Value data in batch) {
                 String id = data["id"];
-                if (id != null && PlayerPrefs.HasKey(id)) {
-                    PlayerPrefs.DeleteKey(id);
+                if (id != null && PreferencesSource.HasKey(id)) {
+                    PreferencesSource.DeleteKey(id);
                 }
             }
         }
@@ -169,14 +179,14 @@ namespace mixpanel
         {
             get
             {
-                if (!PlayerPrefs.HasKey(IsTrackingName)) IsTracking = true;
-                else _isTracking = PlayerPrefs.GetInt(IsTrackingName) == 1;
+                if (!PreferencesSource.HasKey(IsTrackingName)) IsTracking = true;
+                else _isTracking = PreferencesSource.GetInt(IsTrackingName) == 1;
                 return _isTracking;
             }
             set
             {
                 _isTracking = value;
-                PlayerPrefs.SetInt(IsTrackingName, _isTracking ? 1 : 0);
+                PreferencesSource.SetInt(IsTrackingName, _isTracking ? 1 : 0);
             }
         }
 
@@ -193,14 +203,14 @@ namespace mixpanel
             get
             {
                 if (!string.IsNullOrEmpty(_pushDeviceTokenString)) return _pushDeviceTokenString;
-                if (!PlayerPrefs.HasKey(PushDeviceTokenName)) PushDeviceTokenString = "";
-                else _pushDeviceTokenString = PlayerPrefs.GetString(PushDeviceTokenName);
+                if (!PreferencesSource.HasKey(PushDeviceTokenName)) PushDeviceTokenString = "";
+                else _pushDeviceTokenString = PreferencesSource.GetString(PushDeviceTokenName);
                 return _pushDeviceTokenString;
             }
             set
             {
                 _pushDeviceTokenString = value;
-                PlayerPrefs.SetString(PushDeviceTokenName, _pushDeviceTokenString);
+                PreferencesSource.SetString(PushDeviceTokenName, _pushDeviceTokenString);
             }
         }
         
@@ -223,18 +233,18 @@ namespace mixpanel
             get
             {
                 if (_onceProperties != null) return _onceProperties;
-                if (!PlayerPrefs.HasKey(OncePropertiesName)) OnceProperties = new Value();
+                if (!PreferencesSource.HasKey(OncePropertiesName)) OnceProperties = new Value();
                 else
                 {
                     _onceProperties = new Value();
-                    JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(OncePropertiesName), _onceProperties);
+                    JsonUtility.FromJsonOverwrite(PreferencesSource.GetString(OncePropertiesName), _onceProperties);
                 }
                 return _onceProperties;
             }
             set
             {
                 _onceProperties = value;
-                PlayerPrefs.SetString(OncePropertiesName, JsonUtility.ToJson(_onceProperties));
+                PreferencesSource.SetString(OncePropertiesName, JsonUtility.ToJson(_onceProperties));
             }
         }
 
@@ -258,18 +268,18 @@ namespace mixpanel
             get
             {
                 if (_superProperties != null) return _superProperties;
-                if (!PlayerPrefs.HasKey(SuperPropertiesName)) SuperProperties = new Value();
+                if (!PreferencesSource.HasKey(SuperPropertiesName)) SuperProperties = new Value();
                 else
                 {
                     _superProperties = new Value();
-                    JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(SuperPropertiesName), _superProperties);
+                    JsonUtility.FromJsonOverwrite(PreferencesSource.GetString(SuperPropertiesName), _superProperties);
                 }
                 return _superProperties;
             }
             set
             {
                 _superProperties = value;
-                PlayerPrefs.SetString(SuperPropertiesName, JsonUtility.ToJson(_superProperties));
+                PreferencesSource.SetString(SuperPropertiesName, JsonUtility.ToJson(_superProperties));
             }
         }
         
@@ -293,18 +303,18 @@ namespace mixpanel
             get
             {
                 if (_timedEvents != null) return _timedEvents;
-                if (!PlayerPrefs.HasKey(TimedEventsName)) TimedEvents = new Value();
+                if (!PreferencesSource.HasKey(TimedEventsName)) TimedEvents = new Value();
                 else 
                 {
                     _timedEvents = new Value();
-                    JsonUtility.FromJsonOverwrite(PlayerPrefs.GetString(TimedEventsName), _timedEvents);
+                    JsonUtility.FromJsonOverwrite(PreferencesSource.GetString(TimedEventsName), _timedEvents);
                 }
                 return _timedEvents;
             }
             set
             {
                 _timedEvents = value;
-                PlayerPrefs.SetString(TimedEventsName, JsonUtility.ToJson(_timedEvents));
+                PreferencesSource.SetString(TimedEventsName, JsonUtility.ToJson(_timedEvents));
             }
         }
         
