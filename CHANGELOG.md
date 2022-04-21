@@ -1,5 +1,17 @@
 #
 
+## [v3.1.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.1.0) (2022-04-21)
+
+### Enhancements
+
+- Customize player preferences [\#128](https://github.com/mixpanel/mixpanel-unity/pull/128)
+
+### Fixes
+
+- Fix compilation errors on platforms other than Android [\#135](https://github.com/mixpanel/mixpanel-unity/pull/135)
+
+#
+
 ## [v3.0.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.0.2) (2022-01-14)
 
 ### Fixes
@@ -201,6 +213,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
