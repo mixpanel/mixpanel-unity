@@ -163,7 +163,7 @@ namespace mixpanel
         }
 
         /// <summary>
-        /// Clears all super properties, once properties, timed events and push registrations from persistent MixpanelStorage.
+        /// Clears all super properties, once properties, timed events from persistent MixpanelStorage.
         /// </summary>
         public static void Reset()
         {
@@ -173,7 +173,6 @@ namespace mixpanel
             MixpanelStorage.ResetSuperProperties();
             MixpanelStorage.ResetOnceProperties();
             MixpanelStorage.ResetTimedEvents();
-            MixpanelStorage.SavePushDeviceToken("");
             Flush();
             MixpanelStorage.DistinctId = "";
         }
@@ -506,24 +505,6 @@ namespace mixpanel
                 set => Set(new Value {{"$name", value}});
             }
 
-            /// <summary>
-            /// Register the given device to receive push notifications.
-            /// </summary>
-            public static object PushDeviceToken
-            {
-                set
-                {
-                    #if UNITY_IOS
-                        string token = BitConverter.ToString((byte [])value).ToLower().Replace("-", "");
-                        MixpanelStorage.SavePushDeviceToken(token);
-                        Union("$ios_devices", new string[] {token});
-                    #elif UNITY_ANDROID
-                        string token = value.ToString();
-                        MixpanelStorage.SavePushDeviceToken(token);
-                        Union("$android_devices", new string[] {token});
-                    #endif
-                }
-            }
         }
     }
 }
