@@ -191,36 +191,6 @@ namespace mixpanel
         }
 
         #endregion
-
-        #region PushDeviceToken
-
-        private const string PushDeviceTokenName  = "Mixpanel.PushDeviceToken";
-
-        private static string _pushDeviceTokenString;
-
-        internal static string PushDeviceTokenString
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(_pushDeviceTokenString)) return _pushDeviceTokenString;
-                if (!PreferencesSource.HasKey(PushDeviceTokenName)) PushDeviceTokenString = "";
-                else _pushDeviceTokenString = PreferencesSource.GetString(PushDeviceTokenName);
-                return _pushDeviceTokenString;
-            }
-            set
-            {
-                _pushDeviceTokenString = value;
-                PreferencesSource.SetString(PushDeviceTokenName, _pushDeviceTokenString);
-            }
-        }
-        
-        [Conditional("UNITY_IOS")]
-        internal static void SavePushDeviceToken(string token)
-        {
-            PushDeviceTokenString = token;
-        }
-
-        #endregion
         
         #region OnceProperties
         
