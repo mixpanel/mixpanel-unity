@@ -50,6 +50,30 @@ namespace mixpanel
 
         #endregion
 
+        #region MPDebugInitCount
+
+        private const string MPDebugInitCountName = "Mixpanel.MPDebugInitCount";
+
+        internal static int MPDebugInitCount
+        {
+            get => PreferencesSource.GetInt(MPDebugInitCountName, 0);
+            set => PreferencesSource.SetInt(MPDebugInitCountName, value);
+        }
+
+        #endregion
+
+        #region HasTrackedFirstSDKDebugLaunch
+
+        private const string HasTrackedFirstSDKDebugLaunchName = "Mixpanel.HasTrackedFirstSDKDebugLaunch";
+
+        internal static bool HasTrackedFirstSDKDebugLaunch
+        {
+            get => Convert.ToBoolean(PreferencesSource.GetInt(HasTrackedFirstSDKDebugLaunchName, 0));
+            set => PreferencesSource.SetInt(HasTrackedFirstSDKDebugLaunchName, Convert.ToInt32(value));
+        }
+
+        #endregion
+
         #region DistinctId
         
         private const string DistinctIdName = "Mixpanel.DistinctId";
