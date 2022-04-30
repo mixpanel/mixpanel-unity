@@ -42,6 +42,16 @@ namespace mixpanel
         }
 
         /// <summary>
+        /// By default, Mixpanel uses PlayerPreferences for data persistence. However you can call this method to
+        /// set the data persistence of your choice as long as it follows IPeferences
+        /// </summary>
+        /// <param name="preferences">the new distinct_id that should represent original</param>
+        public static void SetPreferencesSource(IPreferences preferences)
+        {
+            MixpanelStorage.SetPreferencesSource(preferences);
+        }
+
+        /// <summary>
         /// Creates a distinct_id alias.
         /// </summary>
         /// <param name="alias">the new distinct_id that should represent original</param>
