@@ -88,9 +88,31 @@ namespace mixpanel
         private void Start()
         {
             MigrateFrom1To2();
-            StartCoroutine(TrackIntegrationEvent());
+            MixpanelTracking();
+            CheckForSurvey();
             Mixpanel.Log($"Mixpanel Component Started");
             StartCoroutine(WaitAndFlush());
+        }
+
+        private void MixpanelTracking()
+        {
+            if (!MixpanelStorage.HasIntegratedLibrary) {
+                StartCoroutine(SendHttpEvent("Integration", "85053bf24bba75239b16a601d9387e17", MixpanelSettings.Instance.Token, ""));
+                MixpanelStorage.HasIntegratedLibrary = true;
+            }
+            if (Debug.isDebugBuild) {
+                StartCoroutine(SendHttpEvent("SDK Debug Launch", "metrics-1", MixpanelSettings.Instance.Token, $",\"Debug Launch Count\":{MixpanelStorage.MPDebugInitCount}"));
+            }
+        }
+        private void CheckForSurvey()
+        {
+            if (Debug.isDebugBuild) {
+                MixpanelStorage.MPDebugInitCount += 1;
+            }
+            if (MixpanelStorage.MPDebugInitCount == 10 || MixpanelStorage.MPDebugInitCount == 20 || MixpanelStorage.MPDebugInitCount == 30) {
+                Mixpanel.Log("*** Hi, Zihe & Jared here, please give feedback or tell us about the Mixpanel developer experience! Open -> https://www.mixpanel.com/devnps ***");
+                StartCoroutine(SendHttpEvent("Dev NPS Survey Logged", "metrics-1", MixpanelSettings.Instance.Token, $",\"Survey Shown Count\":{MixpanelStorage.MPDebugInitCount / 10}"));
+            }
         }
 
         private IEnumerator WaitAndFlush()
@@ -150,30 +172,16 @@ namespace mixpanel
             }
         }
 
-        private IEnumerator TrackIntegrationEvent()
+        private IEnumerator SendHttpEvent(string eventName, string apiToken, string distinctId, string properties)
         {
-            if (MixpanelStorage.HasIntegratedLibrary) {
-                yield break;
-            }
-            string body = "{\"event\":\"Integration\",\"properties\":{\"token\":\"85053bf24bba75239b16a601d9387e17\",\"mp_lib\":\"unity\",\"distinct_id\":\"" + MixpanelSettings.Instance.Token +"\"}}";
+            string body = "{\"event\":\"" + eventName + "\",\"properties\":{\"token\":\"" + 
+                        apiToken + "\",\"mp_lib\":\"unity\",\"$lib_version\":\""+ Mixpanel.MixpanelUnityVersion + "\",\"distinct_id\":\"" + distinctId + "\"" + properties + "}}";
             string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
             WWWForm form = new WWWForm();
             form.AddField("data", payload);
               
             using (UnityWebRequest request = UnityWebRequest.Post(Config.TrackUrl, form)) {
                 yield return request.SendWebRequest();
-                #if UNITY_2020_1_OR_NEWER
-                if (request.result != UnityWebRequest.Result.Success)
-                #else
-                if (request.isHttpError || request.isNetworkError)
-                #endif
-                {
-                    Mixpanel.Log(request.error);
-                }
-                else
-                {
-                    MixpanelStorage.HasIntegratedLibrary = true;
-                }
             }
         }
 
