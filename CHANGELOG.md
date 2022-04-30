@@ -1,5 +1,17 @@
 #
 
+## [v3.1.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.1.1) (2022-04-30)
+
+### Enhancements
+
+- Add Debug tracking and Dev NPS Survey [\#138](https://github.com/mixpanel/mixpanel-unity/pull/138)
+
+### Fixes
+
+- Remove push notification related stuff [\#137](https://github.com/mixpanel/mixpanel-unity/pull/137)
+
+#
+
 ## [v3.1.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.1.0) (2022-04-21)
 
 ### Enhancements
@@ -213,6 +225,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
