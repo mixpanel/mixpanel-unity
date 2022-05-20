@@ -89,7 +89,7 @@ namespace mixpanel
         {
             MigrateFrom1To2();
             MixpanelTracking();
-            CheckForSurvey();
+            CheckForMixpanelImplemented();
             Mixpanel.Log($"Mixpanel Component Started");
             StartCoroutine(WaitAndFlush());
         }
@@ -97,21 +97,36 @@ namespace mixpanel
         private void MixpanelTracking()
         {
             if (!MixpanelStorage.HasIntegratedLibrary) {
-                StartCoroutine(SendHttpEvent("Integration", "85053bf24bba75239b16a601d9387e17", MixpanelSettings.Instance.Token, ""));
+                StartCoroutine(SendHttpEvent("Integration", "85053bf24bba75239b16a601d9387e17", MixpanelSettings.Instance.Token, "", false));
                 MixpanelStorage.HasIntegratedLibrary = true;
             }
             if (Debug.isDebugBuild) {
-                StartCoroutine(SendHttpEvent("SDK Debug Launch", "metrics-1", MixpanelSettings.Instance.Token, $",\"Debug Launch Count\":{MixpanelStorage.MPDebugInitCount}"));
+                StartCoroutine(SendHttpEvent("SDK Debug Launch", "metrics-1", MixpanelSettings.Instance.Token, $",\"Debug Launch Count\":{MixpanelStorage.MPDebugInitCount}", true));
             }
         }
-        private void CheckForSurvey()
+
+        private void CheckForMixpanelImplemented()
         {
-            if (Debug.isDebugBuild) {
-                MixpanelStorage.MPDebugInitCount += 1;
+            if (MixpanelStorage.HasImplemented) {
+                return;
             }
-            if (MixpanelStorage.MPDebugInitCount == 10 || MixpanelStorage.MPDebugInitCount == 20 || MixpanelStorage.MPDebugInitCount == 30) {
-                Mixpanel.Log("*** Hi, Zihe & Jared here, please give feedback or tell us about the Mixpanel developer experience! Open -> https://www.mixpanel.com/devnps ***");
-                StartCoroutine(SendHttpEvent("Dev NPS Survey Logged", "metrics-1", MixpanelSettings.Instance.Token, $",\"Survey Shown Count\":{MixpanelStorage.MPDebugInitCount / 10}"));
+
+            int implementedScore = 0;
+            implementedScore += MixpanelStorage.HasTracked ? 1 : 0;
+            implementedScore += MixpanelStorage.HasIdendified ? 1 : 0;
+            implementedScore += MixpanelStorage.HasAliased ? 1 : 0;
+            implementedScore += MixpanelStorage.HasUsedPeople ? 1 : 0;
+            
+            if (implementedScore >= 3) {
+                MixpanelStorage.HasImplemented = true;
+
+                StartCoroutine(SendHttpEvent("SDK Implemented", "metrics-1", MixpanelSettings.Instance.Token, 
+                    $",\"Tracked\":{MixpanelStorage.HasTracked.ToString().ToLower()}" +
+                    $",\"Identified\":{MixpanelStorage.HasIdendified.ToString().ToLower()}" +
+                    $",\"Aliased\":{MixpanelStorage.HasAliased.ToString().ToLower()}" +
+                    $",\"Used People\":{MixpanelStorage.HasUsedPeople.ToString().ToLower()}",
+                    true
+                ));
             }
         }
 
@@ -172,16 +187,32 @@ namespace mixpanel
             }
         }
 
-        private IEnumerator SendHttpEvent(string eventName, string apiToken, string distinctId, string properties)
+        private IEnumerator SendHttpEvent(string eventName, string apiToken, string distinctId, string properties, bool updatePeople)
         {
             string body = "{\"event\":\"" + eventName + "\",\"properties\":{\"token\":\"" + 
-                        apiToken + "\",\"mp_lib\":\"unity\",\"$lib_version\":\""+ Mixpanel.MixpanelUnityVersion + "\",\"distinct_id\":\"" + distinctId + "\"" + properties + "}}";
+                        apiToken + "\",\"DevX\":true,\"mp_lib\":\"unity\"," + 
+                        "\"$lib_version\":\"" + Mixpanel.MixpanelUnityVersion + "\"," +
+                        "\"Project Token\":\"" + distinctId + "\",\"distinct_id\":\"" + distinctId + "\"" + properties + "}}";
             string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
             WWWForm form = new WWWForm();
             form.AddField("data", payload);
               
             using (UnityWebRequest request = UnityWebRequest.Post(Config.TrackUrl, form)) {
                 yield return request.SendWebRequest();
+            }
+
+            if (updatePeople) {
+                body = "{\"$add\":" + "{\"" + eventName + 
+                "\":1}," + 
+                            "\"$token\":\"" + apiToken + "\"," +
+                            "\"$distinct_id\":\"" + distinctId + "\"}";
+                payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
+                form = new WWWForm();
+                form.AddField("data", payload);
+                
+                using (UnityWebRequest request = UnityWebRequest.Post(Config.EngageUrl, form)) {
+                    yield return request.SendWebRequest();
+                }
             }
         }
 
@@ -333,6 +364,10 @@ namespace mixpanel
             data["properties"] = properties;
             data["$mp_metadata"] = Metadata.GetEventMetadata();
 
+            if (Debug.isDebugBuild && !eventName.StartsWith("$")) {
+                MixpanelStorage.HasTracked = true;
+            }
+
             MixpanelStorage.EnqueueTrackingData(data, MixpanelStorage.FlushType.EVENTS);
         }
 
@@ -345,6 +380,9 @@ namespace mixpanel
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
+            if (Debug.isDebugBuild) {
+                MixpanelStorage.HasUsedPeople = true;
+            }
         }
 
         internal static void DoClear()

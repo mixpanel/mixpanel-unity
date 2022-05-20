@@ -62,6 +62,66 @@ namespace mixpanel
 
         #endregion
 
+        #region HasImplemented
+
+        private const string HasImplementedName = "Mixpanel.HasImplemented";
+
+        internal static bool HasImplemented
+        {
+            get => Convert.ToBoolean(PreferencesSource.GetInt(HasImplementedName, 0));
+            set => PreferencesSource.SetInt(HasImplementedName, Convert.ToInt32(value));
+        }
+        
+        #endregion
+
+        #region HasTracked
+
+        private const string HasTrackedName = "Mixpanel.HasTracked";
+
+        internal static bool HasTracked
+        {
+            get => Convert.ToBoolean(PreferencesSource.GetInt(HasTrackedName, 0));
+            set => PreferencesSource.SetInt(HasTrackedName, Convert.ToInt32(value));
+        }
+
+        #endregion
+
+        #region HasIdentified
+
+        private const string HasIdentifiedName = "Mixpanel.HasIdentified";
+
+        internal static bool HasIdendified
+        {
+            get => Convert.ToBoolean(PreferencesSource.GetInt(HasIdentifiedName, 0));
+            set => PreferencesSource.SetInt(HasIdentifiedName, Convert.ToInt32(value));
+        }
+
+        #endregion
+
+        #region HasAliased
+
+        private const string HasAliasedName = "Mixpanel.HasAliased";
+
+        internal static bool HasAliased
+        {
+            get => Convert.ToBoolean(PreferencesSource.GetInt(HasAliasedName, 0));
+            set => PreferencesSource.SetInt(HasAliasedName, Convert.ToInt32(value));
+        }
+
+        #endregion
+
+        #region HasUsedPeople
+
+        private const string HasUsedPeopleName = "Mixpanel.HasUsedPeople";
+
+        internal static bool HasUsedPeople
+        {
+            get => Convert.ToBoolean(PreferencesSource.GetInt(HasUsedPeopleName, 0));
+            set => PreferencesSource.SetInt(HasUsedPeopleName, Convert.ToInt32(value));
+        }
+
+        #endregion
+
         #region HasTrackedFirstSDKDebugLaunch
 
         private const string HasTrackedFirstSDKDebugLaunchName = "Mixpanel.HasTrackedFirstSDKDebugLaunch";
