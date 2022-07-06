@@ -51,6 +51,7 @@ Mixpanel.Track('Plan Selected', props);
 ## 4. Check for Success
 [Open up Live View in Mixpanel](http://mixpanel.com/report/live)  to view incoming events.
 Once data hits our API, it generally takes ~60 seconds for it to be processed, stored, and queryable in your project.
+👋 👋  Tell us about the Mixpanel developer experience! [https://www.mixpanel.com/devnps](https://www.mixpanel.com/devnps) 👍  👎
 
 
 # FAQ
