@@ -14,6 +14,12 @@ namespace mixpanel
 
     internal static class Util
     {
+        internal static long CurrentMilliseconds()
+        {
+            long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            return milliseconds;
+        }
+        
         internal static double CurrentTime()
         {
             DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);

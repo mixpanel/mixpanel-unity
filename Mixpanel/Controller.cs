@@ -356,7 +356,7 @@ namespace mixpanel
             }
             properties["token"] = MixpanelSettings.Instance.Token;
             properties["distinct_id"] = MixpanelStorage.DistinctId;
-            properties["time"] = Util.CurrentTime();
+            properties["time"] = Util.CurrentMilliseconds();
 
             Value data = new Value();
             
@@ -376,7 +376,7 @@ namespace mixpanel
             if (!MixpanelStorage.IsTracking) return;
             properties["$token"] = MixpanelSettings.Instance.Token;
             properties["$distinct_id"] = MixpanelStorage.DistinctId;
-            properties["$time"] = Util.CurrentTime();
+            properties["$time"] = Util.CurrentMilliseconds();
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
