@@ -17,7 +17,7 @@ namespace mixpanel
         internal static double CurrentTime()
         {
             DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            double currentEpochTime = (DateTime.UtcNow - epochStart).TotalSeconds;
+            long currentEpochTime = (long)(DateTime.UtcNow - epochStart).TotalMilliseconds;
             return currentEpochTime;
         }
 
