@@ -1,5 +1,14 @@
 #
 
+## [v3.3.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.0) (2022-08-04)
+
+### Enhancements
+
+- send millisecond precision timestamps [\#146](https://github.com/mixpanel/mixpanel-unity/pull/146)
+- Remove NPS survey and add more DevX tracking [\#144](https://github.com/mixpanel/mixpanel-unity/pull/144)
+
+#
+
 ## [v3.3.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.0) (2022-08-02)
 
 ### Enhancements
@@ -241,6 +250,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
