@@ -18,7 +18,7 @@ namespace mixpanel
     /// </code>
     public static partial class Mixpanel
     {
-        internal const string MixpanelUnityVersion = "3.3.0";
+        internal const string MixpanelUnityVersion = "3.3.1";
 
         /// <summary>
         /// Creates an Mixpanel instance. Use only if you have enabled "Manual Initialization" from your Project Settings.
