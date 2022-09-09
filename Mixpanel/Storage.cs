@@ -168,6 +168,11 @@ namespace mixpanel
         private const string EventAutoIncrementingIdName = "EventAutoIncrementingID";
         private const string PeopleAutoIncrementingIdName = "PeopleAutoIncrementingID";
 
+        // For performance, we can store the lowest unsent event ID to prevent searching from 0.
+        // This search process can be slow if the auto-increment ID gets large enough.
+        private const string EventStartIndexName = "EventStartIndex";
+        private const string PeopleStartIndexName = "PeopleStartIndex";
+
         internal enum FlushType
         {
             EVENTS,
@@ -194,6 +199,16 @@ namespace mixpanel
             return PreferencesSource.GetInt(PeopleAutoIncrementingIdName, 0);
         }
 
+        internal static int EventStartIndex()
+        {
+            return PreferencesSource.GetInt(EventStartIndexName, 0);
+        }
+
+        internal static int PeopleStartIndex()
+        {
+            return PreferencesSource.GetInt(PeopleStartIndexName, 0);
+        }
+
         private static void IncreaseTrackingDataID(FlushType flushType)
         {
             int id = (flushType == FlushType.EVENTS)? EventAutoIncrementingID() : PeopleAutoIncrementingID();
@@ -205,7 +220,10 @@ namespace mixpanel
         internal static Value DequeueBatchTrackingData(FlushType flushType, int batchSize)
         {
             Value batch = Value.Array;
-            int dataIndex = 0;
+            string startIndexKey = (flushType == FlushType.EVENTS) ? EventStartIndexName : PeopleStartIndexName;
+            int oldStartIndex = (flushType == FlushType.EVENTS) ? EventStartIndex() : PeopleStartIndex();
+            int newStartIndex = oldStartIndex;
+            int dataIndex = oldStartIndex;
             int maxIndex = (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() - 1 : PeopleAutoIncrementingID() - 1;
             while (batch.Count < batchSize && dataIndex <= maxIndex) {
                 String trackingKey = (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();
@@ -216,9 +234,22 @@ namespace mixpanel
                     catch (Exception e) {
                         Mixpanel.LogError($"There was an error processing '{trackingKey}' from the internal object pool: " + e);
                         PreferencesSource.DeleteKey(trackingKey);
+
+                        if (batch.Count == 0) {
+                            // Only update if we didn't find a key prior to deleting this key, since the prior key would be a lower valid index.
+                            newStartIndex = Math.Min(dataIndex + 1, maxIndex);
+                        }
                     }
                 }
+                else if (batch.Count == 0) {
+                    // Keep updating the start index as long as we haven't found anything for our batch yet -- we're looking for the minimum index.
+                    newStartIndex = Math.Min(dataIndex + 1, maxIndex);
+                }
                 dataIndex++;
+            }
+
+            if (newStartIndex != oldStartIndex) {
+                PreferencesSource.SetInt(startIndexKey, newStartIndex);
             }
             
             return batch;
@@ -227,7 +258,10 @@ namespace mixpanel
         internal static void DeleteBatchTrackingData(FlushType flushType, int batchSize)
         {
             int deletedCount = 0;
-            int dataIndex = 0;
+            string startIndexKey = (flushType == FlushType.EVENTS) ? EventStartIndexName : PeopleStartIndexName;
+            int oldStartIndex = (flushType == FlushType.EVENTS) ? EventStartIndex() : PeopleStartIndex();
+            int newStartIndex = oldStartIndex;
+            int dataIndex = oldStartIndex;
             int maxIndex = (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() - 1 : PeopleAutoIncrementingID() - 1;
             while (deletedCount < batchSize && dataIndex <= maxIndex) {
                 String trackingKey = (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();    
@@ -235,6 +269,7 @@ namespace mixpanel
                     PreferencesSource.DeleteKey(trackingKey);
                     deletedCount++;
                 }
+                newStartIndex = Math.Min(dataIndex + 1, maxIndex);
                 dataIndex++;
             }
 
@@ -245,6 +280,11 @@ namespace mixpanel
                 // stored in preferences (since we deleted them all).
                 string idKey = (flushType == FlushType.EVENTS) ? EventAutoIncrementingIdName : PeopleAutoIncrementingIdName;
                 PreferencesSource.SetInt(idKey, 0);
+                PreferencesSource.SetInt(startIndexKey, 0);
+            }
+            else if (newStartIndex != oldStartIndex) {
+                // There are unsent batches, store the index of where to resume searching for next time.
+                PreferencesSource.SetInt(startIndexKey, newStartIndex);
             }
         }
 
