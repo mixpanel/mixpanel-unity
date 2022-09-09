@@ -165,6 +165,8 @@ namespace mixpanel
 
         #region Track
 
+        private const string EventAutoIncrementingIdName = "EventAutoIncrementingID";
+        private const string PeopleAutoIncrementingIdName = "PeopleAutoIncrementingID";
 
         internal enum FlushType
         {
@@ -184,19 +186,19 @@ namespace mixpanel
 
         internal static int EventAutoIncrementingID()
         {
-            return PreferencesSource.HasKey("EventAutoIncrementingID") ? PreferencesSource.GetInt("EventAutoIncrementingID") : 0;
+            return PreferencesSource.GetInt(EventAutoIncrementingIdName, 0);
         }
 
         internal static int PeopleAutoIncrementingID()
         {
-            return PreferencesSource.HasKey("PeopleAutoIncrementingID") ? PreferencesSource.GetInt("PeopleAutoIncrementingID") : 0;
+            return PreferencesSource.GetInt(PeopleAutoIncrementingIdName, 0);
         }
 
         private static void IncreaseTrackingDataID(FlushType flushType)
         {
             int id = (flushType == FlushType.EVENTS)? EventAutoIncrementingID() : PeopleAutoIncrementingID();
             id += 1;
-            String trackingIdKey = (flushType == FlushType.EVENTS)? "EventAutoIncrementingID" : "PeopleAutoIncrementingID";
+            String trackingIdKey = (flushType == FlushType.EVENTS)? EventAutoIncrementingIdName : PeopleAutoIncrementingIdName;
             PreferencesSource.SetInt(trackingIdKey, id);
         }
 
