@@ -14,7 +14,14 @@ namespace mixpanel
 
     internal static class Util
     {
-        internal static double CurrentTime()
+        internal static double CurrentTimeInSeconds()
+        {
+            DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            double currentEpochTime = (DateTime.UtcNow - epochStart).TotalSeconds;
+            return currentEpochTime;
+        }
+
+        internal static double CurrentTimeInMilliseconds()
         {
             DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             long currentEpochTime = (long)(DateTime.UtcNow - epochStart).TotalMilliseconds;

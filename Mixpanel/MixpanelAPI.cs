@@ -18,7 +18,7 @@ namespace mixpanel
     /// </code>
     public static partial class Mixpanel
     {
-        internal const string MixpanelUnityVersion = "3.3.1";
+        internal const string MixpanelUnityVersion = "3.3.2";
 
         /// <summary>
         /// Creates an Mixpanel instance. Use only if you have enabled "Manual Initialization" from your Project Settings.
@@ -217,7 +217,7 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             Value properties = MixpanelStorage.TimedEvents;
-            properties[eventName] = Util.CurrentTime();
+            properties[eventName] = Util.CurrentTimeInSeconds();
             MixpanelStorage.TimedEvents = properties;
         }
 
@@ -232,7 +232,7 @@ namespace mixpanel
             if (!MixpanelStorage.TimedEvents.ContainsKey(eventName))
             {
                 Value properties = MixpanelStorage.TimedEvents;
-                properties[eventName] = Util.CurrentTime();
+                properties[eventName] = Util.CurrentTimeInMilliseconds();
                 MixpanelStorage.TimedEvents = properties;
             }
         }

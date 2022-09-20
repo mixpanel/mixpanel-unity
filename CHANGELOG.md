@@ -1,5 +1,13 @@
 #
 
+## [v3.3.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.2) (2022-09-20)
+
+### Fixes
+
+- Revert timed event $durations to seconds 
+
+#
+
 ## [v3.3.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.1) (2022-08-18)
 
 #

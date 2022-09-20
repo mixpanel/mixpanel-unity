@@ -351,12 +351,12 @@ namespace mixpanel
             Value startTime;
             if (MixpanelStorage.TimedEvents.TryGetValue(eventName, out startTime))
             {
-                properties["$duration"] = Util.CurrentTime() - (double)startTime;
+                properties["$duration"] = Util.CurrentTimeInSeconds() - (double)startTime;
                 MixpanelStorage.TimedEvents.Remove(eventName);
             }
             properties["token"] = MixpanelSettings.Instance.Token;
             properties["distinct_id"] = MixpanelStorage.DistinctId;
-            properties["time"] = Util.CurrentTime();
+            properties["time"] = Util.CurrentTimeInMilliseconds();
 
             Value data = new Value();
             
@@ -376,7 +376,7 @@ namespace mixpanel
             if (!MixpanelStorage.IsTracking) return;
             properties["$token"] = MixpanelSettings.Instance.Token;
             properties["$distinct_id"] = MixpanelStorage.DistinctId;
-            properties["$time"] = Util.CurrentTime();
+            properties["$time"] = Util.CurrentTimeInMilliseconds();
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
