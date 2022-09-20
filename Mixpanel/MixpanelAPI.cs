@@ -232,7 +232,7 @@ namespace mixpanel
             if (!MixpanelStorage.TimedEvents.ContainsKey(eventName))
             {
                 Value properties = MixpanelStorage.TimedEvents;
-                properties[eventName] = Util.CurrentTimeInMilliseconds();
+                properties[eventName] = Util.CurrentTimeInSeconds();
                 MixpanelStorage.TimedEvents = properties;
             }
         }
