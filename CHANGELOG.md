@@ -4,7 +4,7 @@
 
 ### Fixes
 
-- Revert timed event $durations to seconds 
+- dont use milliseconds for $duration of timed events [\#150](https://github.com/mixpanel/mixpanel-unity/pull/150)
 
 #
 
