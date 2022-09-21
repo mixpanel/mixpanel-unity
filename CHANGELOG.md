@@ -1,5 +1,13 @@
 #
 
+## [v3.3.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.2) (2022-09-21)
+
+### Fixes
+
+- dont use milliseconds for $duration of timed events [\#150](https://github.com/mixpanel/mixpanel-unity/pull/150)
+
+#
+
 ## [v3.3.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.1) (2022-08-18)
 
 ### Fixes
@@ -250,6 +258,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
