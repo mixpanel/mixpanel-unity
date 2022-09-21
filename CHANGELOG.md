@@ -1,14 +1,10 @@
 #
 
-## [v3.3.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.2) (2022-09-20)
+## [v3.3.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.1) (2022-08-18)
 
 ### Fixes
 
-- dont use milliseconds for $duration of timed events [\#150](https://github.com/mixpanel/mixpanel-unity/pull/150)
-
-#
-
-## [v3.3.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.1) (2022-08-18)
+- LICENSE has no meta file [\#147](https://github.com/mixpanel/mixpanel-unity/issues/147)
 
 #
 
