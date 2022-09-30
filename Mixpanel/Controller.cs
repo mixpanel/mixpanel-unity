@@ -46,6 +46,8 @@ namespace mixpanel
         }
 
         internal static void Initialize() {
+            // Copy over any runtime changes that happened before initialization from settings instance to the config.
+            MixpanelSettings.Instance.ApplyToConfig();
             GetInstance();
         }
 
