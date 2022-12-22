@@ -1,5 +1,14 @@
 #
 
+## [v3.4.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.0) (2022-12-22)
+
+### Enhancements
+
+- Allow changing settings at runtime [\#153](https://github.com/mixpanel/mixpanel-unity/pull/153)
+- Optimize PlayerPrefs event ID scanning when sending event batches [\#152](https://github.com/mixpanel/mixpanel-unity/pull/152)
+
+#
+
 ## [v3.3.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.3.2) (2022-09-21)
 
 ### Fixes
@@ -258,6 +267,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
