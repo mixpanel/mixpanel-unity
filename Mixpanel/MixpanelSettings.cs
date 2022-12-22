@@ -37,6 +37,16 @@ namespace mixpanel
             }
         }
 
+        public void ApplyToConfig()
+        {
+            string host = APIHostAddress.EndsWith("/") ? APIHostAddress : $"{APIHostAddress}/";
+            Config.TrackUrl = string.Format(TrackUrlTemplate, host);
+            Config.EngageUrl = string.Format(EngageUrlTemplate, host);
+            Config.ShowDebug = ShowDebug;
+            Config.ManualInitialization = ManualInitialization;
+            Config.FlushInterval = FlushInterval;
+        }
+
         #region static
         private static MixpanelSettings _instance;
 
@@ -45,15 +55,10 @@ namespace mixpanel
             if (!_instance)
             {
                 _instance = FindOrCreateInstance();
-                string host = _instance.APIHostAddress.EndsWith("/") ? _instance.APIHostAddress : $"{_instance.APIHostAddress}/";
-                Config.TrackUrl = string.Format(TrackUrlTemplate, host);
-                Config.EngageUrl = string.Format(EngageUrlTemplate, host);
-                Config.ShowDebug = _instance.ShowDebug;
-                Config.ManualInitialization = _instance.ManualInitialization;
-                Config.FlushInterval = _instance.FlushInterval;
+                _instance.ApplyToConfig();
             }
         }
-    
+
         public static MixpanelSettings Instance {
             get {
                 LoadSettings();
