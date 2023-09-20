@@ -1,5 +1,13 @@
 #
 
+## [v3.4.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.1) (2023-09-20)
+
+### Enhancements
+
+- fix RegisterOnce not really register once  [\#162](https://github.com/mixpanel/mixpanel-unity/pull/162)
+
+#
+
 ## [v3.4.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.0) (2022-12-22)
 
 ### Enhancements
