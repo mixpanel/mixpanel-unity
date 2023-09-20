@@ -170,8 +170,10 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             Value properties = MixpanelStorage.OnceProperties;
-            properties[key] = value;
-            MixpanelStorage.OnceProperties = properties;
+            if (properties[key].IsNull) {
+                properties[key] = value;
+                MixpanelStorage.OnceProperties = properties;
+            }
         }
 
         /// <summary>

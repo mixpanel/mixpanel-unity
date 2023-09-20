@@ -348,7 +348,6 @@ namespace mixpanel
             properties["$screen_width"] = Screen.width;
             properties["$screen_height"] = Screen.height;
             properties.Merge(MixpanelStorage.OnceProperties);
-            MixpanelStorage.ResetOnceProperties();
             properties.Merge(MixpanelStorage.SuperProperties);
             Value startTime;
             if (MixpanelStorage.TimedEvents.TryGetValue(eventName, out startTime))
