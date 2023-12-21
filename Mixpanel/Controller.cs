@@ -102,9 +102,9 @@ namespace mixpanel
                 StartCoroutine(SendHttpEvent("Integration", "85053bf24bba75239b16a601d9387e17", MixpanelSettings.Instance.Token, "", false));
                 MixpanelStorage.HasIntegratedLibrary = true;
             }
-            if (Debug.isDebugBuild) {
+            #if DEVELOPMENT_BUILD
                 StartCoroutine(SendHttpEvent("SDK Debug Launch", "metrics-1", MixpanelSettings.Instance.Token, $",\"Debug Launch Count\":{MixpanelStorage.MPDebugInitCount}", true));
-            }
+            #endif
         }
 
         private void CheckForMixpanelImplemented()
@@ -365,9 +365,11 @@ namespace mixpanel
             data["properties"] = properties;
             data["$mp_metadata"] = Metadata.GetEventMetadata();
 
-            if (Debug.isDebugBuild && !eventName.StartsWith("$")) {
-                MixpanelStorage.HasTracked = true;
-            }
+            #if DEVELOPMENT_BUILD
+                if (!eventName.StartsWith("$")) {
+                    MixpanelStorage.HasTracked = true;
+                }
+            #endif
 
             MixpanelStorage.EnqueueTrackingData(data, MixpanelStorage.FlushType.EVENTS);
         }
@@ -381,9 +383,9 @@ namespace mixpanel
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
-            if (Debug.isDebugBuild) {
+            #if DEVELOPMENT_BUILD
                 MixpanelStorage.HasUsedPeople = true;
-            }
+            #endif
         }
 
         internal static void DoClear()
