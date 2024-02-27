@@ -141,15 +141,26 @@ namespace mixpanel
             }
         }
 
-        internal void DoFlush()
+        internal void DoFlush(Action<bool> onFlushComplete = null)
         {
-            StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS));
-            StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE));
+            int coroutinesCount = 2; // Number of coroutines to wait for
+            bool overallSuccess = true;
+            
+            Action<bool> onComplete = onFlushComplete != null ? success =>
+                {
+                    overallSuccess &= success;
+                    CheckCompletion(onFlushComplete, ref coroutinesCount, overallSuccess);
+                }
+                : null;
+            StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS, onComplete));
+            StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE, onComplete));
         }
 
-        private IEnumerator SendData(MixpanelStorage.FlushType flushType)
+        private IEnumerator SendData(MixpanelStorage.FlushType flushType, Action<bool> onComplete)
         {
-            if (_retryTime > DateTime.Now && _retryCount > 0) {
+            if (_retryTime > DateTime.Now && _retryCount > 0)
+            {
+                onComplete?.Invoke(false);
                 yield break;
             }
 
@@ -176,16 +187,31 @@ namespace mixpanel
                         _retryTime = DateTime.Now;
                         _retryTime = _retryTime.AddSeconds(retryIn);
                         Mixpanel.Log("Retrying request in " + retryIn + " seconds (retryCount=" + _retryCount + ")");
+                        onComplete?.Invoke(false);
                         yield break;
                     }
                     else
                     {
-                         _retryCount = 0;
+                        _retryCount = 0;
                         MixpanelStorage.DeleteBatchTrackingData(batch);
                         batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
                         Mixpanel.Log("Successfully posted to " + url);
                     }
                 }
+            }
+            
+            onComplete?.Invoke(true);
+        }
+        
+        private void CheckCompletion(Action<bool> onFlushComplete, ref int coroutinesCount, bool overallSuccess)
+        {
+            // Decrease the counter
+            coroutinesCount--;
+
+            // If all coroutines are finished, invoke the onFlushComplete callback
+            if (coroutinesCount == 0)
+            {
+                onFlushComplete?.Invoke(overallSuccess);
             }
         }
 

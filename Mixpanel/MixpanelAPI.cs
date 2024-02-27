@@ -290,10 +290,11 @@ namespace mixpanel
         /// <summary>
         /// Flushes the queued data to Mixpanel
         /// </summary>
-        public static void Flush()
+        /// <param name="onFlushComplete">callback to be called when the flush is complete. Returns true if overall success</param>
+        public static void Flush(Action<bool> onFlushComplete = null)
         {
             if (!IsInitialized()) return;
-            Controller.GetInstance().DoFlush();
+            Controller.GetInstance().DoFlush(onFlushComplete);
         }
 
         /// <summary>
