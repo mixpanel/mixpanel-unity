@@ -41,11 +41,11 @@ Let's get started by sending event data. You can send an event from anywhere in 
 ```csharp
 using  mixpanel;
 // Track with event-name
-Mixpanel.Track('Sent Message');
+Mixpanel.Track("Sent Message");
 // Track with event-name and property
 var  props  =  new  Value();  
 props["Plan"] =  "Premium";
-Mixpanel.Track('Plan Selected', props);
+Mixpanel.Track("Plan Selected", props);
 ```
 
 ## 4. Check for Success
