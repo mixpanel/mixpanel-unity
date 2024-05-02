@@ -1,5 +1,14 @@
 #
 
+## [v3.5.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.1) (2024-05-02)
+
+### Fixes
+
+- Remove internal tracking [\#175](https://github.com/mixpanel/mixpanel-unity/pull/175)
+- fix "Type of conditional expression cannot be determined" [\#174](https://github.com/mixpanel/mixpanel-unity/pull/174)
+
+#
+
 ## [v3.4.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.1) (2023-09-20)
 
 ### Enhancements
@@ -275,6 +284,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
