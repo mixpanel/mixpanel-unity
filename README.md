@@ -32,7 +32,7 @@ Supported Unity Version >= 2018.3. For older versions, you need to have `.NET 4.
 This library can be installed using the unity package manager system with git. We support Unity 2018.3 and above. For older versions of Unity, you need to have .NET 4.x Equivalent selected as the scripting runtime version in your editor settings.
 
 - In your unity project root open ./Packages/manifest.json
-- Add the following line to the dependencies section "com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#master", or point to a specific version: "com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#v3.5.1"
+- Add the following line to the dependencies section "com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#master", or point to a specific version. Example: ("com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#v3.5.1")
 - Open Unity and the package should download automatically
   Alternatively you can go to the [releases page](https://github.com/mixpanel/mixpanel-unity/releases) and download the .unitypackage file and have unity install that.
 
