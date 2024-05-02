@@ -62,7 +62,6 @@ namespace mixpanel
             Value properties = new Value();
             properties["alias"] = alias;
             Track("$create_alias", properties);
-            MixpanelStorage.HasAliased = true;
             Flush();
         }
 
@@ -102,7 +101,6 @@ namespace mixpanel
             string oldDistinctId = MixpanelStorage.DistinctId;
             MixpanelStorage.DistinctId = uniqueId;
             Track("$identify", "$anon_distinct_id", oldDistinctId);
-            MixpanelStorage.HasIdendified = true;
         }
 
         [Obsolete("Please use 'DistinctId' instead!")]
@@ -200,7 +198,7 @@ namespace mixpanel
             if (!IsInitialized()) return;
             Controller.DoClear();
         }
-        
+
         /// <summary>
         /// Clears all super properties
         /// </summary>
