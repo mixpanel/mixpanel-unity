@@ -90,47 +90,10 @@ namespace mixpanel
         private void Start()
         {
             MigrateFrom1To2();
-            MixpanelTracking();
-            CheckForMixpanelImplemented();
             Mixpanel.Log($"Mixpanel Component Started");
             StartCoroutine(WaitAndFlush());
         }
 
-        private void MixpanelTracking()
-        {
-            if (!MixpanelStorage.HasIntegratedLibrary) {
-                StartCoroutine(SendHttpEvent("Integration", "85053bf24bba75239b16a601d9387e17", MixpanelSettings.Instance.Token, "", false));
-                MixpanelStorage.HasIntegratedLibrary = true;
-            }
-            #if DEVELOPMENT_BUILD
-                StartCoroutine(SendHttpEvent("SDK Debug Launch", "metrics-1", MixpanelSettings.Instance.Token, $",\"Debug Launch Count\":{MixpanelStorage.MPDebugInitCount}", true));
-            #endif
-        }
-
-        private void CheckForMixpanelImplemented()
-        {
-            if (MixpanelStorage.HasImplemented) {
-                return;
-            }
-
-            int implementedScore = 0;
-            implementedScore += MixpanelStorage.HasTracked ? 1 : 0;
-            implementedScore += MixpanelStorage.HasIdendified ? 1 : 0;
-            implementedScore += MixpanelStorage.HasAliased ? 1 : 0;
-            implementedScore += MixpanelStorage.HasUsedPeople ? 1 : 0;
-
-            if (implementedScore >= 3) {
-                MixpanelStorage.HasImplemented = true;
-
-                StartCoroutine(SendHttpEvent("SDK Implemented", "metrics-1", MixpanelSettings.Instance.Token,
-                    $",\"Tracked\":{MixpanelStorage.HasTracked.ToString().ToLower()}" +
-                    $",\"Identified\":{MixpanelStorage.HasIdendified.ToString().ToLower()}" +
-                    $",\"Aliased\":{MixpanelStorage.HasAliased.ToString().ToLower()}" +
-                    $",\"Used People\":{MixpanelStorage.HasUsedPeople.ToString().ToLower()}",
-                    true
-                ));
-            }
-        }
 
         private IEnumerator WaitAndFlush()
         {
@@ -267,12 +230,6 @@ namespace mixpanel
                         {
                             bool optedOut = stateValue[optedOutKey];
                             MixpanelStorage.IsTracking = !optedOut;
-                        }
-                        string trackedIntegrationKey = "tracked_integration";
-                        if (stateValue.ContainsKey(trackedIntegrationKey) && !stateValue[trackedIntegrationKey].IsNull)
-                        {
-                            bool trackedIntegration = stateValue[trackedIntegrationKey];
-                            MixpanelStorage.HasIntegratedLibrary = trackedIntegration;
                         }
                     }
                 }
