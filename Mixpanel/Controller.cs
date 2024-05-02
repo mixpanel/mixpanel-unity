@@ -24,9 +24,9 @@ namespace mixpanel
 
         private static int _retryCount = 0;
         private static DateTime _retryTime;
-        
+
         #region Singleton
-        
+
         private static Controller _instance;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -118,11 +118,11 @@ namespace mixpanel
             implementedScore += MixpanelStorage.HasIdendified ? 1 : 0;
             implementedScore += MixpanelStorage.HasAliased ? 1 : 0;
             implementedScore += MixpanelStorage.HasUsedPeople ? 1 : 0;
-            
+
             if (implementedScore >= 3) {
                 MixpanelStorage.HasImplemented = true;
 
-                StartCoroutine(SendHttpEvent("SDK Implemented", "metrics-1", MixpanelSettings.Instance.Token, 
+                StartCoroutine(SendHttpEvent("SDK Implemented", "metrics-1", MixpanelSettings.Instance.Token,
                     $",\"Tracked\":{MixpanelStorage.HasTracked.ToString().ToLower()}" +
                     $",\"Identified\":{MixpanelStorage.HasIdendified.ToString().ToLower()}" +
                     $",\"Aliased\":{MixpanelStorage.HasAliased.ToString().ToLower()}" +
@@ -145,13 +145,13 @@ namespace mixpanel
         {
             int coroutinesCount = 2; // Number of coroutines to wait for
             bool overallSuccess = true;
-            
-            Action<bool> onComplete = onFlushComplete != null ? success =>
-                {
+
+            Action<bool> onComplete = onFlushComplete != null ?
+                new Action<bool>(success => {
                     overallSuccess &= success;
                     CheckCompletion(onFlushComplete, ref coroutinesCount, overallSuccess);
-                }
-                : null;
+                })
+                : (Action<bool>)null;
             StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS, onComplete));
             StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE, onComplete));
         }
@@ -199,10 +199,10 @@ namespace mixpanel
                     }
                 }
             }
-            
+
             onComplete?.Invoke(true);
         }
-        
+
         private void CheckCompletion(Action<bool> onFlushComplete, ref int coroutinesCount, bool overallSuccess)
         {
             // Decrease the counter
@@ -217,27 +217,27 @@ namespace mixpanel
 
         private IEnumerator SendHttpEvent(string eventName, string apiToken, string distinctId, string properties, bool updatePeople)
         {
-            string body = "{\"event\":\"" + eventName + "\",\"properties\":{\"token\":\"" + 
-                        apiToken + "\",\"DevX\":true,\"mp_lib\":\"unity\"," + 
+            string body = "{\"event\":\"" + eventName + "\",\"properties\":{\"token\":\"" +
+                        apiToken + "\",\"DevX\":true,\"mp_lib\":\"unity\"," +
                         "\"$lib_version\":\"" + Mixpanel.MixpanelUnityVersion + "\"," +
                         "\"Project Token\":\"" + distinctId + "\",\"distinct_id\":\"" + distinctId + "\"" + properties + "}}";
             string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
             WWWForm form = new WWWForm();
             form.AddField("data", payload);
-              
+
             using (UnityWebRequest request = UnityWebRequest.Post(Config.TrackUrl, form)) {
                 yield return request.SendWebRequest();
             }
 
             if (updatePeople) {
-                body = "{\"$add\":" + "{\"" + eventName + 
-                "\":1}," + 
+                body = "{\"$add\":" + "{\"" + eventName +
+                "\":1}," +
                             "\"$token\":\"" + apiToken + "\"," +
                             "\"$distinct_id\":\"" + distinctId + "\"}";
                 payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
                 form = new WWWForm();
                 form.AddField("data", payload);
-                
+
                 using (UnityWebRequest request = UnityWebRequest.Post(Config.EngageUrl, form)) {
                     yield return request.SendWebRequest();
                 }
@@ -386,7 +386,7 @@ namespace mixpanel
             properties["time"] = Util.CurrentTimeInMilliseconds();
 
             Value data = new Value();
-            
+
             data["event"] = eventName;
             data["properties"] = properties;
             data["$mp_metadata"] = Metadata.GetEventMetadata();
