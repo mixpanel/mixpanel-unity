@@ -9,6 +9,37 @@
 
 #
 
+## [v3.5.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.0) (2024-02-29)
+
+### Enhancements
+
+- Add the UseIpAddressForGeolocation option for MixpanelSettings  [\#170](https://github.com/mixpanel/mixpanel-unity/pull/170), thanks @qwe321qwe321qwe321 !
+- Add onFlushComplete callback [\#168](https://github.com/mixpanel/mixpanel-unity/pull/168), thanks @elic-sightful
+
+### Bug fixes
+- Use DEVELOPMENT_BUILD build flag instead of Debug.isDebugBuild [\#167](https://github.com/mixpanel/mixpanel-unity/pull/167), thanks @elic-sightful
+- Fixed single quotes in readme [\#172](https://github.com/mixpanel/mixpanel-unity/pull/172), thanks @AldeRoberge
+
+#
+
+## [v3.4.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.2) (2023-11-08)
+
+### Bug fixes
+
+Remove the internal release script. https://github.com/mixpanel/mixpanel-unity/pull/165  
+address issue #164 
+
+#
+
+## [v3.4.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.2) (2023-09-20)
+
+### Bug fixes
+
+Remove the internal release script. https://github.com/mixpanel/mixpanel-unity/pull/165  
+address issue #164 
+
+#
+
 ## [v3.4.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.1) (2023-09-20)
 
 ### Enhancements
