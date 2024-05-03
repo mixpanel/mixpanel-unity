@@ -348,12 +348,6 @@ namespace mixpanel
             data["properties"] = properties;
             data["$mp_metadata"] = Metadata.GetEventMetadata();
 
-            #if DEVELOPMENT_BUILD
-                if (!eventName.StartsWith("$")) {
-                    MixpanelStorage.HasTracked = true;
-                }
-            #endif
-
             MixpanelStorage.EnqueueTrackingData(data, MixpanelStorage.FlushType.EVENTS);
         }
 
@@ -366,9 +360,6 @@ namespace mixpanel
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
-            #if DEVELOPMENT_BUILD
-                MixpanelStorage.HasUsedPeople = true;
-            #endif
         }
 
         internal static void DoClear()
