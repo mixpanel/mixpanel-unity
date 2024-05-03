@@ -143,7 +143,7 @@ namespace mixpanel
                     if (request.isHttpError || request.isNetworkError)
                     #endif
                     {
-                        Mixpanel.Log("API request to " + url + "has failed with reason " + request.error);
+                        Mixpanel.LogError("API request failed", "API request to " + url + "has failed with reason " + request.error);
                         _retryCount += 1;
                         double retryIn = Math.Pow(2, _retryCount - 1) * 60;
                         retryIn = Math.Min(retryIn, 10 * 60); // limit 10 min

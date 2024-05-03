@@ -11,6 +11,7 @@ using System.Web;
 using UnityEngine.Networking;
 using Unity.Jobs;
 using Unity.Collections;
+using Debug = UnityEngine.Debug;
 
 namespace mixpanel
 {
@@ -135,8 +136,11 @@ namespace mixpanel
                     try {
                         batch.Add(JsonUtility.FromJson<Value>(PreferencesSource.GetString(trackingKey)));
                     }
-                    catch (Exception e) {
-                        Mixpanel.LogError($"There was an error processing '{trackingKey}' from the internal object pool: " + e);
+                    catch (Exception e)
+                    {
+                        Mixpanel.LogError("Exception while processing object pool",
+                            $"There was an error processing '{trackingKey}' from the internal object pool");
+                        Debug.LogException(e); // Log underlying exception.
                         PreferencesSource.DeleteKey(trackingKey);
 
                         if (batch.Count == 0) {
