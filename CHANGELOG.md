@@ -2,7 +2,9 @@
 
 ## [v3.5.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.2) (2024-05-12)
 
-#
+### Fixes
+
+- Fix the compile errors in the development build [\#178](https://github.com/mixpanel/mixpanel-unity/pull/178)
 
 ## [v3.5.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.1) (2024-05-02)
 
