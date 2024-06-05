@@ -177,11 +177,11 @@ namespace mixpanel
                 dataIndex++;
             }
 
-            if (dataIndex == maxIndex) {
-                // We want to avoid maxIndex from getting too high while having large "empty gaps" stored in PlayerPrefs, otherwise
-                // there can be a large number of string concatenation and PlayerPrefs API calls (in extreme cases, 100K+).
-                // At this point, we should have iterated through all possible event IDs and can assume that there are no other events
-                // stored in preferences (since we deleted them all).
+            bool deletedAllTrackingData = dataIndex > maxIndex; // if true, we iterated through all events.
+            if (deletedAllTrackingData) {
+                // For performance reasons, reset the tracking data ID to 0 if all data stored in PlayerPrefs has been deleted.
+                // Otherwise, there can be a large number of string concatenation and PreferencesSource.Haskey calls (in extreme cases, 100K+).
+                // See https://github.com/mixpanel/mixpanel-unity/pull/152 for context
                 string idKey = (flushType == FlushType.EVENTS) ? EventAutoIncrementingIdName : PeopleAutoIncrementingIdName;
                 PreferencesSource.SetInt(idKey, 0);
                 PreferencesSource.SetInt(startIndexKey, 0);
