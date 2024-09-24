@@ -78,7 +78,9 @@ namespace mixpanel
             get => _array[index];
             set
             {
-                Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.UNDEFINED);
+                Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.UNDEFINED,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.ARRAY or ValueTypes.UNDEFINED."
+                );
                 _valueType = ValueTypes.ARRAY;
                 _dataType = DataTypes.CONTAINER;
                 _array[index] = value;
@@ -94,7 +96,9 @@ namespace mixpanel
             }
             set
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT || _valueType == ValueTypes.UNDEFINED);
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT || _valueType == ValueTypes.UNDEFINED,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.UNDEFINED."
+                );
                 _valueType = ValueTypes.OBJECT;
                 _dataType = DataTypes.CONTAINER;
                 _container[key] = value;
@@ -129,7 +133,9 @@ namespace mixpanel
 
         public IEnumerator GetEnumerator()
         {
-            Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.OBJECT);
+            Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.OBJECT,
+                $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.ARRAY or ValueTypes.OBJECT."
+            );
             switch (_valueType)
             {
                 case ValueTypes.ARRAY:
@@ -144,7 +150,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.OBJECT);
+                Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.OBJECT,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.ARRAY or ValueTypes.OBJECT."
+                );
                 switch (_valueType)
                 {
                     case ValueTypes.ARRAY:
@@ -158,19 +166,25 @@ namespace mixpanel
 
         public bool Contains(int index)
         {
-            Assert.IsTrue(_valueType == ValueTypes.ARRAY);
+            Assert.IsTrue(_valueType == ValueTypes.ARRAY,
+                $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.ARRAY."
+            );
             return _array.Contains(index);
         }
 
         public bool ContainsKey(string key)
         {
-            Assert.IsTrue(_valueType == ValueTypes.OBJECT);
+            Assert.IsTrue(_valueType == ValueTypes.OBJECT,
+                $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT."
+            );
             return _container.ContainsKey(key);
         }
         
         public void Add(Value value)
         {
-            Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.UNDEFINED);
+            Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.UNDEFINED,
+                $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.ARRAY or ValueTypes.UNDEFINED."
+            );
             _valueType = ValueTypes.ARRAY;
             _dataType = DataTypes.CONTAINER;
             _array.Add(value);
@@ -178,7 +192,9 @@ namespace mixpanel
 
         public void Add(string key, Value value)
         {
-            Assert.IsTrue(_valueType == ValueTypes.OBJECT || _valueType == ValueTypes.UNDEFINED);
+            Assert.IsTrue(_valueType == ValueTypes.OBJECT || _valueType == ValueTypes.UNDEFINED,
+                $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.UNDEFINED."
+            );
             _valueType = ValueTypes.OBJECT;
             _dataType = DataTypes.CONTAINER;
             _container.Add(key, value);
@@ -186,13 +202,17 @@ namespace mixpanel
 
         public void Remove(int index)
         {
-            Assert.IsTrue(_valueType == ValueTypes.ARRAY);
+            Assert.IsTrue(_valueType == ValueTypes.ARRAY,
+                $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.ARRAY."
+            );
             _array.Remove(index);
         }
 
         public void Remove(string key)
         {
-            Assert.IsTrue(_valueType == ValueTypes.OBJECT);
+            Assert.IsTrue(_valueType == ValueTypes.OBJECT,
+                $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT."
+            );
             _container.Remove(key);
         }
         
@@ -200,7 +220,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.OBJECT);
+                Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.OBJECT,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.ARRAY or ValueTypes.OBJECT."
+                );
                 switch (_valueType)
                 {
                     case ValueTypes.ARRAY:
@@ -214,13 +236,17 @@ namespace mixpanel
 
         public bool TryGetValue(string key, out Value value)
         {
-            Assert.IsTrue(_valueType == ValueTypes.OBJECT);
+            Assert.IsTrue(_valueType == ValueTypes.OBJECT,
+                $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT."
+            );
             return _container.TryGetValue(key, out value);
         }
 
         public void Merge(Value other)
         {
-            Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.OBJECT);
+            Assert.IsTrue(_valueType == ValueTypes.ARRAY || _valueType == ValueTypes.OBJECT,
+                $"Merge operation failed: _valueType is {_valueType}, but expected ValueTypes.ARRAY or ValueTypes.OBJECT."
+            );
             switch (other._valueType)
             {
                 case ValueTypes.ARRAY:
@@ -243,7 +269,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.PRIMITIVE);
+                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.PRIMITIVE,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.STRING or ValueTypes.PRIMITIVE."
+                );
                 return _string;
             }
             set
@@ -258,7 +286,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.BOOLEAN && _dataType == DataTypes.PRIMITIVE);
+                Assert.IsTrue(_valueType == ValueTypes.BOOLEAN && _dataType == DataTypes.PRIMITIVE,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.BOOLEAN or ValueTypes.PRIMITIVE."
+                );
                 return _bool;
             }
             set
@@ -273,7 +303,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.NUMBER && _dataType == DataTypes.PRIMITIVE);
+                Assert.IsTrue(_valueType == ValueTypes.NUMBER && _dataType == DataTypes.PRIMITIVE,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.NUMBER or ValueTypes.PRIMITIVE."
+                );
                 return _number;
             }
             set
@@ -288,7 +320,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.URI);
+                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.URI,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.STRING or ValueTypes.URI."
+                );
                 return new Uri(_string);
             }
             set
@@ -303,7 +337,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.GUID);
+                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.GUID,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.STRING or ValueTypes.GUID."
+                );
                 return Guid.Parse(_string);
             }
             set
@@ -318,7 +354,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.DATE_TIME);
+                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.DATE_TIME,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.STRING or ValueTypes.DATE_TIME."
+                );
                 return DateTime.SpecifyKind(DateTime.Parse(_string), DateTimeKind.Utc);
             }
             set
@@ -333,7 +371,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.DATE_TIME_OFFSET);
+                Assert.IsTrue(_valueType == ValueTypes.STRING && _dataType == DataTypes.DATE_TIME_OFFSET,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.STRING or ValueTypes.DATE_TIME_OFFSET."
+                );
                 return DateTimeOffset.Parse(_string);
             }
             set
@@ -348,7 +388,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.TIME_SPAN);
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.TIME_SPAN,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.TIME_SPAN."
+                );
                 return new TimeSpan((long)_number);
             }
             set
@@ -363,7 +405,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.COLOR);
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.COLOR,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.COLOR."
+                );
                 return new Color(this["r"], this["g"], this["b"], this["a"]);
             }
             set
@@ -378,7 +422,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.COLOR);
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.COLOR,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.COLOR."
+                );
                 return new Color(this["r"], this["g"], this["b"], this["a"]);
             }
             set
@@ -393,7 +439,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.VECTOR);
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.VECTOR,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.VECTOR."
+                );
                 return new Vector2(this["x"], this["y"]);
             }
             set
@@ -408,7 +456,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.VECTOR);
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.VECTOR,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.VECTOR."
+                );
                 return new Vector3(this["x"], this["y"], this["z"]);
             }
             set
@@ -423,7 +473,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && (_dataType == DataTypes.VECTOR || _dataType == DataTypes.QUATERNION));
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && (_dataType == DataTypes.VECTOR || _dataType == DataTypes.QUATERNION),
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT, ValueTypes.VECTOR or ValueTypes.QUATERNION."
+                );
                 return new Vector4(this["x"], this["y"], this["z"], this["w"]);
             }
             set
@@ -438,7 +490,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && (_dataType == DataTypes.VECTOR || _dataType == DataTypes.QUATERNION));
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && (_dataType == DataTypes.VECTOR || _dataType == DataTypes.QUATERNION),
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT, ValueTypes.VECTOR or ValueTypes.QUATERNION."
+                );
                 return new Quaternion(this["x"], this["y"], this["z"], this["w"]);
             }
             set
@@ -453,7 +507,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.BOUNDS);
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.BOUNDS,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.BOUNDS."
+                );
                 return new Bounds(this["center"], this["size"]);
             }
             set
@@ -468,7 +524,9 @@ namespace mixpanel
         {
             get
             {
-                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.RECT);
+                Assert.IsTrue(_valueType == ValueTypes.OBJECT && _dataType == DataTypes.RECT,
+                    $"Assertion failed: _valueType is {_valueType}, but expected ValueTypes.OBJECT or ValueTypes.RECT."
+                );
                 return new Rect(this["x"], this["y"], this["width"], this["height"]);
             }
             set
