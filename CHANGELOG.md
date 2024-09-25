@@ -1,5 +1,17 @@
 #
 
+## [v3.5.3](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.3) (2024-09-25)
+
+### Enhancements
+
+- Provide more details to Assert [\#180](https://github.com/mixpanel/mixpanel-unity/pull/180)
+
+### Fixes
+
+- Fix incorrect condition for determining if all tracking data was deleted [\#179](https://github.com/mixpanel/mixpanel-unity/pull/179)
+
+#
+
 ## [v3.5.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.2) (2024-05-12)
 
 ### Fixes
@@ -321,6 +333,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
