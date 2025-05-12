@@ -42,7 +42,7 @@ namespace mixpanel
             RECT
         }
 
-        [SerializeField] private ValueTypes _valueType = ValueTypes.OBJECT;
+        [SerializeField] private ValueTypes _valueType = ValueTypes.UNDEFINED;
         [SerializeField] private DataTypes _dataType = DataTypes.UNDEFINED;
         [SerializeField] private string _string;
         [SerializeField] private bool _bool;
