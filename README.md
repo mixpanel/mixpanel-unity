@@ -89,6 +89,8 @@ No worries, here are some links that you will find useful:
 - **[Full Documentation](https://developer.mixpanel.com/docs/unity)**
 - **[Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)**
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mixpanel/mixpanel-unity)
+
 Have any questions? Reach out to Mixpanel [Support](https://help.mixpanel.com/hc/en-us/requests/new) to speak to someone smart, quickly.
 
 ## Examples
