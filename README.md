@@ -34,7 +34,7 @@ This library can be installed using the unity package manager system with git. W
 - In your unity project root open ./Packages/manifest.json
 - Add the following line to the dependencies section "com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#master", or point to a specific version. Example: ("com.mixpanel.unity": "https://github.com/mixpanel/mixpanel-unity.git#v3.5.1")
 - Open Unity and the package should download automatically
-  Alternatively you can go to the [releases page](https://github.com/mixpanel/mixpanel-unity/releases) and download the .unitypackage file and have unity install that.
+  Alternatively you can go to the [releases page](https://github.com/mixpanel/mixpanel-unity/releases) for versions before Release v3.0.0, download the .unitypackage file, and have Unity install that.
 
 ## 2. Initialize Mixpanel
 
@@ -65,6 +65,10 @@ Once data hits our API, it generally takes ~60 seconds for it to be processed, s
 👋 👋 Tell us about the Mixpanel developer experience! [https://www.mixpanel.com/devnps](https://www.mixpanel.com/devnps) 👍 👎
 
 # FAQ
+
+**Does the Unity SDK support [Simplified ID Merge](https://docs.mixpanel.com/docs/tracking-methods/id-management/identifying-users-simplified)?**
+
+The Unity SDK **does not** currently support Simplified ID Merge. You will need to send data to a project using [Original ID Merge](https://docs.mixpanel.com/docs/tracking-methods/id-management/identifying-users-original) to properly merge event streams before and after you call `Mixpanel.Identify()`
 
 **I want to stop tracking an event/event property in Mixpanel. Is that possible?**
 
