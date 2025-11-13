@@ -83,14 +83,39 @@ namespace mixpanel
         {
             if (!pauseStatus)
             {
+                // Re-initialize session when app resumes from background
                 Metadata.InitSession();
             }
+            #if UNITY_ANDROID
+            else
+            {
+                // Flush events when app goes to background on Android
+                Mixpanel.Log("App pausing on Android - flushing events");
+                DoFlush();
+            }
+            #endif
         }
+
+        #if UNITY_ANDROID
+        void OnApplicationQuit()
+        {
+            // Synchronous flush on Android before app quits to prevent event loss
+            Mixpanel.Log("App quitting on Android - flushing events");
+            DoFlush(onFlushComplete: (success) => {
+                Mixpanel.Log($"Final flush completed with success={success}");
+            });
+            // Brief delay to allow flush to complete
+            // Note: This is a best-effort approach; Unity may kill the app before completion
+            System.Threading.Thread.Sleep(500);
+        }
+        #endif
 
         private void Start()
         {
             MigrateFrom1To2();
-            Mixpanel.Log($"Mixpanel Component Started");
+            // Initialize session metadata immediately on startup to ensure first event has valid metadata
+            Metadata.InitSession();
+            Mixpanel.Log($"Mixpanel Component Started (Session ID: {Metadata.GetSessionId()})");
             StartCoroutine(WaitAndFlush());
         }
 
@@ -381,6 +406,11 @@ namespace mixpanel
                 _peopleCounter = 0;
                 _sessionID = Convert.ToString(_random.Next(0, Int32.MaxValue), 16);
                 _sessionStartEpoch = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                Mixpanel.Log($"Session initialized: ID={_sessionID}, StartTime={_sessionStartEpoch}");
+            }
+
+            internal static String GetSessionId() {
+                return _sessionID ?? "(not initialized)";
             }
             internal static Value GetEventMetadata() {
                 Value eventMetadata = new Value
@@ -390,6 +420,7 @@ namespace mixpanel
                     {"$mp_session_seq_id", _eventCounter},
                     {"$mp_session_start_sec", _sessionStartEpoch}
                 };
+                Mixpanel.Log($"Event metadata: SessionID={_sessionID ?? "null"}, SeqID={_eventCounter}, StartEpoch={_sessionStartEpoch}");
                 _eventCounter++;
                 return eventMetadata;
             }
