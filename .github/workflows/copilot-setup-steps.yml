@@ -26,6 +26,6 @@ jobs:
       - name: Display Unity package info
         run: |
           echo "Repository setup complete for GitHub Copilot"
-          echo "Unity Package: $(cat package.json | grep -o '"name": "[^"]*' | cut -d'"' -f4)"
-          echo "Version: $(cat package.json | grep -o '"version": "[^"]*' | cut -d'"' -f4)"
+          echo "Unity Package: $(jq -r '.name' package.json)"
+          echo "Version: $(jq -r '.version' package.json)"
           echo "Mixpanel Unity SDK is ready for Copilot assistance"
