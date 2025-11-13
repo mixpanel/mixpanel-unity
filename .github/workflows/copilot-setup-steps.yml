@@ -1,0 +1,31 @@
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Display Unity package info
+        run: |
+          echo "Repository setup complete for GitHub Copilot"
+          echo "Unity Package: $(cat package.json | grep -o '"name": "[^"]*' | cut -d'"' -f4)"
+          echo "Version: $(cat package.json | grep -o '"version": "[^"]*' | cut -d'"' -f4)"
+          echo "Mixpanel Unity SDK is ready for Copilot assistance"
