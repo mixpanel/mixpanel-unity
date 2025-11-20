@@ -153,23 +153,7 @@ namespace mixpanel
             Metadata.ResetSession();  // Clear session state
         }
 
-        /// <summary>
-        /// Helper method to set the fully initialized flag from instance methods.
-        /// This avoids direct static field writes from instance methods.
-        /// </summary>
-        private static void SetFullyInitialized(bool value)
-        {
-            _fullyInitialized = value;
-        }
 
-        /// <summary>
-        /// Helper method to set the flush coroutine running flag from instance methods.
-        /// This avoids direct static field writes from instance methods.
-        /// </summary>
-        private static void SetFlushCoroutineRunning(bool value)
-        {
-            _isFlushCoroutineRunning = value;
-        }
 
         void OnApplicationPause(bool pauseStatus)
         {
@@ -192,7 +176,7 @@ namespace mixpanel
             // Start the flush coroutine if initialized and not already running
             if (_fullyInitialized && !_isFlushCoroutineRunning)
             {
-                SetFlushCoroutineRunning(true);
+                _isFlushCoroutineRunning = true;
                 StartCoroutine(WaitAndFlush());
                 Mixpanel.Log($"Mixpanel flush coroutine started");
             }
@@ -229,12 +213,12 @@ namespace mixpanel
                     PreloadPersistedProperties();
 
                     // Mark as initialized
-                    SetFullyInitialized(true);
+                    _fullyInitialized = true;
 
                     // Start flush coroutine after initialization
                     if (!_isFlushCoroutineRunning)
                     {
-                        SetFlushCoroutineRunning(true);
+                        _isFlushCoroutineRunning = true;
                         StartCoroutine(WaitAndFlush());
                         Mixpanel.Log($"Mixpanel flush coroutine started (fallback)");
                     }
