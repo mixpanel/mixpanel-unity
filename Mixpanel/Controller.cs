@@ -46,30 +46,37 @@ namespace mixpanel
         }
 
         internal static void Initialize() {
-            // Copy over any runtime changes that happened before initialization from settings instance to the config.
-            MixpanelSettings.Instance.ApplyToConfig();
+            try {
+                // Copy over any runtime changes that happened before initialization from settings instance to the config.
+                MixpanelSettings.Instance.ApplyToConfig();
 
-            // Create the singleton instance
-            Controller instance = GetInstance();
+                // Create the singleton instance
+                Controller instance = GetInstance();
 
-            // SYNCHRONOUS INITIALIZATION - Critical operations that must complete before tracking
-            // 1. Initialize session metadata BEFORE any tracking can occur
-            Metadata.InitSession();
+                // SYNCHRONOUS INITIALIZATION - Critical operations that must complete before tracking
+                // 1. Initialize session metadata BEFORE any tracking can occur
+                Metadata.InitSession();
 
-            // 2. Migrate v1 data if needed (sets DistinctId and IsTracking from old SDK)
-            instance.MigrateFrom1To2();
+                // 2. Migrate v1 data if needed (sets DistinctId and IsTracking from old SDK)
+                instance.MigrateFrom1To2();
 
-            // 3. Initialize auto properties synchronously to ensure they're ready for first event
-            GetEventsDefaultProperties();
-            GetEngageDefaultProperties();
+                // 3. Initialize auto properties synchronously to ensure they're ready for first event
+                GetEventsDefaultProperties();
+                GetEngageDefaultProperties();
 
-            // 4. Start the flush coroutine for periodic network operations
-            instance.StartCoroutine(instance.WaitAndFlush());
+                // 4. Start the flush coroutine for periodic network operations
+                instance.StartCoroutine(instance.WaitAndFlush());
 
-            // Mark as fully initialized
-            _fullyInitialized = true;
+                // Mark as fully initialized
+                _fullyInitialized = true;
 
-            Mixpanel.Log($"Mixpanel fully initialized (synchronous)");
+                Mixpanel.Log($"Mixpanel fully initialized (synchronous)");
+            }
+            catch (Exception e) {
+                Mixpanel.LogError($"Error during Mixpanel initialization: {e}");
+                _fullyInitialized = false; // Ensure we're not marked as initialized on error
+                // Note: Start() will attempt fallback initialization if this fails
+            }
         }
 
         internal static bool IsInitialized() {
@@ -99,11 +106,13 @@ namespace mixpanel
         void OnDestroy()
         {
             Mixpanel.Log($"Mixpanel Component Destroyed");
+            _instance = null;  // Clear static reference to destroyed instance
+            _fullyInitialized = false;  // Reset initialization state
         }
 
         void OnApplicationPause(bool pauseStatus)
         {
-            if (!pauseStatus)
+            if (!pauseStatus && _fullyInitialized)
             {
                 Metadata.InitSession();
             }
@@ -115,12 +124,41 @@ namespace mixpanel
             // This method is called by Unity after the GameObject is created
             // but all critical initialization has already completed
 
-            // Safety check: if somehow Start() is called without proper initialization
-            // (e.g., GameObject created manually), ensure we're initialized
+            // Safety check with active fallback for edge cases (e.g., GameObject created manually)
             if (!_fullyInitialized)
             {
-                Mixpanel.LogError("Mixpanel Component Start() called without proper initialization. This should not happen.");
-                // Do NOT attempt to initialize here as it would create recursion
+                Mixpanel.LogWarning("Mixpanel Component Start() called without proper initialization. Attempting fallback initialization...");
+                try
+                {
+                    // Perform fallback initialization (without creating new instance)
+                    // This handles edge cases like manual GameObject creation
+
+                    // Apply settings if not already done
+                    MixpanelSettings.Instance.ApplyToConfig();
+
+                    // Initialize session if needed
+                    Metadata.InitSession();
+
+                    // Migrate if not already done
+                    MigrateFrom1To2();
+
+                    // Initialize auto properties
+                    GetEventsDefaultProperties();
+                    GetEngageDefaultProperties();
+
+                    // Start flush coroutine
+                    StartCoroutine(WaitAndFlush());
+
+                    // Mark as initialized
+                    _fullyInitialized = true;
+
+                    Mixpanel.Log($"Mixpanel fallback initialization completed successfully");
+                }
+                catch (Exception e)
+                {
+                    Mixpanel.LogError($"Mixpanel fallback initialization failed: {e}");
+                    // SDK remains non-functional but won't crash the app
+                }
             }
 
             Mixpanel.Log($"Mixpanel Component Started");
