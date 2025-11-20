@@ -64,7 +64,12 @@ namespace mixpanel
                 GetEventsDefaultProperties();
                 GetEngageDefaultProperties();
 
-                // 4. Start the flush coroutine for periodic network operations
+                // 4. Eagerly load persisted properties to ensure consistent Track() performance
+                // This prevents lazy-loading with disk I/O when Track() is called immediately after Init()
+                // Moving the I/O cost from first Track() to Init() for predictable performance
+                PreloadPersistedProperties();
+
+                // 5. Start the flush coroutine for periodic network operations
                 instance.StartCoroutine(instance.WaitAndFlush());
 
                 // Mark as fully initialized
@@ -145,6 +150,9 @@ namespace mixpanel
                     // Initialize auto properties
                     GetEventsDefaultProperties();
                     GetEngageDefaultProperties();
+
+                    // Preload persisted properties
+                    PreloadPersistedProperties();
 
                     // Start flush coroutine
                     StartCoroutine(WaitAndFlush());
@@ -361,6 +369,22 @@ namespace mixpanel
                 _autoEngageProperties = properties;
             }
             return _autoEngageProperties;
+        }
+
+        private static void PreloadPersistedProperties() {
+            // Eagerly load all persisted properties from disk into memory cache
+            // This prevents lazy-loading with disk I/O during the first Track() call
+            // Each property getter will check if cached, and if not, load from PlayerPreferences
+            try {
+                var _ = MixpanelStorage.SuperProperties;   // Force load + cache
+                var __ = MixpanelStorage.OnceProperties;   // Force load + cache
+                var ___ = MixpanelStorage.TimedEvents;     // Force load + cache
+                Mixpanel.Log($"Preloaded persisted properties from storage");
+            }
+            catch (Exception e) {
+                // Non-critical failure - properties will lazy-load on first use
+                Mixpanel.LogError($"Failed to preload persisted properties: {e}");
+            }
         }
 
         private static Value GetEventsDefaultProperties()
