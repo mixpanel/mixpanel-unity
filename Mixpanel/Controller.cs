@@ -30,6 +30,7 @@ namespace mixpanel
         private static Controller _instance;
         private static bool _fullyInitialized = false;
         private static bool _isFlushCoroutineRunning = false;
+        private static bool _isInitializing = false;  // Guard against concurrent initialization
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeBeforeSceneLoad()
@@ -47,6 +48,14 @@ namespace mixpanel
         }
 
         internal static void Initialize() {
+            // Guard against concurrent initialization calls
+            if (_fullyInitialized || _isInitializing) {
+                Mixpanel.Log($"Mixpanel initialization already in progress or completed");
+                return;
+            }
+
+            _isInitializing = true;
+
             try {
                 // Copy over any runtime changes that happened before initialization from settings instance to the config.
                 MixpanelSettings.Instance.ApplyToConfig();
@@ -83,6 +92,9 @@ namespace mixpanel
                 _fullyInitialized = false; // Ensure we're not marked as initialized on error
                 // Note: Start() will attempt fallback initialization if _fullyInitialized remains false
             }
+            finally {
+                _isInitializing = false; // Always clear the initialization flag
+            }
         }
 
         internal static bool IsInitialized() {
@@ -93,6 +105,9 @@ namespace mixpanel
             if (_instance != null) {
                 Destroy(_instance);
                 _fullyInitialized = false;
+                _isFlushCoroutineRunning = false;  // Reset coroutine flag on disable
+                _isInitializing = false;  // Reset initialization guard
+                Metadata.ResetSession();  // Clear session state for clean re-initialization
             }
         }
 
@@ -116,10 +131,39 @@ namespace mixpanel
             // Only clear the static reference if this is the actual singleton instance
             if (_instance == this)
             {
-                _instance = null;  // Clear static reference to destroyed instance
-                _fullyInitialized = false;  // Reset initialization state
-                _isFlushCoroutineRunning = false;  // Reset coroutine flag
+                ResetStaticState();
             }
+        }
+
+        /// <summary>
+        /// Resets all static state for the Controller singleton.
+        /// Should only be called from static context or by the singleton instance.
+        /// </summary>
+        internal static void ResetStaticState()
+        {
+            _instance = null;  // Clear static reference to destroyed instance
+            _fullyInitialized = false;  // Reset initialization state
+            _isFlushCoroutineRunning = false;  // Reset coroutine flag
+            _isInitializing = false;  // Reset initialization guard
+            Metadata.ResetSession();  // Clear session state
+        }
+
+        /// <summary>
+        /// Helper method to set the fully initialized flag from instance methods.
+        /// This avoids direct static field writes from instance methods.
+        /// </summary>
+        private static void SetFullyInitialized(bool value)
+        {
+            _fullyInitialized = value;
+        }
+
+        /// <summary>
+        /// Helper method to set the flush coroutine running flag from instance methods.
+        /// This avoids direct static field writes from instance methods.
+        /// </summary>
+        private static void SetFlushCoroutineRunning(bool value)
+        {
+            _isFlushCoroutineRunning = value;
         }
 
         void OnApplicationPause(bool pauseStatus)
@@ -139,7 +183,7 @@ namespace mixpanel
             // Start the flush coroutine if initialized and not already running
             if (_fullyInitialized && !_isFlushCoroutineRunning)
             {
-                _isFlushCoroutineRunning = true;
+                SetFlushCoroutineRunning(true);
                 StartCoroutine(WaitAndFlush());
                 Mixpanel.Log($"Mixpanel flush coroutine started");
             }
@@ -176,12 +220,12 @@ namespace mixpanel
                     PreloadPersistedProperties();
 
                     // Mark as initialized
-                    _fullyInitialized = true;
+                    SetFullyInitialized(true);
 
                     // Start flush coroutine after initialization
                     if (!_isFlushCoroutineRunning)
                     {
-                        _isFlushCoroutineRunning = true;
+                        SetFlushCoroutineRunning(true);
                         StartCoroutine(WaitAndFlush());
                         Mixpanel.Log($"Mixpanel flush coroutine started (fallback)");
                     }
@@ -507,6 +551,17 @@ namespace mixpanel
                 _sessionID = Convert.ToString(_random.Next(0, Int32.MaxValue), 16);
                 _sessionStartEpoch = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                 _sessionInitialized = true;
+            }
+
+            /// <summary>
+            /// Resets session state for clean re-initialization.
+            /// Should be called when the SDK is disabled or destroyed.
+            /// </summary>
+            internal static void ResetSession() {
+                _sessionInitialized = false;
+                _eventCounter = 0;
+                _peopleCounter = 0;
+                // Note: We don't reset _sessionID or _sessionStartEpoch as they will be regenerated on next InitSession()
             }
             internal static Value GetEventMetadata() {
                 Value eventMetadata = new Value
