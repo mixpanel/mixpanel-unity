@@ -49,8 +49,12 @@ namespace mixpanel
 
         internal static void Initialize() {
             // Guard against concurrent initialization calls
-            if (_fullyInitialized || _isInitializing) {
-                Mixpanel.Log($"Mixpanel initialization already in progress or completed");
+            if (_isInitializing) {
+                Mixpanel.Log($"Mixpanel initialization already in progress");
+                return;
+            }
+            if (_fullyInitialized) {
+                Mixpanel.Log($"Mixpanel already initialized");
                 return;
             }
 
@@ -104,9 +108,8 @@ namespace mixpanel
         internal static void Disable() {
             if (_instance != null) {
                 Destroy(_instance);
-                _fullyInitialized = false;
-                _isFlushCoroutineRunning = false;  // Reset coroutine flag on disable
-                _isInitializing = false;  // Reset initialization guard
+                _instance = null; // Prevent race condition by clearing reference immediately
+                ResetStaticState(); // Centralize cleanup logic
                 Metadata.ResetSession();  // Clear session state for clean re-initialization
             }
         }
@@ -145,6 +148,8 @@ namespace mixpanel
             _fullyInitialized = false;  // Reset initialization state
             _isFlushCoroutineRunning = false;  // Reset coroutine flag
             _isInitializing = false;  // Reset initialization guard
+            _autoTrackProperties = null;  // Reset auto-properties cache
+            _autoEngageProperties = null; // Reset auto-properties cache
             Metadata.ResetSession();  // Clear session state
         }
 
@@ -168,9 +173,13 @@ namespace mixpanel
 
         void OnApplicationPause(bool pauseStatus)
         {
-            if (!pauseStatus && _fullyInitialized)
+            // On resume, ensure session is initialized even if initialization was interrupted
+            if (!pauseStatus)
             {
-                Metadata.InitSession();
+                if (!Metadata.IsSessionInitialized())
+                {
+                    Metadata.InitSession();
+                }
             }
         }
 
@@ -446,9 +455,9 @@ namespace mixpanel
             // This prevents lazy-loading with disk I/O during the first Track() call
             // Each property getter will check if cached, and if not, load from PlayerPreferences
             try {
-                var _ = MixpanelStorage.SuperProperties;   // Force load + cache
-                var __ = MixpanelStorage.OnceProperties;   // Force load + cache
-                var ___ = MixpanelStorage.TimedEvents;     // Force load + cache
+                _ = MixpanelStorage.SuperProperties;   // Force load + cache
+                _ = MixpanelStorage.OnceProperties;    // Force load + cache
+                _ = MixpanelStorage.TimedEvents;       // Force load + cache
                 Mixpanel.Log($"Preloaded persisted properties from storage");
             }
             catch (Exception e) {
@@ -561,7 +570,8 @@ namespace mixpanel
                 _sessionInitialized = false;
                 _eventCounter = 0;
                 _peopleCounter = 0;
-                // Note: We don't reset _sessionID or _sessionStartEpoch as they will be regenerated on next InitSession()
+                _sessionID = null;
+                _sessionStartEpoch = 0;
             }
             internal static Value GetEventMetadata() {
                 Value eventMetadata = new Value
