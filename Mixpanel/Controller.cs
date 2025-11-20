@@ -97,17 +97,25 @@ namespace mixpanel
         {
             if (_initialized) return;
 
-            // Perform critical initialization that must happen before any Track calls
-            MigrateFrom1To2();
-            Metadata.InitSession();
+            try
+            {
+                // Perform critical initialization that must happen before any Track calls
+                MigrateFrom1To2();
+                Metadata.InitSession();
 
-            Mixpanel.Log($"Mixpanel Component Initialized");
+                Mixpanel.Log($"Mixpanel Component Initialized");
 
-            // Start background flush coroutine
-            StartCoroutine(WaitAndFlush());
+                // Start background flush coroutine
+                StartCoroutine(WaitAndFlush());
 
-            // Mark as initialized after all setup completes successfully
-            _initialized = true;
+                // Mark as initialized only after all setup completes successfully
+                _initialized = true;
+            }
+            catch (Exception e)
+            {
+                Mixpanel.LogError($"Error during Mixpanel initialization: {e.Message}");
+                // Don't set _initialized = true, allowing retry on next call
+            }
         }
 
         private void Start()
