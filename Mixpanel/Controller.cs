@@ -49,6 +49,19 @@ namespace mixpanel
             // Copy over any runtime changes that happened before initialization from settings instance to the config.
             MixpanelSettings.Instance.ApplyToConfig();
             GetInstance();
+            
+            // Eagerly load all persisted properties to ensure they're available immediately for tracking
+            // This prevents race conditions where Track() is called before properties are loaded from disk
+            var _ = MixpanelStorage.SuperProperties;
+            var __ = MixpanelStorage.OnceProperties;
+            var ___ = MixpanelStorage.TimedEvents;
+            
+            // Pre-cache auto properties so they're ready for the first Track() call
+            GetEventsDefaultProperties();
+            GetEngageDefaultProperties();
+            
+            // Initialize session metadata
+            Metadata.InitSession();
         }
 
         internal static bool IsInitialized() {
