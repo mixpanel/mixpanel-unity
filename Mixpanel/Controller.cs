@@ -29,6 +29,7 @@ namespace mixpanel
 
         private static Controller _instance;
         private static bool _fullyInitialized = false;
+        private static bool _isFlushCoroutineRunning = false;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeBeforeSceneLoad()
@@ -41,8 +42,8 @@ namespace mixpanel
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void InitializeAfterSceneLoad()
         {
-            // Auto properties are now initialized in Initialize() for synchronous behavior
-            // This method is kept for compatibility but no longer does anything
+            // Formerly initialized auto properties here; now handled synchronously in Initialize()
+            // Kept as placeholder for potential future use
         }
 
         internal static void Initialize() {
@@ -69,8 +70,8 @@ namespace mixpanel
                 // Moving the I/O cost from first Track() to Init() for predictable performance
                 PreloadPersistedProperties();
 
-                // 5. Start the flush coroutine for periodic network operations
-                instance.StartCoroutine(instance.WaitAndFlush());
+                // Note: Flush coroutine will be started in Start() to follow Unity lifecycle best practices
+                // and prevent duplicate coroutines if initialization partially fails
 
                 // Mark as fully initialized
                 _fullyInitialized = true;
@@ -80,7 +81,7 @@ namespace mixpanel
             catch (Exception e) {
                 Mixpanel.LogError($"Error during Mixpanel initialization: {e}");
                 _fullyInitialized = false; // Ensure we're not marked as initialized on error
-                // Note: Start() will attempt fallback initialization if this fails
+                // Note: Start() will attempt fallback initialization if _fullyInitialized remains false
             }
         }
 
@@ -111,8 +112,14 @@ namespace mixpanel
         void OnDestroy()
         {
             Mixpanel.Log($"Mixpanel Component Destroyed");
-            _instance = null;  // Clear static reference to destroyed instance
-            _fullyInitialized = false;  // Reset initialization state
+
+            // Only clear the static reference if this is the actual singleton instance
+            if (_instance == this)
+            {
+                _instance = null;  // Clear static reference to destroyed instance
+                _fullyInitialized = false;  // Reset initialization state
+                _isFlushCoroutineRunning = false;  // Reset coroutine flag
+            }
         }
 
         void OnApplicationPause(bool pauseStatus)
@@ -129,20 +136,34 @@ namespace mixpanel
             // This method is called by Unity after the GameObject is created
             // but all critical initialization has already completed
 
-            // Safety check with active fallback for edge cases (e.g., GameObject created manually)
-            if (!_fullyInitialized)
+            // Start the flush coroutine if initialized and not already running
+            if (_fullyInitialized && !_isFlushCoroutineRunning)
             {
-                Mixpanel.LogWarning("Mixpanel Component Start() called without proper initialization. Attempting fallback initialization...");
+                _isFlushCoroutineRunning = true;
+                StartCoroutine(WaitAndFlush());
+                Mixpanel.Log($"Mixpanel flush coroutine started");
+            }
+            // Safety check with active fallback for edge cases (e.g., GameObject created manually)
+            else if (!_fullyInitialized)
+            {
+                Mixpanel.LogError("Mixpanel Component Start() called without proper initialization. Attempting fallback initialization...");
                 try
                 {
-                    // Perform fallback initialization (without creating new instance)
-                    // This handles edge cases like manual GameObject creation
+                    // Check if session was already initialized to avoid resetting counters
+                    bool sessionAlreadyInitialized = Metadata.IsSessionInitialized();
 
                     // Apply settings if not already done
                     MixpanelSettings.Instance.ApplyToConfig();
 
-                    // Initialize session if needed
-                    Metadata.InitSession();
+                    // Only initialize session if not already done
+                    if (!sessionAlreadyInitialized)
+                    {
+                        Metadata.InitSession();
+                    }
+                    else
+                    {
+                        Mixpanel.Log($"Preserving existing session during fallback initialization");
+                    }
 
                     // Migrate if not already done
                     MigrateFrom1To2();
@@ -154,11 +175,16 @@ namespace mixpanel
                     // Preload persisted properties
                     PreloadPersistedProperties();
 
-                    // Start flush coroutine
-                    StartCoroutine(WaitAndFlush());
-
                     // Mark as initialized
                     _fullyInitialized = true;
+
+                    // Start flush coroutine after initialization
+                    if (!_isFlushCoroutineRunning)
+                    {
+                        _isFlushCoroutineRunning = true;
+                        StartCoroutine(WaitAndFlush());
+                        Mixpanel.Log($"Mixpanel flush coroutine started (fallback)");
+                    }
 
                     Mixpanel.Log($"Mixpanel fallback initialization completed successfully");
                 }
@@ -469,12 +495,18 @@ namespace mixpanel
             private static Int32 _eventCounter = 0, _peopleCounter = 0, _sessionStartEpoch;
             private static String _sessionID;
             private static System.Random _random = new System.Random(Guid.NewGuid().GetHashCode());
+            private static bool _sessionInitialized = false;
+
+            internal static bool IsSessionInitialized() {
+                return _sessionInitialized;
+            }
 
             internal static void InitSession() {
                 _eventCounter = 0;
                 _peopleCounter = 0;
                 _sessionID = Convert.ToString(_random.Next(0, Int32.MaxValue), 16);
                 _sessionStartEpoch = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                _sessionInitialized = true;
             }
             internal static Value GetEventMetadata() {
                 Value eventMetadata = new Value
