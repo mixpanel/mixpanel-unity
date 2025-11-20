@@ -114,7 +114,7 @@ namespace mixpanel
             }
             catch (Exception e)
             {
-                Mixpanel.LogError($"Error during Mixpanel initialization: {e.Message}");
+                Mixpanel.LogError($"Error during Mixpanel initialization: {e}");
                 // Don't set _initialized = true, allowing retry on next call
             }
         }
