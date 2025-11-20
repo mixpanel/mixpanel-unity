@@ -101,11 +101,13 @@ namespace mixpanel
             MigrateFrom1To2();
             Metadata.InitSession();
 
-            _initialized = true;
             Mixpanel.Log($"Mixpanel Component Initialized");
 
             // Start background flush coroutine
             StartCoroutine(WaitAndFlush());
+
+            // Mark as initialized after all setup completes successfully
+            _initialized = true;
         }
 
         private void Start()
