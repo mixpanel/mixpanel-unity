@@ -28,6 +28,7 @@ namespace mixpanel
         #region Singleton
 
         private static Controller _instance;
+        private static bool _fullyInitialized = false;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeBeforeSceneLoad()
@@ -40,24 +41,45 @@ namespace mixpanel
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void InitializeAfterSceneLoad()
         {
-            if (Config.ManualInitialization) return;
-            GetEngageDefaultProperties();
-            GetEventsDefaultProperties();
+            // Auto properties are now initialized in Initialize() for synchronous behavior
+            // This method is kept for compatibility but no longer does anything
         }
 
         internal static void Initialize() {
             // Copy over any runtime changes that happened before initialization from settings instance to the config.
             MixpanelSettings.Instance.ApplyToConfig();
-            GetInstance();
+
+            // Create the singleton instance
+            Controller instance = GetInstance();
+
+            // SYNCHRONOUS INITIALIZATION - Critical operations that must complete before tracking
+            // 1. Initialize session metadata BEFORE any tracking can occur
+            Metadata.InitSession();
+
+            // 2. Migrate v1 data if needed (sets DistinctId and IsTracking from old SDK)
+            instance.MigrateFrom1To2();
+
+            // 3. Initialize auto properties synchronously to ensure they're ready for first event
+            GetEventsDefaultProperties();
+            GetEngageDefaultProperties();
+
+            // 4. Start the flush coroutine for periodic network operations
+            instance.StartCoroutine(instance.WaitAndFlush());
+
+            // Mark as fully initialized
+            _fullyInitialized = true;
+
+            Mixpanel.Log($"Mixpanel fully initialized (synchronous)");
         }
 
         internal static bool IsInitialized() {
-            return _instance != null;
+            return _instance != null && _fullyInitialized;
         }
 
         internal static void Disable() {
             if (_instance != null) {
                 Destroy(_instance);
+                _fullyInitialized = false;
             }
         }
 
@@ -89,9 +111,19 @@ namespace mixpanel
 
         private void Start()
         {
-            MigrateFrom1To2();
+            // All initialization now happens synchronously in Initialize()
+            // This method is called by Unity after the GameObject is created
+            // but all critical initialization has already completed
+
+            // Safety check: if somehow Start() is called without proper initialization
+            // (e.g., GameObject created manually), ensure we're initialized
+            if (!_fullyInitialized)
+            {
+                Mixpanel.LogError("Mixpanel Component Start() called without proper initialization. This should not happen.");
+                // Do NOT attempt to initialize here as it would create recursion
+            }
+
             Mixpanel.Log($"Mixpanel Component Started");
-            StartCoroutine(WaitAndFlush());
         }
 
 
