@@ -24,6 +24,7 @@ namespace mixpanel
 
         private static int _retryCount = 0;
         private static DateTime _retryTime;
+        private bool _initialized = false;
 
         #region Singleton
 
@@ -48,7 +49,8 @@ namespace mixpanel
         internal static void Initialize() {
             // Copy over any runtime changes that happened before initialization from settings instance to the config.
             MixpanelSettings.Instance.ApplyToConfig();
-            GetInstance();
+            Controller instance = GetInstance();
+            instance.InitializeImmediately();
         }
 
         internal static bool IsInitialized() {
@@ -87,11 +89,30 @@ namespace mixpanel
             }
         }
 
+        /// <summary>
+        /// Performs critical initialization synchronously to ensure SDK is ready immediately.
+        /// This prevents race conditions where Track() is called before Start() executes.
+        /// </summary>
+        private void InitializeImmediately()
+        {
+            if (_initialized) return;
+
+            // Perform critical initialization that must happen before any Track calls
+            MigrateFrom1To2();
+            Metadata.InitSession();
+
+            _initialized = true;
+            Mixpanel.Log($"Mixpanel Component Initialized");
+
+            // Start background flush coroutine
+            StartCoroutine(WaitAndFlush());
+        }
+
         private void Start()
         {
-            MigrateFrom1To2();
-            Mixpanel.Log($"Mixpanel Component Started");
-            StartCoroutine(WaitAndFlush());
+            // Ensure initialization even if GameObject was created differently
+            // This is a safety fallback in case Initialize() wasn't called
+            InitializeImmediately();
         }
 
 
