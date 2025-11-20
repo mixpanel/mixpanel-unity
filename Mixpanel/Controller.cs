@@ -79,6 +79,7 @@ namespace mixpanel
         void OnDestroy()
         {
             Mixpanel.Log($"Mixpanel Component Destroyed");
+            _instance = null;
         }
 
         void OnApplicationPause(bool pauseStatus)
