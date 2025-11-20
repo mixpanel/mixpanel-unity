@@ -54,7 +54,7 @@ namespace mixpanel
         }
 
         internal static bool IsInitialized() {
-            return _instance != null;
+            return _instance != null && _instance._initialized;
         }
 
         internal static void Disable() {
@@ -84,7 +84,7 @@ namespace mixpanel
 
         void OnApplicationPause(bool pauseStatus)
         {
-            if (!pauseStatus)
+            if (!pauseStatus && _initialized)
             {
                 Metadata.InitSession();
             }
