@@ -1,5 +1,18 @@
 #
 
+## [Unreleased]
+
+### Fixes
+
+- Fix race condition in initialization causing missing super properties on first event [\#TBD](https://github.com/mixpanel/mixpanel-unity/pull/TBD)
+  - Eagerly load all persisted properties (SuperProperties, OnceProperties, TimedEvents) during Initialize()
+  - Pre-cache auto properties before first Track() call
+  - Initialize session metadata during Initialize() to ensure it's ready
+  - Addresses issue where Track() called immediately after Init() could miss properties
+  - Fixes reported 30-44% event volume drop and missing super properties after SDK migration
+
+#
+
 ## [v3.5.3](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.3) (2024-09-25)
 
 ### Enhancements
