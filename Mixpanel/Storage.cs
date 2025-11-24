@@ -38,108 +38,12 @@ namespace mixpanel
 
         #endregion
 
-        #region HasIntegratedLibrary
-
-        private const string HasIntegratedLibraryName = "Mixpanel.HasIntegratedLibrary";
-
-        internal static bool HasIntegratedLibrary
-        {
-            get => Convert.ToBoolean(PreferencesSource.GetInt(HasIntegratedLibraryName, 0));
-            set => PreferencesSource.SetInt(HasIntegratedLibraryName, Convert.ToInt32(value));
-        }
-
-        #endregion
-
-        #region MPDebugInitCount
-
-        private const string MPDebugInitCountName = "Mixpanel.MPDebugInitCount";
-
-        internal static int MPDebugInitCount
-        {
-            get => PreferencesSource.GetInt(MPDebugInitCountName, 0);
-            set => PreferencesSource.SetInt(MPDebugInitCountName, value);
-        }
-
-        #endregion
-
-        #region HasImplemented
-
-        private const string HasImplementedName = "Mixpanel.HasImplemented";
-
-        internal static bool HasImplemented
-        {
-            get => Convert.ToBoolean(PreferencesSource.GetInt(HasImplementedName, 0));
-            set => PreferencesSource.SetInt(HasImplementedName, Convert.ToInt32(value));
-        }
-        
-        #endregion
-
-        #region HasTracked
-
-        private const string HasTrackedName = "Mixpanel.HasTracked";
-
-        internal static bool HasTracked
-        {
-            get => Convert.ToBoolean(PreferencesSource.GetInt(HasTrackedName, 0));
-            set => PreferencesSource.SetInt(HasTrackedName, Convert.ToInt32(value));
-        }
-
-        #endregion
-
-        #region HasIdentified
-
-        private const string HasIdentifiedName = "Mixpanel.HasIdentified";
-
-        internal static bool HasIdendified
-        {
-            get => Convert.ToBoolean(PreferencesSource.GetInt(HasIdentifiedName, 0));
-            set => PreferencesSource.SetInt(HasIdentifiedName, Convert.ToInt32(value));
-        }
-
-        #endregion
-
-        #region HasAliased
-
-        private const string HasAliasedName = "Mixpanel.HasAliased";
-
-        internal static bool HasAliased
-        {
-            get => Convert.ToBoolean(PreferencesSource.GetInt(HasAliasedName, 0));
-            set => PreferencesSource.SetInt(HasAliasedName, Convert.ToInt32(value));
-        }
-
-        #endregion
-
-        #region HasUsedPeople
-
-        private const string HasUsedPeopleName = "Mixpanel.HasUsedPeople";
-
-        internal static bool HasUsedPeople
-        {
-            get => Convert.ToBoolean(PreferencesSource.GetInt(HasUsedPeopleName, 0));
-            set => PreferencesSource.SetInt(HasUsedPeopleName, Convert.ToInt32(value));
-        }
-
-        #endregion
-
-        #region HasTrackedFirstSDKDebugLaunch
-
-        private const string HasTrackedFirstSDKDebugLaunchName = "Mixpanel.HasTrackedFirstSDKDebugLaunch";
-
-        internal static bool HasTrackedFirstSDKDebugLaunch
-        {
-            get => Convert.ToBoolean(PreferencesSource.GetInt(HasTrackedFirstSDKDebugLaunchName, 0));
-            set => PreferencesSource.SetInt(HasTrackedFirstSDKDebugLaunchName, Convert.ToInt32(value));
-        }
-
-        #endregion
-
         #region DistinctId
-        
+
         private const string DistinctIdName = "Mixpanel.DistinctId";
-        
+
         private static string _distinctId;
-        
+
         public static string DistinctId
         {
             get
@@ -160,7 +64,7 @@ namespace mixpanel
                 PreferencesSource.SetString(DistinctIdName, _distinctId);
             }
         }
-        
+
         #endregion
 
         #region Track
@@ -251,7 +155,7 @@ namespace mixpanel
             if (newStartIndex != oldStartIndex) {
                 PreferencesSource.SetInt(startIndexKey, newStartIndex);
             }
-            
+
             return batch;
         }
 
@@ -264,7 +168,7 @@ namespace mixpanel
             int dataIndex = oldStartIndex;
             int maxIndex = (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() - 1 : PeopleAutoIncrementingID() - 1;
             while (deletedCount < batchSize && dataIndex <= maxIndex) {
-                String trackingKey = (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();    
+                String trackingKey = (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();
                 if (PreferencesSource.HasKey(trackingKey)) {
                     PreferencesSource.DeleteKey(trackingKey);
                     deletedCount++;
@@ -273,11 +177,11 @@ namespace mixpanel
                 dataIndex++;
             }
 
-            if (dataIndex == maxIndex) {
-                // We want to avoid maxIndex from getting too high while having large "empty gaps" stored in PlayerPrefs, otherwise
-                // there can be a large number of string concatenation and PlayerPrefs API calls (in extreme cases, 100K+).
-                // At this point, we should have iterated through all possible event IDs and can assume that there are no other events
-                // stored in preferences (since we deleted them all).
+            bool deletedAllTrackingData = dataIndex > maxIndex; // if true, we iterated through all events.
+            if (deletedAllTrackingData) {
+                // For performance reasons, reset the tracking data ID to 0 if all data stored in PlayerPrefs has been deleted.
+                // Otherwise, there can be a large number of string concatenation and PreferencesSource.Haskey calls (in extreme cases, 100K+).
+                // See https://github.com/mixpanel/mixpanel-unity/pull/152 for context
                 string idKey = (flushType == FlushType.EVENTS) ? EventAutoIncrementingIdName : PeopleAutoIncrementingIdName;
                 PreferencesSource.SetInt(idKey, 0);
                 PreferencesSource.SetInt(startIndexKey, 0);
@@ -307,7 +211,7 @@ namespace mixpanel
         #region IsTracking
 
         private const string IsTrackingName = "Mixpanel.IsTracking";
-        
+
         private static bool _isTracking;
 
         public static bool IsTracking
@@ -326,9 +230,9 @@ namespace mixpanel
         }
 
         #endregion
-        
+
         #region OnceProperties
-        
+
         private const string OncePropertiesName = "Mixpanel.OnceProperties";
 
         private static Value _onceProperties;
@@ -359,11 +263,11 @@ namespace mixpanel
             properties.OnRecycle();
             OnceProperties = properties;
         }
-        
+
         #endregion
-        
+
         #region SuperProperties
-        
+
         private const string SuperPropertiesName = "Mixpanel.SuperProperties";
 
         private static Value _superProperties;
@@ -387,18 +291,18 @@ namespace mixpanel
                 PreferencesSource.SetString(SuperPropertiesName, JsonUtility.ToJson(_superProperties));
             }
         }
-        
+
         internal static void ResetSuperProperties()
         {
             Value properties = SuperProperties;
             properties.OnRecycle();
             SuperProperties = properties;
         }
-        
+
         #endregion
-        
+
         #region TimedEvents
-        
+
         private const string TimedEventsName = "Mixpanel.TimedEvents";
 
         private static Value _timedEvents;
@@ -409,7 +313,7 @@ namespace mixpanel
             {
                 if (_timedEvents != null) return _timedEvents;
                 if (!PreferencesSource.HasKey(TimedEventsName)) TimedEvents = new Value();
-                else 
+                else
                 {
                     _timedEvents = new Value();
                     JsonUtility.FromJsonOverwrite(PreferencesSource.GetString(TimedEventsName), _timedEvents);
@@ -422,14 +326,14 @@ namespace mixpanel
                 PreferencesSource.SetString(TimedEventsName, JsonUtility.ToJson(_timedEvents));
             }
         }
-        
+
         internal static void ResetTimedEvents()
         {
             Value properties = TimedEvents;
             properties.OnRecycle();
             TimedEvents = properties;
         }
-        
+
         #endregion
     }
 }

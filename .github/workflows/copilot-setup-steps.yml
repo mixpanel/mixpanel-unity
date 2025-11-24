@@ -1,0 +1,36 @@
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Note: .NET SDK provides basic C# syntax support for Copilot.
+      # This Unity SDK uses Unity-specific APIs (UnityEngine, UnityEditor)
+      # that aren't available in standard .NET, so Copilot's type information
+      # for Unity-specific code will be limited. However, this still helps with
+      # general C# syntax, patterns, and non-Unity code analysis.
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Display Unity package info
+        run: |
+          echo "Repository setup complete for GitHub Copilot"
+          echo "Unity Package: $(jq -r '.name' package.json)"
+          echo "Version: $(jq -r '.version' package.json)"
+          echo "Mixpanel Unity SDK is ready for Copilot assistance"

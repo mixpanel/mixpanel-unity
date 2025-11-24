@@ -18,7 +18,7 @@ namespace mixpanel
     /// </code>
     public static partial class Mixpanel
     {
-        internal const string MixpanelUnityVersion = "3.4.0";
+        internal const string MixpanelUnityVersion = "3.5.3";
 
         /// <summary>
         /// Creates an Mixpanel instance. Use only if you have enabled "Manual Initialization" from your Project Settings.
@@ -62,7 +62,6 @@ namespace mixpanel
             Value properties = new Value();
             properties["alias"] = alias;
             Track("$create_alias", properties);
-            MixpanelStorage.HasAliased = true;
             Flush();
         }
 
@@ -102,7 +101,6 @@ namespace mixpanel
             string oldDistinctId = MixpanelStorage.DistinctId;
             MixpanelStorage.DistinctId = uniqueId;
             Track("$identify", "$anon_distinct_id", oldDistinctId);
-            MixpanelStorage.HasIdendified = true;
         }
 
         [Obsolete("Please use 'DistinctId' instead!")]
@@ -170,8 +168,10 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             Value properties = MixpanelStorage.OnceProperties;
-            properties[key] = value;
-            MixpanelStorage.OnceProperties = properties;
+            if (properties[key].IsNull) {
+                properties[key] = value;
+                MixpanelStorage.OnceProperties = properties;
+            }
         }
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace mixpanel
             if (!IsInitialized()) return;
             Controller.DoClear();
         }
-        
+
         /// <summary>
         /// Clears all super properties
         /// </summary>
@@ -288,10 +288,11 @@ namespace mixpanel
         /// <summary>
         /// Flushes the queued data to Mixpanel
         /// </summary>
-        public static void Flush()
+        /// <param name="onFlushComplete">callback to be called when the flush is complete. Returns true if overall success</param>
+        public static void Flush(Action<bool> onFlushComplete = null)
         {
             if (!IsInitialized()) return;
-            Controller.GetInstance().DoFlush();
+            Controller.GetInstance().DoFlush(onFlushComplete);
         }
 
         /// <summary>

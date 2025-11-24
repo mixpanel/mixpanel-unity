@@ -10,8 +10,8 @@ namespace mixpanel
 {
     public class MixpanelSettings : ScriptableObject
     {
-        private const string TrackUrlTemplate = "{0}track/?ip=1";
-        private const string EngageUrlTemplate = "{0}engage/?ip=1";
+        private const string TrackUrlTemplate = "{0}track/?ip={1}";
+        private const string EngageUrlTemplate = "{0}engage/?ip={1}";
         
         //TODO: Convert to log level
         [Tooltip("If true will print helpful debugging messages")] 
@@ -26,6 +26,8 @@ namespace mixpanel
         public string DebugToken = "";
         [Tooltip("Seconds (in realtime) between sending data to the API Host.")]
         public float FlushInterval = 60f;
+        [Tooltip("If true, the library will use the IP address of the client for geolocation. If false, the library will use the IP address of the Mixpanel server for geolocation.")]
+        public bool UseIpAddressForGeolocation = true;
 
         internal string Token {
             get {
@@ -40,8 +42,9 @@ namespace mixpanel
         public void ApplyToConfig()
         {
             string host = APIHostAddress.EndsWith("/") ? APIHostAddress : $"{APIHostAddress}/";
-            Config.TrackUrl = string.Format(TrackUrlTemplate, host);
-            Config.EngageUrl = string.Format(EngageUrlTemplate, host);
+            string useIpAddressForGeolocation = UseIpAddressForGeolocation ? "1" : "0";
+            Config.TrackUrl = string.Format(TrackUrlTemplate, host, useIpAddressForGeolocation);
+            Config.EngageUrl = string.Format(EngageUrlTemplate, host, useIpAddressForGeolocation);
             Config.ShowDebug = ShowDebug;
             Config.ManualInitialization = ManualInitialization;
             Config.FlushInterval = FlushInterval;

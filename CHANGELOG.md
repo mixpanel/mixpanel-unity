@@ -1,5 +1,71 @@
 #
 
+## [v3.5.3](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.3) (2024-09-25)
+
+### Enhancements
+
+- Provide more details to Assert [\#180](https://github.com/mixpanel/mixpanel-unity/pull/180)
+
+### Fixes
+
+- Fix incorrect condition for determining if all tracking data was deleted [\#179](https://github.com/mixpanel/mixpanel-unity/pull/179)
+
+#
+
+## [v3.5.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.2) (2024-05-12)
+
+### Fixes
+
+- Fix the compile errors in the development build [\#178](https://github.com/mixpanel/mixpanel-unity/pull/178)
+
+## [v3.5.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.1) (2024-05-02)
+
+### Fixes
+
+- Remove internal tracking [\#175](https://github.com/mixpanel/mixpanel-unity/pull/175)
+- fix "Type of conditional expression cannot be determined" [\#174](https://github.com/mixpanel/mixpanel-unity/pull/174)
+
+#
+
+## [v3.5.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.0) (2024-02-29)
+
+### Enhancements
+
+- Add the UseIpAddressForGeolocation option for MixpanelSettings  [\#170](https://github.com/mixpanel/mixpanel-unity/pull/170), thanks @qwe321qwe321qwe321 !
+- Add onFlushComplete callback [\#168](https://github.com/mixpanel/mixpanel-unity/pull/168), thanks @elic-sightful
+
+### Bug fixes
+- Use DEVELOPMENT_BUILD build flag instead of Debug.isDebugBuild [\#167](https://github.com/mixpanel/mixpanel-unity/pull/167), thanks @elic-sightful
+- Fixed single quotes in readme [\#172](https://github.com/mixpanel/mixpanel-unity/pull/172), thanks @AldeRoberge
+
+#
+
+## [v3.4.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.2) (2023-11-08)
+
+### Bug fixes
+
+Remove the internal release script. https://github.com/mixpanel/mixpanel-unity/pull/165  
+address issue #164 
+
+#
+
+## [v3.4.2](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.2) (2023-09-20)
+
+### Bug fixes
+
+Remove the internal release script. https://github.com/mixpanel/mixpanel-unity/pull/165  
+address issue #164 
+
+#
+
+## [v3.4.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.1) (2023-09-20)
+
+### Enhancements
+
+- fix RegisterOnce not really register once  [\#162](https://github.com/mixpanel/mixpanel-unity/pull/162)
+
+#
+
 ## [v3.4.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.4.0) (2022-12-22)
 
 ### Enhancements
@@ -267,6 +333,12 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
+
+
+
+
 
 
 
