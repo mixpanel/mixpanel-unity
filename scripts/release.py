@@ -16,8 +16,8 @@ def validate_version(version):
         sys.exit(1)
 
 parser = argparse.ArgumentParser(description='Release Mixpanel Unity SDK')
-parser.add_argument('--old', help='old version to replace', action="store", required=True)
-parser.add_argument('--new', help='new version for the release', action="store", required=True)
+parser.add_argument('--old', help='old version to replace', required=True)
+parser.add_argument('--new', help='new version for the release', required=True)
 args = parser.parse_args()
 
 # Validate version arguments
@@ -33,6 +33,8 @@ def bump_version():
     subprocess.call(['git', 'push'], cwd=REPO_ROOT)
 
 def replace_version(file_name, old_version, new_version):
+    if not os.path.exists(file_name):
+        raise FileNotFoundError(f"File not found: {file_name}")
     with open(file_name) as f:
         file_str = f.read()
         assert old_version in file_str, f"Version {old_version} not found in {file_name}"
