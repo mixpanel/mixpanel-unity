@@ -1,15 +1,28 @@
 import argparse
 import os
+import re
 import subprocess
+import sys
 
 # Get the repo root directory (parent of scripts/)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 
+def validate_version(version):
+    """Validate that version follows semantic versioning format (e.g., 1.2.3)"""
+    pattern = r'^\d+\.\d+\.\d+$'
+    if not re.match(pattern, version):
+        print(f"Error: Invalid version format '{version}'. Expected semantic versioning format (e.g., 1.2.3)")
+        sys.exit(1)
+
 parser = argparse.ArgumentParser(description='Release Mixpanel Unity SDK')
 parser.add_argument('--old', help='old version to replace', action="store", required=True)
 parser.add_argument('--new', help='new version for the release', action="store", required=True)
 args = parser.parse_args()
+
+# Validate version arguments
+validate_version(args.old)
+validate_version(args.new)
 
 def bump_version():
     replace_version(os.path.join(REPO_ROOT, 'package.json'), args.old, args.new)
