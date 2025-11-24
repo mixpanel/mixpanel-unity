@@ -76,12 +76,17 @@ props.Merge(otherValue);          // Merge operations
 
 ### Version Updates
 
-When updating versions:
+**Automated (recommended)**:
+```bash
+python scripts/release.py --old 3.5.3 --new 3.5.4
+```
+This handles version updates, commit, tag creation, and push in one command.
 
+**Manual process**:
 1. Update `MixpanelUnityVersion` constant in `MixpanelAPI.cs:21`
 2. Update version in `package.json:4`
 3. Update `CHANGELOG.md`
-4. Tag release: `git tag v3.5.4 && git push origin v3.5.4`
+4. Tag release: `git tag -a v3.5.4 -m "version 3.5.4" && git push origin --tags`
 
 ### Package Installation
 
