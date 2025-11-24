@@ -1,19 +1,19 @@
 # AGENTS.md
 
-Guidance for OpenAI Codex coding agents collaborating on the Mixpanel Unity SDK. Keep this file up to date so future agents can ramp quickly.
+Guidance for OpenAI Codex coding agents working on the Mixpanel Unity SDK. Keep this current so agents can ramp quickly.
 
 ## Mission & Constraints
-- Primary goal: maintain and extend the Unity SDK located in this repo (`Mixpanel/` plus associated assets). The package ships through Unity Package Manager; treat `.meta` files as first-class citizens.
-- Unity target: 2018.3+ with .NET 4.x Equivalent. Avoid API usages newer than that unless you guard them.
-- No automated tests live in the repo. Separate `Tests.unitypackage` exists, so changes generally require manual validation or targeted scripts.
-- Network calls and platform-specific code must stay within Unity’s coroutine/threading model (no raw threads).
+- Maintain and extend the Unity SDK under `Mixpanel/` (plus assets). Package ships via Unity Package Manager; treat `.meta` files as required artifacts.
+- Target Unity 2018.3+ with .NET 4.x Equivalent. Guard any newer API usage.
+- No test suite lives here (tests are in `Tests.unitypackage`). Expect manual validation or targeted scripts.
+- Unity threading model only—work through coroutines, not raw threads.
 
-## Key Architecture (read with `.github/copilot-instructions.md`)
-- `Mixpanel` static partial class (`MixpanelAPI.cs`, `Log.cs`, etc.) exposes the public surface. Every new public method must guard with `IsInitialized()`.
-- `Controller` MonoBehaviour singleton (`Controller.cs`) manages initialization, periodic flushing, default property collection, and migration hooks.
-- `MixpanelStorage` (`Storage.cs`) reads/writes data via `IPreferences` (default `PlayerPreferences`). Be careful with key naming and migrations (`HasMigratedFrom1To2`).
-- `Value` (`Value.cs`) is the JSON-like container used for event/user properties. It supports primitives, arrays, Unity structs (Vector, Quaternion, Color), and merge operations.
-- `MixpanelSettings` + `Config` control tokens, debug flags, flush/batch values, and manual initialization. Tokens follow the Debug vs Runtime pattern:
+## Core Architecture (pair with `.github/copilot-instructions.md`)
+- `Mixpanel` static partial class (`MixpanelAPI.cs`, `Log.cs`, etc.) is the public API. Every public method starts with `IsInitialized()` and then delegates to controller helpers.
+- `Controller` MonoBehaviour singleton (`Controller.cs`) governs initialization, coroutine-based flush cadence, default property capture, and migration hooks.
+- `MixpanelStorage` (`Storage.cs`) uses `IPreferences` (default `PlayerPreferences`) for persistence. Watch key names and migration flags (`HasMigratedFrom1To2`).
+- `Value` (`Value.cs`) is the JSON-like container for event/people properties (primitives, arrays, Unity structs like Vector/Quaternion/Color) with merge and serialization logic.
+- `MixpanelSettings` + `Config` surface tokens, debug flags, flush/batch settings, and manual initialization. Token selection follows:
   ```csharp
   #if UNITY_EDITOR || DEBUG
       return DebugToken;
@@ -23,31 +23,31 @@ Guidance for OpenAI Codex coding agents collaborating on the Mixpanel Unity SDK.
   ```
 
 ## Development Workflow
-1. **Version bumps**: update `MixpanelAPI.cs (MixpanelUnityVersion)`, `package.json`, and `CHANGELOG.md`, then tag (`git tag vX.Y.Z && git push origin vX.Y.Z`).
-2. **Local testing**: add `"com.mixpanel.unity": "file:/absolute/path/to/mixpanel-unity"` to a Unity project’s `Packages/manifest.json`. Import `Examples.unitypackage` for manual validation scenarios.
-3. **Debugging**: enable `ShowDebug` in Unity Project Settings → Mixpanel or use `Mixpanel.Log()` (respects `Config.ShowDebug`).
-4. **Pull Requests**: ensure new files include `.meta` counterparts (Unity generates them, but don’t delete existing ones).
+1. **Version bumps**: update `MixpanelAPI.cs` (`MixpanelUnityVersion`), `package.json`, and `CHANGELOG.md`; then tag (`git tag vX.Y.Z && git push origin vX.Y.Z`).
+2. **Local testing**: in a Unity project `Packages/manifest.json`, add `"com.mixpanel.unity": "file:/absolute/path/to/mixpanel-unity"`. Import `Examples.unitypackage` for sample scenes.
+3. **Debugging**: enable `ShowDebug` in Unity Project Settings → Mixpanel or call `Mixpanel.Log()` (respects `Config.ShowDebug`).
+4. **PR hygiene**: ensure every new asset/code file has a `.meta`. Do not delete existing `.meta` files; Unity regenerates them if needed.
 
 ## Implementation Patterns
-- Auto-init occurs via `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]`; respect `Config.ManualInitialization` for manual flows (`Mixpanel.Init()` path).
-- Event flow: `Track()` → `DoTrack()` → merge default + user props → `EnqueueTrackingData()` → periodic flush (60s default, configurable). People updates go through `DoEngage()`.
-- Batch/flush tuning: `Config.BatchSize` and `Config.FlushInterval`. If you change defaults, update documentation and settings UI.
-- For new serialization cases in `Value`, extend both the storage dictionary logic and JSON conversion. Preserve backward compatibility in PlayerPreferences storage.
+- Auto-init: `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]`; respect `Config.ManualInitialization` and the `Mixpanel.Init()` path.
+- Event flow: `Track()` → `DoTrack()` → merge default + user props → `EnqueueTrackingData()` → periodic flush (default 60s, configurable). People ops use `DoEngage()`.
+- Tuning: `Config.BatchSize` and `Config.FlushInterval`. When changing defaults, update docs and any editor UI.
+- Serialization changes in `Value` must update the backing store and JSON conversion and stay backward compatible with existing PlayerPreferences data.
 
 ## Coding Guidelines
-- Namespace: `mixpanel` (runtime) and `mixpanel.editor` (editor scripts). Maintain existing assembly definition setups.
-- Documentation: public APIs need XML docs with `<summary>` and `<param>` tags. Keep tone consistent with current files.
-- Conditional compilation: use `#if UNITY_EDITOR || DEBUG` for editor-only logic and guards like `#if UNITY_IOS` for platform-specific code.
-- Avoid new dependencies without coordination; Unity packages must stay lightweight.
+- Namespaces: `mixpanel` (runtime) and `mixpanel.editor` (editor scripts). Keep assembly definition boundaries intact.
+- Public APIs need XML docs (`<summary>`, `<param>`). Match existing tone.
+- Conditional compilation: `#if UNITY_EDITOR || DEBUG` for editor-only logic; platform guards like `#if UNITY_IOS` where applicable.
+- Keep dependencies minimal to stay UPM-friendly.
 
 ## Practical Tips
-- Use `rg` for searches (`rg SymbolName Mixpanel`); `git grep` is slower.
-- When touching serialization, migration, or PlayerPreferences keys, add inline comments explaining decisions—future contributors rely on them during debugging.
-- If you need test scaffolding inside Unity, prefer sample scripts placed under `Mixpanel/Examples` and reference them in documentation rather than leaving ad-hoc files in root.
+- Use `rg` for search (`rg SymbolName Mixpanel`) to navigate the codebase quickly.
+- When editing storage, migrations, or PlayerPreferences keys, add concise inline comments for future debugging.
+- Prefer placing sample/debug scripts under `Mixpanel/Examples` and referencing them in docs rather than leaving ad-hoc files at repo root.
 
 ## Quick Reference
-- Docs: README.md, CLAUDE.md, `.github/copilot-instructions.md`
-- Release automation: `.github/workflows/*`
-- Support links: README’s FAQ + Mixpanel support portal
+- Docs: `README.md`, `CLAUDE.md`, `.github/copilot-instructions.md`
+- Release automation: `.github/workflows/`
+- Support links: README FAQ and Mixpanel support portal
 
-Keep this document concise but thorough; update it whenever workflows or expectations evolve.
+Update this playbook whenever workflows or expectations change.
