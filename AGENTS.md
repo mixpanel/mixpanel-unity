@@ -23,7 +23,7 @@ Guidance for OpenAI Codex coding agents working on the Mixpanel Unity SDK. Keep 
   ```
 
 ## Development Workflow
-1. **Version bumps**: update `MixpanelAPI.cs` (`MixpanelUnityVersion`), `package.json`, and `CHANGELOG.md`; then tag (`git tag vX.Y.Z && git push origin vX.Y.Z`).
+1. **Version bumps**: use `python scripts/release.py --old X.Y.Z --new A.B.C` to automate version updates, commit, tag, and push. Manual alternative: update `MixpanelAPI.cs` (`MixpanelUnityVersion`), `package.json`, and `CHANGELOG.md`; then tag (`git tag -a vX.Y.Z -m "version X.Y.Z" && git push origin --tags`).
 2. **Local testing**: in a Unity project `Packages/manifest.json`, add `"com.mixpanel.unity": "file:/absolute/path/to/mixpanel-unity"`. Import `Examples.unitypackage` for sample scenes.
 3. **Debugging**: enable `ShowDebug` in Unity Project Settings → Mixpanel or call `Mixpanel.Log()` (respects `Config.ShowDebug`).
 4. **PR hygiene**: ensure every new asset/code file has a `.meta`. Do not delete existing `.meta` files; Unity regenerates them if needed.

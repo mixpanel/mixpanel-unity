@@ -95,10 +95,22 @@ Or point to specific version:
 
 ### Release Process
 
-GitHub Actions workflow (`.github/workflows/release.yml`) triggers on version tags:
-- Push tag: `git tag v3.5.4 && git push origin v3.5.4`
-- Action generates changelog and creates GitHub release
-- Manual step: Update version numbers before tagging
+**Using the release script** (recommended):
+```bash
+python scripts/release.py --old 3.5.3 --new 3.5.4
+```
+This script:
+1. Updates version in `package.json` and `Mixpanel/MixpanelAPI.cs`
+2. Commits the changes with message "Version X.Y.Z"
+3. Pushes to remote
+4. Creates and pushes annotated tag `vX.Y.Z`
+
+**Manual process**:
+- Update version in `MixpanelAPI.cs:21` (`MixpanelUnityVersion` constant)
+- Update version in `package.json:4`
+- Commit, then tag: `git tag -a v3.5.4 -m "version 3.5.4" && git push origin --tags`
+
+GitHub Actions workflow (`.github/workflows/release.yml`) triggers on version tags to generate changelog and create GitHub release.
 
 ## Code Conventions
 
