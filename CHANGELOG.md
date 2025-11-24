@@ -1,5 +1,15 @@
 #
 
+## [v3.5.4](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.4) (2025-11-24)
+
+### Fixes
+
+- Race Condition: Controller.Start\(\) executes after first Track call causing initialization issues [\#192](https://github.com/mixpanel/mixpanel-unity/issues/192)
+- Fix initialization race condition causing event loss [\#194](https://github.com/mixpanel/mixpanel-unity/pull/194)
+- Replace obsolete WWWForm [\#160](https://github.com/mixpanel/mixpanel-unity/pull/160)
+
+#
+
 ## [v3.5.3](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.3) (2024-09-25)
 
 ### Enhancements
@@ -333,6 +343,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
