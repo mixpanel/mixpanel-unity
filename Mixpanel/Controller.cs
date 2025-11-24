@@ -271,9 +271,9 @@ namespace mixpanel
             string url = (flushType == MixpanelStorage.FlushType.EVENTS) ? Config.TrackUrl : Config.EngageUrl;
             Value batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
             while (batch.Count > 0) {
-                WWWForm form = new WWWForm();
+                Dictionary<string, string> form = new Dictionary<string, string>();
                 String payload = batch.ToString();
-                form.AddField("data", payload);
+                form.Add("data", payload);
                 Mixpanel.Log("Sending batch of data: " + payload);
                 using (UnityWebRequest request = UnityWebRequest.Post(url, form))
                 {
@@ -326,9 +326,9 @@ namespace mixpanel
                         "\"$lib_version\":\"" + Mixpanel.MixpanelUnityVersion + "\"," +
                         "\"Project Token\":\"" + distinctId + "\",\"distinct_id\":\"" + distinctId + "\"" + properties + "}}";
             string payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
-            WWWForm form = new WWWForm();
-            form.AddField("data", payload);
-
+            Dictionary<string, string> form = new Dictionary<string, string>();
+            form.Add("data", payload);
+              
             using (UnityWebRequest request = UnityWebRequest.Post(Config.TrackUrl, form)) {
                 yield return request.SendWebRequest();
             }
@@ -339,9 +339,9 @@ namespace mixpanel
                             "\"$token\":\"" + apiToken + "\"," +
                             "\"$distinct_id\":\"" + distinctId + "\"}";
                 payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(body));
-                form = new WWWForm();
-                form.AddField("data", payload);
-
+                form = new Dictionary<string, string>();
+                form.Add("data", payload);
+                
                 using (UnityWebRequest request = UnityWebRequest.Post(Config.EngageUrl, form)) {
                     yield return request.SendWebRequest();
                 }
