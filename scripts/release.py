@@ -27,10 +27,10 @@ validate_version(args.new)
 def bump_version():
     replace_version(os.path.join(REPO_ROOT, 'package.json'), args.old, args.new)
     replace_version(os.path.join(REPO_ROOT, 'Mixpanel', 'MixpanelAPI.cs'), args.old, args.new)
-    subprocess.call(['git', 'add', 'package.json'], cwd=REPO_ROOT)
-    subprocess.call(['git', 'add', 'Mixpanel/MixpanelAPI.cs'], cwd=REPO_ROOT)
-    subprocess.call(['git', 'commit', '-m', f'Version {args.new}'], cwd=REPO_ROOT)
-    subprocess.call(['git', 'push'], cwd=REPO_ROOT)
+    subprocess.run(['git', 'add', 'package.json'], cwd=REPO_ROOT, check=True)
+    subprocess.run(['git', 'add', 'Mixpanel/MixpanelAPI.cs'], cwd=REPO_ROOT, check=True)
+    subprocess.run(['git', 'commit', '-m', f'Version {args.new}'], cwd=REPO_ROOT, check=True)
+    subprocess.run(['git', 'push'], cwd=REPO_ROOT, check=True)
 
 def replace_version(file_name, old_version, new_version):
     if not os.path.exists(file_name):
@@ -45,8 +45,8 @@ def replace_version(file_name, old_version, new_version):
 
 
 def add_tag():
-    subprocess.call(['git', 'tag', '-a', f'v{args.new}', '-m', f'version {args.new}'], cwd=REPO_ROOT)
-    subprocess.call(['git', 'push', 'origin', '--tags'], cwd=REPO_ROOT)
+    subprocess.run(['git', 'tag', '-a', f'v{args.new}', '-m', f'version {args.new}'], cwd=REPO_ROOT, check=True)
+    subprocess.run(['git', 'push', 'origin', '--tags'], cwd=REPO_ROOT, check=True)
 
 
 def main():
