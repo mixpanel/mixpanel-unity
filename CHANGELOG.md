@@ -1,5 +1,9 @@
 #
 
+## [v3.5.5](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.5) (2025-12-05)
+
+#
+
 ## [v3.5.4](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.4) (2025-11-24)
 
 ### Fixes
@@ -343,6 +347,8 @@ We are thrilled to release the official Mixpanel Unity SDK. Some links to get st
 * [Official documentation](https://mixpanel.com/help/reference/unity)
 * [Full API Reference](http://mixpanel.github.io/mixpanel-unity/api-reference/annotated.html)
 * [Sample application](https://github.com/mixpanel/mixpanel-unity/tree/master/deployments/UnityMixpanel/Assets/Mixpanel/Sample)
+
+
 
 
 
