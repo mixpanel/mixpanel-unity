@@ -48,14 +48,26 @@ namespace mixpanel
         [SerializeField] private bool _bool;
         [SerializeField] private double _number;
 
-        [NonSerialized]
-        private List<Value> _array = new List<Value>(50);
+        // Lazy-initialized backing fields — null until first use.
+        // All access goes through the _array/_container properties below.
+        [NonSerialized] private List<Value> _arrayBacking;
         [SerializeField] private string[] _arrayData;
 
-        [NonSerialized]
-        private Dictionary<string, Value> _container = new Dictionary<string, Value>(5);
+        [NonSerialized] private Dictionary<string, Value> _containerBacking;
         [SerializeField] private string[] _containerKeys;
         [SerializeField] private string[] _containerValues;
+
+        private List<Value> _array {
+            get => _arrayBacking ?? (_arrayBacking = new List<Value>());
+            set => _arrayBacking = value;
+        }
+
+        private Dictionary<string, Value> _container {
+            get => _containerBacking ?? (_containerBacking = new Dictionary<string, Value>());
+            set => _containerBacking = value;
+        }
+
+        [ThreadStatic] private static StringBuilder _sharedBuilder;
 
         public bool IsNull => _valueType == ValueTypes.NULL;
         public bool IsArray => _valueType == ValueTypes.ARRAY;
@@ -63,12 +75,14 @@ namespace mixpanel
 
         public void OnRecycle()
         {
+            _valueType = ValueTypes.OBJECT;
+            _dataType = DataTypes.UNDEFINED;
             _string = "";
             _bool = false;
             _number = 0;
-            _array.Clear();
+            _arrayBacking = null;
             _arrayData = null;
-            _container.Clear();
+            _containerBacking = null;
             _containerKeys = null;
             _containerValues = null;
         }
@@ -119,13 +133,11 @@ namespace mixpanel
                 case ValueTypes.NUMBER:
                     return _number.ToString(CultureInfo.InvariantCulture);
                 case ValueTypes.ARRAY:
-                    StringWriter arrayWriter = new StringWriter();
-                    Write(arrayWriter);
-                    return arrayWriter.ToString();
                 case ValueTypes.OBJECT:
-                    StringWriter containerWriter = new StringWriter();
-                    Write(containerWriter);
-                    return containerWriter.ToString();
+                    var sb = _sharedBuilder ?? (_sharedBuilder = new StringBuilder(256));
+                    sb.Length = 0;
+                    Write(sb);
+                    return sb.ToString();
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -589,257 +601,236 @@ namespace mixpanel
         #region ToJsonType
         
         public static implicit operator Value(string value) => new Value(value);
-        public static implicit operator Value(string[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<string> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(string[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<string> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(bool value) => new Value(value);
-        public static implicit operator Value(bool[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<bool> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(bool[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<bool> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(float value) => new Value((double)(decimal)value);
-        public static implicit operator Value(float[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<float> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(float[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<float> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(double value) => new Value(value);
-        public static implicit operator Value(double[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<double> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(double[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<double> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(decimal value) => new Value((double)value);
-        public static implicit operator Value(decimal[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<decimal> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(decimal[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<decimal> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(short value) => new Value(value);
-        public static implicit operator Value(short[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<short> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(short[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<short> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(int value) => new Value(value);
-        public static implicit operator Value(int[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<int> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(int[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<int> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(long value) => new Value(value);
-        public static implicit operator Value(long[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<long> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(long[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<long> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(ushort value) => new Value(value);
-        public static implicit operator Value(ushort[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<ushort> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(ushort[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<ushort> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(uint value) => new Value(value);
-        public static implicit operator Value(uint[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<uint> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(uint[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<uint> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(ulong value) => new Value(value);
-        public static implicit operator Value(ulong[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<ulong> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(ulong[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<ulong> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(sbyte value) => new Value(value);
-        public static implicit operator Value(sbyte[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<sbyte> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(sbyte[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<sbyte> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(byte value) => new Value(value);
-        public static implicit operator Value(byte[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<byte> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(byte[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<byte> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         
         public static implicit operator Value(Uri value) => new Value(value);
-        public static implicit operator Value(Uri[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Uri> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Uri[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Uri> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Guid value) => new Value(value);
-        public static implicit operator Value(Guid[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Guid> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Guid[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Guid> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(DateTime value) => new Value(value);
-        public static implicit operator Value(DateTime[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<DateTime> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(DateTime[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<DateTime> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(DateTimeOffset value) => new Value(value);
-        public static implicit operator Value(DateTimeOffset[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<DateTimeOffset> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(DateTimeOffset[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<DateTimeOffset> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(TimeSpan value) => new Value(value);
-        public static implicit operator Value(TimeSpan[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<TimeSpan> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(TimeSpan[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<TimeSpan> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Color value) => new Value(value);
-        public static implicit operator Value(Color[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Color> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Color[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Color> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Color32 value) => new Value(value);
-        public static implicit operator Value(Color32[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Color32> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Color32[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Color32> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Vector2 value) => new Value(value);
-        public static implicit operator Value(Vector2[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Vector2> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Vector2[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Vector2> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Vector3 value) => new Value(value);
-        public static implicit operator Value(Vector3[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Vector3> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Vector3[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Vector3> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Vector4 value) => new Value(value);
-        public static implicit operator Value(Vector4[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Vector4> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Vector4[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Vector4> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Quaternion value) => new Value(value);
-        public static implicit operator Value(Quaternion[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Quaternion> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Quaternion[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Quaternion> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Bounds value) => new Value(value);
-        public static implicit operator Value(Bounds[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Bounds> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Bounds[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Bounds> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Rect value) => new Value(value);
-        public static implicit operator Value(Rect[] value) => new Value(System.Array.ConvertAll(value, x => (Value)x));
-        public static implicit operator Value(List<Rect> value) => new Value(System.Array.ConvertAll(value.ToArray(), x => (Value)x));
+        public static implicit operator Value(Rect[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Rect> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         
         #endregion
 
         #region ToOtherTypes
         
         public static implicit operator string(Value value) => value.String;
-        public static implicit operator string[](Value value) => value._array.ConvertAll(x => (string)x).ToArray();
-        public static implicit operator List<string>(Value value) => value._array.ConvertAll(x => (string)x);
+        public static implicit operator string[](Value value) { var r = new string[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (string)value._array[i]; return r; }
+        public static implicit operator List<string>(Value value) { var r = new List<string>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((string)value._array[i]); return r; }
         public static implicit operator bool(Value value) => value.Bool;
-        public static implicit operator bool[](Value value) => value._array.ConvertAll(x => (bool)x).ToArray();
-        public static implicit operator List<bool>(Value value) => value._array.ConvertAll(x => (bool)x);
+        public static implicit operator bool[](Value value) { var r = new bool[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (bool)value._array[i]; return r; }
+        public static implicit operator List<bool>(Value value) { var r = new List<bool>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((bool)value._array[i]); return r; }
         public static implicit operator float(Value value) => (float)value.Number;
-        public static implicit operator float[](Value value) => value._array.ConvertAll(x => (float)x).ToArray();
-        public static implicit operator List<float>(Value value) => value._array.ConvertAll(x => (float)x);
+        public static implicit operator float[](Value value) { var r = new float[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (float)value._array[i]; return r; }
+        public static implicit operator List<float>(Value value) { var r = new List<float>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((float)value._array[i]); return r; }
         public static implicit operator double(Value value) => value.Number;
-        public static implicit operator double[](Value value) => value._array.ConvertAll(x => (double)x).ToArray();
-        public static implicit operator List<double>(Value value) => value._array.ConvertAll(x => (double)x);
+        public static implicit operator double[](Value value) { var r = new double[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (double)value._array[i]; return r; }
+        public static implicit operator List<double>(Value value) { var r = new List<double>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((double)value._array[i]); return r; }
         public static implicit operator decimal(Value value) => (decimal)value.Number;
-        public static implicit operator decimal[](Value value) => value._array.ConvertAll(x => (decimal)x).ToArray();
-        public static implicit operator List<decimal>(Value value) => value._array.ConvertAll(x => (decimal)x);
+        public static implicit operator decimal[](Value value) { var r = new decimal[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (decimal)value._array[i]; return r; }
+        public static implicit operator List<decimal>(Value value) { var r = new List<decimal>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((decimal)value._array[i]); return r; }
         public static implicit operator short(Value value) => (short)value.Number;
-        public static implicit operator short[](Value value) => value._array.ConvertAll(x => (short)x).ToArray();
-        public static implicit operator List<short>(Value value) => value._array.ConvertAll(x => (short)x);
+        public static implicit operator short[](Value value) { var r = new short[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (short)value._array[i]; return r; }
+        public static implicit operator List<short>(Value value) { var r = new List<short>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((short)value._array[i]); return r; }
         public static implicit operator int(Value value) => (int)value.Number;
-        public static implicit operator int[](Value value) => value._array.ConvertAll(x => (int)x).ToArray();
-        public static implicit operator List<int>(Value value) => value._array.ConvertAll(x => (int)x);
+        public static implicit operator int[](Value value) { var r = new int[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (int)value._array[i]; return r; }
+        public static implicit operator List<int>(Value value) { var r = new List<int>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((int)value._array[i]); return r; }
         public static implicit operator long(Value value) => (long)value.Number;
-        public static implicit operator long[](Value value) => value._array.ConvertAll(x => (long)x).ToArray();
-        public static implicit operator List<long>(Value value) => value._array.ConvertAll(x => (long)x);
+        public static implicit operator long[](Value value) { var r = new long[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (long)value._array[i]; return r; }
+        public static implicit operator List<long>(Value value) { var r = new List<long>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((long)value._array[i]); return r; }
         public static implicit operator ushort(Value value) => (ushort)value.Number;
-        public static implicit operator ushort[](Value value) => value._array.ConvertAll(x => (ushort)x).ToArray();
-        public static implicit operator List<ushort>(Value value) => value._array.ConvertAll(x => (ushort)x);
+        public static implicit operator ushort[](Value value) { var r = new ushort[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (ushort)value._array[i]; return r; }
+        public static implicit operator List<ushort>(Value value) { var r = new List<ushort>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((ushort)value._array[i]); return r; }
         public static implicit operator uint(Value value) => (uint)value.Number;
-        public static implicit operator uint[](Value value) => value._array.ConvertAll(x => (uint)x).ToArray();
-        public static implicit operator List<uint>(Value value) => value._array.ConvertAll(x => (uint)x);
+        public static implicit operator uint[](Value value) { var r = new uint[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (uint)value._array[i]; return r; }
+        public static implicit operator List<uint>(Value value) { var r = new List<uint>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((uint)value._array[i]); return r; }
         public static implicit operator ulong(Value value) => (ulong)value.Number;
-        public static implicit operator ulong[](Value value) => value._array.ConvertAll(x => (ulong)x).ToArray();
-        public static implicit operator List<ulong>(Value value) => value._array.ConvertAll(x => (ulong)x);
+        public static implicit operator ulong[](Value value) { var r = new ulong[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (ulong)value._array[i]; return r; }
+        public static implicit operator List<ulong>(Value value) { var r = new List<ulong>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((ulong)value._array[i]); return r; }
         public static implicit operator sbyte(Value value) => (sbyte)value.Number;
-        public static implicit operator sbyte[](Value value) => value._array.ConvertAll(x => (sbyte)x).ToArray();
-        public static implicit operator List<sbyte>(Value value) => value._array.ConvertAll(x => (sbyte)x);
+        public static implicit operator sbyte[](Value value) { var r = new sbyte[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (sbyte)value._array[i]; return r; }
+        public static implicit operator List<sbyte>(Value value) { var r = new List<sbyte>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((sbyte)value._array[i]); return r; }
         public static implicit operator byte(Value value) => (byte)value.Number;
-        public static implicit operator byte[](Value value) => value._array.ConvertAll(x => (byte)x).ToArray();
-        public static implicit operator List<byte>(Value value) => value._array.ConvertAll(x => (byte)x);
+        public static implicit operator byte[](Value value) { var r = new byte[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (byte)value._array[i]; return r; }
+        public static implicit operator List<byte>(Value value) { var r = new List<byte>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((byte)value._array[i]); return r; }
         
         public static implicit operator Uri(Value value) => value.Uri;
-        public static implicit operator Uri[](Value value) => value._array.ConvertAll(x => (Uri)x).ToArray();
-        public static implicit operator List<Uri>(Value value) => value._array.ConvertAll(x => (Uri)x);
+        public static implicit operator Uri[](Value value) { var r = new Uri[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Uri)value._array[i]; return r; }
+        public static implicit operator List<Uri>(Value value) { var r = new List<Uri>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Uri)value._array[i]); return r; }
         public static implicit operator Guid(Value value) => value.Guid;
-        public static implicit operator Guid[](Value value) => value._array.ConvertAll(x => (Guid)x).ToArray();
-        public static implicit operator List<Guid>(Value value) => value._array.ConvertAll(x => (Guid)x);
+        public static implicit operator Guid[](Value value) { var r = new Guid[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Guid)value._array[i]; return r; }
+        public static implicit operator List<Guid>(Value value) { var r = new List<Guid>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Guid)value._array[i]); return r; }
         public static implicit operator DateTime(Value value) => value.DateTime;
-        public static implicit operator DateTime[](Value value) => value._array.ConvertAll(x => (DateTime)x).ToArray();
-        public static implicit operator List<DateTime>(Value value) => value._array.ConvertAll(x => (DateTime)x);
+        public static implicit operator DateTime[](Value value) { var r = new DateTime[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (DateTime)value._array[i]; return r; }
+        public static implicit operator List<DateTime>(Value value) { var r = new List<DateTime>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((DateTime)value._array[i]); return r; }
         public static implicit operator DateTimeOffset(Value value) => value.DateTimeOffset;
-        public static implicit operator DateTimeOffset[](Value value) => value._array.ConvertAll(x => (DateTimeOffset)x).ToArray();
-        public static implicit operator List<DateTimeOffset>(Value value) => value._array.ConvertAll(x => (DateTimeOffset)x);
+        public static implicit operator DateTimeOffset[](Value value) { var r = new DateTimeOffset[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (DateTimeOffset)value._array[i]; return r; }
+        public static implicit operator List<DateTimeOffset>(Value value) { var r = new List<DateTimeOffset>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((DateTimeOffset)value._array[i]); return r; }
         public static implicit operator TimeSpan(Value value) => value.TimeSpan;
-        public static implicit operator TimeSpan[](Value value) => value._array.ConvertAll(x => (TimeSpan)x).ToArray();
-        public static implicit operator List<TimeSpan>(Value value) => value._array.ConvertAll(x => (TimeSpan)x);
+        public static implicit operator TimeSpan[](Value value) { var r = new TimeSpan[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (TimeSpan)value._array[i]; return r; }
+        public static implicit operator List<TimeSpan>(Value value) { var r = new List<TimeSpan>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((TimeSpan)value._array[i]); return r; }
         public static implicit operator Color(Value value) => value.Color;
-        public static implicit operator Color[](Value value) => value._array.ConvertAll(x => (Color)x).ToArray();
-        public static implicit operator List<Color>(Value value) => value._array.ConvertAll(x => (Color)x);
+        public static implicit operator Color[](Value value) { var r = new Color[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Color)value._array[i]; return r; }
+        public static implicit operator List<Color>(Value value) { var r = new List<Color>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Color)value._array[i]); return r; }
         public static implicit operator Color32(Value value) => value.Color32;
-        public static implicit operator Color32[](Value value) => value._array.ConvertAll(x => (Color32)x).ToArray();
-        public static implicit operator List<Color32>(Value value) => value._array.ConvertAll(x => (Color32)x);
+        public static implicit operator Color32[](Value value) { var r = new Color32[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Color32)value._array[i]; return r; }
+        public static implicit operator List<Color32>(Value value) { var r = new List<Color32>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Color32)value._array[i]); return r; }
         public static implicit operator Vector2(Value value) => value.Vector2;
-        public static implicit operator Vector2[](Value value) => value._array.ConvertAll(x => (Vector2)x).ToArray();
-        public static implicit operator List<Vector2>(Value value) => value._array.ConvertAll(x => (Vector2)x);
+        public static implicit operator Vector2[](Value value) { var r = new Vector2[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Vector2)value._array[i]; return r; }
+        public static implicit operator List<Vector2>(Value value) { var r = new List<Vector2>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Vector2)value._array[i]); return r; }
         public static implicit operator Vector3(Value value) => value.Vector3;
-        public static implicit operator Vector3[](Value value) => value._array.ConvertAll(x => (Vector3)x).ToArray();
-        public static implicit operator List<Vector3>(Value value) => value._array.ConvertAll(x => (Vector3)x);
+        public static implicit operator Vector3[](Value value) { var r = new Vector3[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Vector3)value._array[i]; return r; }
+        public static implicit operator List<Vector3>(Value value) { var r = new List<Vector3>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Vector3)value._array[i]); return r; }
         public static implicit operator Vector4(Value value) => value.Vector4;
-        public static implicit operator Vector4[](Value value) => value._array.ConvertAll(x => (Vector4)x).ToArray();
-        public static implicit operator List<Vector4>(Value value) => value._array.ConvertAll(x => (Vector4)x);
+        public static implicit operator Vector4[](Value value) { var r = new Vector4[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Vector4)value._array[i]; return r; }
+        public static implicit operator List<Vector4>(Value value) { var r = new List<Vector4>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Vector4)value._array[i]); return r; }
         public static implicit operator Quaternion(Value value) => value.Quaternion;
-        public static implicit operator Quaternion[](Value value) => value._array.ConvertAll(x => (Quaternion)x).ToArray();
-        public static implicit operator List<Quaternion>(Value value) => value._array.ConvertAll(x => (Quaternion)x);
+        public static implicit operator Quaternion[](Value value) { var r = new Quaternion[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Quaternion)value._array[i]; return r; }
+        public static implicit operator List<Quaternion>(Value value) { var r = new List<Quaternion>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Quaternion)value._array[i]); return r; }
         public static implicit operator Bounds(Value value) => value.Bounds;
-        public static implicit operator Bounds[](Value value) => value._array.ConvertAll(x => (Bounds)x).ToArray();
-        public static implicit operator List<Bounds>(Value value) => value._array.ConvertAll(x => (Bounds)x);
+        public static implicit operator Bounds[](Value value) { var r = new Bounds[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Bounds)value._array[i]; return r; }
+        public static implicit operator List<Bounds>(Value value) { var r = new List<Bounds>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Bounds)value._array[i]); return r; }
         public static implicit operator Rect(Value value) => value.Rect;
-        public static implicit operator Rect[](Value value) => value._array.ConvertAll(x => (Rect)x).ToArray();
-        public static implicit operator List<Rect>(Value value) => value._array.ConvertAll(x => (Rect)x);
+        public static implicit operator Rect[](Value value) { var r = new Rect[value._array.Count]; for (int i = 0; i < r.Length; i++) r[i] = (Rect)value._array[i]; return r; }
+        public static implicit operator List<Rect>(Value value) { var r = new List<Rect>(value._array.Count); for (int i = 0; i < value._array.Count; i++) r.Add((Rect)value._array[i]); return r; }
         
         #endregion
 
         #region Writer
 
-        private void Write(StringWriter writer, bool includeTypeInfo = false)
+        private void Write(StringBuilder sb, bool includeTypeInfo = false)
         {
             if (includeTypeInfo)
             {
-                writer.Write("{");
-                writer.Write($"\"JsonType\": \"{_valueType}\", \"DataType\": \"{_dataType}\", \"Value\": ");
+                sb.Append("{\"JsonType\": \"");
+                sb.Append(_valueType);
+                sb.Append("\", \"DataType\": \"");
+                sb.Append(_dataType);
+                sb.Append("\", \"Value\": ");
             }
             switch (_valueType)
             {
                 case ValueTypes.UNDEFINED:
                 case ValueTypes.NULL:
-                    writer.Write("null");
+                    sb.Append("null");
                     break;
                 case ValueTypes.STRING:
-                    writer.Write("\"");
-                    writer.Write(SanitizeStringForJson(_string));
-                    writer.Write("\"");
+                    sb.Append('"');
+                    AppendSanitizedString(sb, _string);
+                    sb.Append('"');
                     break;
                 case ValueTypes.BOOLEAN:
-                    writer.Write(_bool ? "true" : "false");
+                    sb.Append(_bool ? "true" : "false");
                     break;
                 case ValueTypes.NUMBER:
-                    writer.Write(_number.ToString(CultureInfo.InvariantCulture));
+                    sb.Append(_number.ToString(CultureInfo.InvariantCulture));
                     break;
                 case ValueTypes.ARRAY:
-                    writer.Write("[");
-                    int arrayIndex = 0;
-                    int arrayCount = _array.Count - 1;
-                    foreach (Value item in _array)
+                    sb.Append('[');
+                    for (int i = 0; i < _array.Count; i++)
                     {
-                        item.Write(writer, includeTypeInfo);
-                        if (arrayIndex < arrayCount) writer.Write(", ");
-                        arrayIndex++;
+                        if (i > 0) sb.Append(", ");
+                        _array[i].Write(sb, includeTypeInfo);
                     }
-                    writer.Write("]");
+                    sb.Append(']');
                     break;
                 case ValueTypes.OBJECT:
-                    writer.Write("{");
-                    if (_dataType == DataTypes.CONTAINER)
+                    sb.Append('{');
+                    int idx = 0;
+                    foreach (KeyValuePair<string, Value> kvp in _container)
                     {
-                        int containerIndex = 0;
-                        int containerCount = _container.Count - 1;
-                        foreach (KeyValuePair<string, Value> kvp in _container)
-                        {
-                            writer.Write($"\"{kvp.Key}\": ");
-                            kvp.Value.Write(writer, includeTypeInfo);
-                            if (containerIndex < containerCount) writer.Write(", ");
-                            containerIndex++;
-                        }
+                        if (idx > 0) sb.Append(", ");
+                        sb.Append('"');
+                        sb.Append(kvp.Key);
+                        sb.Append("\": ");
+                        kvp.Value.Write(sb, includeTypeInfo);
+                        idx++;
                     }
-                    else
-                    {
-                        int containerIndex = 0;
-                        int containerCount = _container.Count - 1;
-                        foreach (KeyValuePair<string, Value> kvp in _container)
-                        {
-                            writer.Write($"\"{kvp.Key}\": {kvp.Value}");
-                            if (containerIndex < containerCount) writer.Write(", ");
-                            containerIndex++;
-                        }
-                    }
-                    writer.Write("}");
+                    sb.Append('}');
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
-            if (includeTypeInfo)
-            {
-                writer.Write("}");
-            }
+            if (includeTypeInfo) sb.Append('}');
         }
         
         #endregion
         
         #region Reader
 
-        public static string SanitizeStringForJson(string s)
+        private static void AppendSanitizedString(StringBuilder sb, string s)
         {
-            if (s == null || s.Length == 0) {
-                return "";
-            }
-
-            StringBuilder sb = new StringBuilder();
+            if (s == null || s.Length == 0) return;
             for (int i = 0; i < s.Length; i += 1) {
                 char c = s[i];
                 if (c >= 0 && c <= 7 || c == 11 || c >= 14 && c <= 31 || c == 39 || c == 60 || c == 62)
@@ -870,6 +861,16 @@ namespace mixpanel
                         break;
                 }
             }
+        }
+
+        public static string SanitizeStringForJson(string s)
+        {
+            if (s == null || s.Length == 0) {
+                return "";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            AppendSanitizedString(sb, s);
             return sb.ToString();
         }
         
@@ -884,7 +885,6 @@ namespace mixpanel
 
         private void SerializeList()
         {
-            if (_array == null) _array = new List<Value>(0);
             int count = _array.Count;
             _arrayData = new string[count];
             if (count <= 0) return;
@@ -896,7 +896,6 @@ namespace mixpanel
 
         private void SerializeDictionary()
         {
-            if (_container == null) _container = new Dictionary<string, Value>(0);
             int count = _container.Count;
             _containerKeys = new string[count];
             _containerValues = new string[count];
@@ -930,6 +929,7 @@ namespace mixpanel
                 JsonUtility.FromJsonOverwrite(data, item);
                 _array.Add(item);
             }
+            _arrayData = null;
         }
 
         private void DeserializeDictionary()
@@ -944,6 +944,8 @@ namespace mixpanel
                 JsonUtility.FromJsonOverwrite(_containerValues[i], item);
                 _container[_containerKeys[i]] = item;
             }
+            _containerKeys = null;
+            _containerValues = null;
         }
         #endregion
 

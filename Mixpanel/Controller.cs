@@ -4,12 +4,6 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.Profiling;
-using System.Threading;
-using Unity.Jobs;
-using Unity.Collections;
-using System.Net;
-using System.Net.Http;
 
 #if UNITY_IOS
 using UnityEngine.iOS;
@@ -25,6 +19,29 @@ namespace mixpanel
         private static int _retryCount = 0;
         private static DateTime _retryTime;
 
+        #region ValuePool
+
+        private const int PoolCapacity = 16;
+        private static readonly Stack<Value> _valuePool = new Stack<Value>(PoolCapacity);
+
+        internal static Value RentValue()
+        {
+            if (_valuePool.Count > 0)
+            {
+                return _valuePool.Pop();
+            }
+            return new Value();
+        }
+
+        internal static void ReturnValue(Value v)
+        {
+            if (v == null || _valuePool.Count >= PoolCapacity) return;
+            v.OnRecycle();
+            _valuePool.Push(v);
+        }
+
+        #endregion
+
         #region Singleton
 
         private static Controller _instance;
@@ -32,6 +49,10 @@ namespace mixpanel
         private static bool _isFlushCoroutineRunning = false;
         private static bool _isInitializing = false;  // Guard against concurrent initialization
 
+        // When MIXPANEL_DISABLE_AUTO_INIT is defined, the BeforeSceneLoad hook is compiled out
+        // entirely — zero boot-time cost. Use Mixpanel.Init() to initialize manually.
+        // This is the recommended approach when ManualInitialization is always enabled.
+        #if !MIXPANEL_DISABLE_AUTO_INIT
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeBeforeSceneLoad()
         {
@@ -39,13 +60,7 @@ namespace mixpanel
             if (Config.ManualInitialization) return;
             Initialize();
         }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void InitializeAfterSceneLoad()
-        {
-            // Formerly initialized auto properties here; now handled synchronously in Initialize()
-            // Kept as placeholder for potential future use
-        }
+        #endif
 
         internal static void Initialize() {
             // Guard against concurrent initialization calls
@@ -74,14 +89,14 @@ namespace mixpanel
                 // 2. Migrate v1 data if needed (sets DistinctId and IsTracking from old SDK)
                 instance.MigrateFrom1To2();
 
-                // 3. Initialize auto properties synchronously to ensure they're ready for first event
+                #if !MIXPANEL_DISABLE_AUTO_INIT
+                // Eagerly initialize auto properties and preload persisted properties
+                // so the first Track() call has no surprise disk I/O or SystemInfo queries.
+                // Skipped when MIXPANEL_DISABLE_AUTO_INIT is defined — all lazy-load on first use.
                 GetEventsDefaultProperties();
                 GetEngageDefaultProperties();
-
-                // 4. Eagerly load persisted properties to ensure consistent Track() performance
-                // This prevents lazy-loading with disk I/O when Track() is called immediately after Init()
-                // Moving the I/O cost from first Track() to Init() for predictable performance
                 PreloadPersistedProperties();
+                #endif
 
                 // Note: Flush coroutine will be started in Start() to follow Unity lifecycle best practices
                 // and prevent duplicate coroutines if initialization partially fails
@@ -89,7 +104,7 @@ namespace mixpanel
                 // Mark as fully initialized
                 _fullyInitialized = true;
 
-                Mixpanel.Log($"Mixpanel fully initialized (synchronous)");
+                Mixpanel.Log($"Mixpanel initialized");
             }
             catch (Exception e) {
                 Mixpanel.LogError($"Error during Mixpanel initialization: {e}");
@@ -205,12 +220,11 @@ namespace mixpanel
                     // Migrate if not already done
                     MigrateFrom1To2();
 
-                    // Initialize auto properties
+                    #if !MIXPANEL_DISABLE_AUTO_INIT
                     GetEventsDefaultProperties();
                     GetEngageDefaultProperties();
-
-                    // Preload persisted properties
                     PreloadPersistedProperties();
+                    #endif
 
                     // Mark as initialized
                     _fullyInitialized = true;
@@ -269,12 +283,11 @@ namespace mixpanel
             }
 
             string url = (flushType == MixpanelStorage.FlushType.EVENTS) ? Config.TrackUrl : Config.EngageUrl;
-            Value batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
+            MixpanelStorage.StoredBatch batch = MixpanelStorage.DequeueBatchTrackingDataRaw(flushType, Config.BatchSize);
             while (batch.Count > 0) {
                 Dictionary<string, string> form = new Dictionary<string, string>();
-                String payload = batch.ToString();
-                form.Add("data", payload);
-                Mixpanel.Log("Sending batch of data: " + payload);
+                form.Add("data", batch.Payload);
+                Mixpanel.Log("Sending batch of data: " + batch.Payload);
                 using (UnityWebRequest request = UnityWebRequest.Post(url, form))
                 {
                     yield return request.SendWebRequest();
@@ -298,7 +311,7 @@ namespace mixpanel
                     {
                         _retryCount = 0;
                         MixpanelStorage.DeleteBatchTrackingData(batch);
-                        batch = MixpanelStorage.DequeueBatchTrackingData(flushType, Config.BatchSize);
+                        batch = MixpanelStorage.DequeueBatchTrackingDataRaw(flushType, Config.BatchSize);
                         Mixpanel.Log("Successfully posted to " + url);
                     }
                 }
@@ -434,22 +447,6 @@ namespace mixpanel
             return _autoEngageProperties;
         }
 
-        private static void PreloadPersistedProperties() {
-            // Eagerly load all persisted properties from disk into memory cache
-            // This prevents lazy-loading with disk I/O during the first Track() call
-            // Each property getter will check if cached, and if not, load from PlayerPreferences
-            try {
-                _ = MixpanelStorage.SuperProperties;   // Force load + cache
-                _ = MixpanelStorage.OnceProperties;    // Force load + cache
-                _ = MixpanelStorage.TimedEvents;       // Force load + cache
-                Mixpanel.Log($"Preloaded persisted properties from storage");
-            }
-            catch (Exception e) {
-                // Non-critical failure - properties will lazy-load on first use
-                Mixpanel.LogError($"Failed to preload persisted properties: {e}");
-            }
-        }
-
         private static Value GetEventsDefaultProperties()
         {
             if (_autoTrackProperties == null) {
@@ -479,6 +476,21 @@ namespace mixpanel
             return _autoTrackProperties;
         }
 
+        #if !MIXPANEL_DISABLE_AUTO_INIT
+        private static void PreloadPersistedProperties() {
+            try {
+                _ = MixpanelStorage.SuperProperties;
+                _ = MixpanelStorage.OnceProperties;
+                _ = MixpanelStorage.TimedEvents;
+                Mixpanel.Log($"Preloaded persisted properties from storage");
+            }
+            catch (Exception e) {
+                // Non-critical failure - properties will lazy-load on first use
+                Mixpanel.LogError($"Failed to preload persisted properties: {e}");
+            }
+        }
+        #endif
+
         internal static void DoTrack(string eventName, Value properties)
         {
             if (!MixpanelStorage.IsTracking) return;
@@ -499,13 +511,14 @@ namespace mixpanel
             properties["distinct_id"] = MixpanelStorage.DistinctId;
             properties["time"] = Util.CurrentTimeInMilliseconds();
 
-            Value data = new Value();
+            Value data = RentValue();
 
             data["event"] = eventName;
             data["properties"] = properties;
             data["$mp_metadata"] = Metadata.GetEventMetadata();
 
             MixpanelStorage.EnqueueTrackingData(data, MixpanelStorage.FlushType.EVENTS);
+            ReturnValue(data);
         }
 
         internal static void DoEngage(Value properties)
