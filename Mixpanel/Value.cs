@@ -67,6 +67,9 @@ namespace mixpanel
             set => _containerBacking = value;
         }
 
+        private const int SharedBuilderInitialCapacity = 256;
+        private const int MaxRetainedBuilderCapacity = 16 * 1024;
+
         [ThreadStatic] private static StringBuilder _sharedBuilder;
 
         public bool IsNull => _valueType == ValueTypes.NULL;
@@ -134,10 +137,20 @@ namespace mixpanel
                     return _number.ToString(CultureInfo.InvariantCulture);
                 case ValueTypes.ARRAY:
                 case ValueTypes.OBJECT:
-                    var sb = _sharedBuilder ?? (_sharedBuilder = new StringBuilder(256));
+                    var sb = _sharedBuilder;
+                    if (sb == null || sb.Capacity > MaxRetainedBuilderCapacity)
+                    {
+                        sb = new StringBuilder(SharedBuilderInitialCapacity);
+                        _sharedBuilder = sb;
+                    }
                     sb.Length = 0;
                     Write(sb);
-                    return sb.ToString();
+                    string json = sb.ToString();
+                    if (sb.Capacity > MaxRetainedBuilderCapacity)
+                    {
+                        _sharedBuilder = null;
+                    }
+                    return json;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

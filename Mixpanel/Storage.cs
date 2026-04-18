@@ -272,11 +272,29 @@ namespace mixpanel
             }
         }
 
-        internal static void DeleteBatchTrackingData(StoredBatch batch) {
+        internal static void DeleteBatchTrackingData(FlushType flushType, StoredBatch batch)
+        {
+            if (batch == null || batch.Count == 0) return;
+
             foreach (string trackingKey in batch.TrackingKeys) {
                 if (PreferencesSource.HasKey(trackingKey)) {
                     PreferencesSource.DeleteKey(trackingKey);
                 }
+            }
+
+            string startIndexKey = StartIndexKey(flushType);
+            int oldStartIndex = CurrentStartIndex(flushType);
+            int maxIndex = NextTrackingId(flushType) - 1;
+            int newStartIndex = AdvanceStartIndex(flushType, oldStartIndex, maxIndex);
+
+            if (newStartIndex > maxIndex) {
+                // Reset the ids when the queue drains so future flushes do not
+                // keep scanning sparse, ever-growing PlayerPrefs keys.
+                PreferencesSource.SetInt(TrackingIdKey(flushType), 0);
+                PreferencesSource.SetInt(startIndexKey, 0);
+            }
+            else if (newStartIndex != oldStartIndex) {
+                PreferencesSource.SetInt(startIndexKey, newStartIndex);
             }
         }
 

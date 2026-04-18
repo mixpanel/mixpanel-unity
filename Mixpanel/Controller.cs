@@ -310,7 +310,7 @@ namespace mixpanel
                     else
                     {
                         _retryCount = 0;
-                        MixpanelStorage.DeleteBatchTrackingData(batch);
+                        MixpanelStorage.DeleteBatchTrackingData(flushType, batch);
                         batch = MixpanelStorage.DequeueBatchTrackingDataRaw(flushType, Config.BatchSize);
                         Mixpanel.Log("Successfully posted to " + url);
                     }
