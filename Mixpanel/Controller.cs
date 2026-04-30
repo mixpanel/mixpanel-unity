@@ -503,10 +503,12 @@ namespace mixpanel
             properties.Merge(MixpanelStorage.OnceProperties);
             properties.Merge(MixpanelStorage.SuperProperties);
             Value startTime;
-            if (MixpanelStorage.TimedEvents.TryGetValue(eventName, out startTime))
+            Value timedEvents = MixpanelStorage.TimedEvents;
+            if (timedEvents.TryGetValue(eventName, out startTime))
             {
                 properties["$duration"] = Util.CurrentTimeInSeconds() - (double)startTime;
-                MixpanelStorage.TimedEvents.Remove(eventName);
+                timedEvents.Remove(eventName);
+                MixpanelStorage.TimedEvents = timedEvents;
             }
             properties["token"] = MixpanelSettings.Instance.Token;
             properties["distinct_id"] = MixpanelStorage.DistinctId;
