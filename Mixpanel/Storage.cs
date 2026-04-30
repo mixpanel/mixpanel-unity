@@ -24,7 +24,31 @@ namespace mixpanel
         private static bool IsLegacySerializedValue(string json)
         {
             if (string.IsNullOrEmpty(json)) return false;
-            return json.TrimStart().StartsWith("{\"_valueType\":", StringComparison.Ordinal);
+
+            const string legacyPrefix = "{\"_valueType\":";
+            int startIndex = 0;
+            while (startIndex < json.Length && char.IsWhiteSpace(json[startIndex]))
+            {
+                startIndex++;
+            }
+
+            if (startIndex > json.Length - legacyPrefix.Length) return false;
+            bool hasLegacyPrefix = string.Compare(
+                json,
+                startIndex,
+                legacyPrefix,
+                0,
+                legacyPrefix.Length,
+                StringComparison.Ordinal) == 0;
+            if (!hasLegacyPrefix) return false;
+
+            int valueTypeIndex = startIndex + legacyPrefix.Length;
+            if (valueTypeIndex >= json.Length) return false;
+
+            // JsonUtility emits ValueTypes as an integer; Value.ToString() may emit
+            // a user key named "_valueType".
+            char valueType = json[valueTypeIndex];
+            return valueType >= '0' && valueType <= '9';
         }
 
         // Deserializes stored Value data, accepting both JsonUtility-backed data and
@@ -35,6 +59,11 @@ namespace mixpanel
             if (IsLegacySerializedValue(json))
                 return JsonUtility.FromJson<Value>(json);
             return Value.Deserialize(json);
+        }
+
+        private static string SerializeStored(Value value)
+        {
+            return value == null ? "null" : value.ToString();
         }
 
         private static string NormalizeStoredPayload(string json)
@@ -161,7 +190,7 @@ namespace mixpanel
             int trackingDataId = NextTrackingId(flushType);
             String trackingKey = TrackingKey(flushType, trackingDataId);
             data["id"] = trackingKey;
-            PreferencesSource.SetString(trackingKey, data.ToString());
+            PreferencesSource.SetString(trackingKey, SerializeStored(data));
             IncreaseTrackingDataID(flushType);
         }
 
@@ -349,7 +378,7 @@ namespace mixpanel
             set
             {
                 _onceProperties = value;
-                PreferencesSource.SetString(OncePropertiesName, JsonUtility.ToJson(_onceProperties));
+                PreferencesSource.SetString(OncePropertiesName, SerializeStored(_onceProperties));
             }
         }
 
@@ -383,7 +412,7 @@ namespace mixpanel
             set
             {
                 _superProperties = value;
-                PreferencesSource.SetString(SuperPropertiesName, JsonUtility.ToJson(_superProperties));
+                PreferencesSource.SetString(SuperPropertiesName, SerializeStored(_superProperties));
             }
         }
 
@@ -417,7 +446,7 @@ namespace mixpanel
             set
             {
                 _timedEvents = value;
-                PreferencesSource.SetString(TimedEventsName, JsonUtility.ToJson(_timedEvents));
+                PreferencesSource.SetString(TimedEventsName, SerializeStored(_timedEvents));
             }
         }
 

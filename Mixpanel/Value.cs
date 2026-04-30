@@ -614,84 +614,84 @@ namespace mixpanel
         #region ToJsonType
         
         public static implicit operator Value(string value) => new Value(value);
-        public static implicit operator Value(string[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<string> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(string[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<string> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(bool value) => new Value(value);
-        public static implicit operator Value(bool[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<bool> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(bool[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<bool> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(float value) => new Value((double)(decimal)value);
-        public static implicit operator Value(float[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<float> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(float[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<float> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(double value) => new Value(value);
-        public static implicit operator Value(double[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<double> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(double[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<double> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(decimal value) => new Value((double)value);
-        public static implicit operator Value(decimal[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<decimal> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(decimal[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<decimal> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(short value) => new Value(value);
-        public static implicit operator Value(short[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<short> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(short[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<short> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(int value) => new Value(value);
-        public static implicit operator Value(int[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<int> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(int[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<int> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(long value) => new Value(value);
-        public static implicit operator Value(long[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<long> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(long[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<long> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(ushort value) => new Value(value);
-        public static implicit operator Value(ushort[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<ushort> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(ushort[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<ushort> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(uint value) => new Value(value);
-        public static implicit operator Value(uint[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<uint> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(uint[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<uint> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(ulong value) => new Value(value);
-        public static implicit operator Value(ulong[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<ulong> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(ulong[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<ulong> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(sbyte value) => new Value(value);
-        public static implicit operator Value(sbyte[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<sbyte> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(sbyte[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<sbyte> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(byte value) => new Value(value);
-        public static implicit operator Value(byte[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<byte> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(byte[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<byte> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         
         public static implicit operator Value(Uri value) => new Value(value);
-        public static implicit operator Value(Uri[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Uri> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Uri[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Uri> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Guid value) => new Value(value);
-        public static implicit operator Value(Guid[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Guid> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Guid[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Guid> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(DateTime value) => new Value(value);
-        public static implicit operator Value(DateTime[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<DateTime> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(DateTime[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<DateTime> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(DateTimeOffset value) => new Value(value);
-        public static implicit operator Value(DateTimeOffset[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<DateTimeOffset> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(DateTimeOffset[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<DateTimeOffset> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(TimeSpan value) => new Value(value);
-        public static implicit operator Value(TimeSpan[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<TimeSpan> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(TimeSpan[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<TimeSpan> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Color value) => new Value(value);
-        public static implicit operator Value(Color[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Color> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Color[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Color> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Color32 value) => new Value(value);
-        public static implicit operator Value(Color32[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Color32> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Color32[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Color32> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Vector2 value) => new Value(value);
-        public static implicit operator Value(Vector2[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Vector2> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Vector2[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Vector2> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Vector3 value) => new Value(value);
-        public static implicit operator Value(Vector3[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Vector3> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Vector3[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Vector3> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Vector4 value) => new Value(value);
-        public static implicit operator Value(Vector4[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Vector4> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Vector4[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Vector4> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Quaternion value) => new Value(value);
-        public static implicit operator Value(Quaternion[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Quaternion> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Quaternion[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Quaternion> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Bounds value) => new Value(value);
-        public static implicit operator Value(Bounds[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Bounds> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Bounds[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Bounds> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         public static implicit operator Value(Rect value) => new Value(value);
-        public static implicit operator Value(Rect[] value) { var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
-        public static implicit operator Value(List<Rect> value) { var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(Rect[] value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Length); for (int i = 0; i < value.Length; i++) v._array.Add(value[i]); return v; }
+        public static implicit operator Value(List<Rect> value) { if (value == null) throw new ArgumentNullException(nameof(value)); var v = Value.Array; v._array = new List<Value>(value.Count); for (int i = 0; i < value.Count; i++) v._array.Add(value[i]); return v; }
         
         #endregion
 
@@ -824,7 +824,7 @@ namespace mixpanel
                     {
                         if (idx > 0) sb.Append(", ");
                         sb.Append('"');
-                        sb.Append(kvp.Key);
+                        AppendSanitizedString(sb, kvp.Key);
                         sb.Append("\": ");
                         kvp.Value.Write(sb, includeTypeInfo);
                         idx++;
@@ -1073,7 +1073,7 @@ namespace mixpanel
         {
             string number = NextWord(reader);
             double parsedDouble;
-            double.TryParse(number, out parsedDouble);
+            double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedDouble);
             return parsedDouble;
         }
         

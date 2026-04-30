@@ -22,6 +22,7 @@ namespace mixpanel
         #region ValuePool
 
         private const int PoolCapacity = 16;
+        // Unity SDK calls run on the main thread; this pool is intentionally not synchronized.
         private static readonly Stack<Value> _valuePool = new Stack<Value>(PoolCapacity);
 
         internal static Value RentValue()
@@ -529,6 +530,8 @@ namespace mixpanel
             properties["$time"] = Util.CurrentTimeInMilliseconds();
             properties["$mp_metadata"] = Metadata.GetPeopleMetadata();
 
+            // Unlike DoTrack, people properties are already the payload, so there is
+            // no wrapper Value to rent or return here.
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
         }
 
