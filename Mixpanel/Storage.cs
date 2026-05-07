@@ -45,10 +45,39 @@ namespace mixpanel
             int valueTypeIndex = startIndex + legacyPrefix.Length;
             if (valueTypeIndex >= json.Length) return false;
 
-            // JsonUtility emits ValueTypes as an integer; Value.ToString() may emit
-            // a user key named "_valueType".
+            // JsonUtility emits ValueTypes as an integer, but a user payload may
+            // also legitimately start with a top-level "_valueType" numeric
+            // property. Require additional JsonUtility backing fields before
+            // treating stored data as legacy format.
             char valueType = json[valueTypeIndex];
-            return valueType >= '0' && valueType <= '9';
+            return valueType >= '0' && valueType <= '9'
+                && HasJsonUtilityField(json, startIndex, "\"_dataType\":")
+                && (HasJsonUtilityField(json, startIndex, "\"_arrayData\":")
+                    || (HasJsonUtilityField(json, startIndex, "\"_containerKeys\":")
+                        && HasJsonUtilityField(json, startIndex, "\"_containerValues\":")));
+        }
+
+        private static bool HasJsonUtilityField(string json, int startIndex, string field)
+        {
+            return json.IndexOf(field, startIndex, StringComparison.Ordinal) >= 0;
+        }
+
+        private static void EnsureStoredPayloadIsObjectJson(string json)
+        {
+            int startIndex = 0;
+            while (startIndex < json.Length && char.IsWhiteSpace(json[startIndex]))
+            {
+                startIndex++;
+            }
+
+            int endIndex = json.Length - 1;
+            while (endIndex >= startIndex && char.IsWhiteSpace(json[endIndex]))
+            {
+                endIndex--;
+            }
+
+            if (startIndex > endIndex || json[startIndex] != '{' || json[endIndex] != '}')
+                throw new FormatException("Stored tracking payload is not a JSON object.");
         }
 
         // Deserializes stored Value data, accepting both JsonUtility-backed data and
@@ -68,8 +97,14 @@ namespace mixpanel
 
         private static string NormalizeStoredPayload(string json)
         {
-            if (string.IsNullOrEmpty(json)) return "null";
-            return IsLegacySerializedValue(json) ? JsonUtility.FromJson<Value>(json).ToString() : json;
+            if (string.IsNullOrWhiteSpace(json))
+                throw new FormatException("Stored tracking payload is empty.");
+
+            string normalizedPayload = IsLegacySerializedValue(json)
+                ? JsonUtility.FromJson<Value>(json).ToString()
+                : json;
+            EnsureStoredPayloadIsObjectJson(normalizedPayload);
+            return normalizedPayload;
         }
         #region Preferences
         private static IPreferences PreferencesSource = new PlayerPreferences();
@@ -244,7 +279,7 @@ namespace mixpanel
                         trackingKeys.Add(trackingKey);
                     }
                     catch (Exception e) {
-                        Mixpanel.LogError($"There was an error processing '{trackingKey}' from the internal object pool: " + e);
+                        Mixpanel.LogError($"There was an error processing stored tracking payload '{trackingKey}': " + e);
                         PreferencesSource.DeleteKey(trackingKey);
 
                         if (trackingKeys.Count == 0) {
