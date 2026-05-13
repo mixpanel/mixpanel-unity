@@ -109,7 +109,7 @@ Releases follow the standardized two-step ceremony documented in the [Unity Rele
 3. The tag push fires `.github/workflows/release-upm.yml`, which validates the tag, gates on the `release` GitHub environment, and creates a draft GitHub release with `Examples.unitypackage` and `Tests.unitypackage` attached as assets.
 4. Review the draft release on GitHub and click **Publish release**. UPM consumers install via git URL — the tag itself is the published artifact.
 
-> **`.unitypackage` rebuild caveat:** the `Examples.unitypackage` and `Tests.unitypackage` files committed to the repo ship as-is in the GitHub release. CI does not rebuild them (Unity license required). If a release includes Examples or Tests changes, rebuild them locally with the existing scripts under `scripts/` and commit on the release prep branch before tagging.
+> **`.unitypackage` rebuild caveat:** the `Examples.unitypackage` and `Tests.unitypackage` files committed to the repo ship as-is in the GitHub release. CI does not rebuild them (Unity license required). If a release includes Examples or Tests changes, re-export the affected `.unitypackage` from the Unity Editor (Assets → Export Package…) and commit it on the release prep branch before tagging.
 
 ## Code Conventions
 
