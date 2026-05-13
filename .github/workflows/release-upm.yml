@@ -72,6 +72,7 @@ jobs:
             echo "version=$VERSION"
             echo "tag_prefix=$TAG_PREFIX"
             echo "package_json=$(echo "$MODULE_CONFIG" | jq -r '.package_json')"
+            echo "version_files=$(echo "$MODULE_CONFIG" | jq -c '.version_files // []')"
             echo "changelog=$(echo "$MODULE_CONFIG" | jq -r '.changelog')"
             echo "package_name=$(echo "$MODULE_CONFIG" | jq -r '.package_name')"
           } >> "$GITHUB_OUTPUT"
@@ -101,6 +102,30 @@ jobs:
             exit 1
           fi
           echo "Version confirmed: $PKG_VERSION"
+
+      - name: Validate version_files contain only the tag version
+        env:
+          VERSION: ${{ steps.module.outputs.version }}
+          VERSION_FILES: ${{ steps.module.outputs.version_files }}
+        run: |
+          # Each version_files entry is expected to reference the SDK version
+          # exactly once (e.g. the C# `MixpanelUnityVersion` constant). Refuse
+          # to release if any listed file contains a semver-shaped string that
+          # isn't the tag version — that means the prepare workflow either
+          # missed a bump or someone hand-edited the file out of sync.
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+            if [ ! -f "$FILE" ]; then
+              echo "::error::version_files entry not found: $FILE"
+              exit 1
+            fi
+            FOUND=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?' "$FILE" | sort -u || true)
+            if [ "$FOUND" != "$VERSION" ]; then
+              echo "::error::$FILE contains unexpected semver(s): $FOUND (expected only $VERSION)"
+              exit 1
+            fi
+            echo "$FILE -> $VERSION OK"
+          done < <(echo "$VERSION_FILES" | jq -r '.[]')
 
       - name: Verify .unitypackage assets exist
         run: |

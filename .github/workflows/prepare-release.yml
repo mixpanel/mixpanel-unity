@@ -57,6 +57,7 @@ jobs:
           {
             echo "tag=${TAG_PREFIX}${VERSION}"
             echo "package_json=$(echo "$MODULE_CONFIG" | jq -r '.package_json')"
+            echo "version_files=$(echo "$MODULE_CONFIG" | jq -c '.version_files // []')"
             echo "changelog=$(echo "$MODULE_CONFIG" | jq -r '.changelog')"
             echo "readme=$(echo "$MODULE_CONFIG" | jq -r '.readme')"
             echo "package_name=$(echo "$MODULE_CONFIG" | jq -r '.package_name')"
@@ -91,10 +92,11 @@ jobs:
           BRANCH: ${{ steps.config.outputs.branch }}
         run: git checkout -b "$BRANCH"
 
-      - name: Bump version in package.json
+      - name: Bump version in package.json and version files
         env:
           VERSION: ${{ inputs.version }}
           PACKAGE_JSON: ${{ steps.config.outputs.package_json }}
+          VERSION_FILES: ${{ steps.config.outputs.version_files }}
         run: |
           OLD_VERSION=$(jq -r '.version' "$PACKAGE_JSON")
           if [ -z "$OLD_VERSION" ] || [ "$OLD_VERSION" = "null" ]; then
@@ -109,6 +111,26 @@ jobs:
           # left untouched.
           jq --indent 2 --arg v "$VERSION" '.version = $v' "$PACKAGE_JSON" > "$PACKAGE_JSON.tmp"
           mv "$PACKAGE_JSON.tmp" "$PACKAGE_JSON"
+
+          # Bump literal version occurrences in each version_files entry
+          # (e.g. the C# `MixpanelUnityVersion` constant the SDK reports as
+          # `$lib_version` on every event). The publish workflow refuses to
+          # release if any version_files entry contains a semver-shaped
+          # string other than $VERSION, so each listed file must reference
+          # the SDK version exactly once.
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+            if [ ! -f "$FILE" ]; then
+              echo "::error::version_files entry not found: $FILE"
+              exit 1
+            fi
+            if ! grep -qF "$OLD_VERSION" "$FILE"; then
+              echo "::error::$FILE does not contain old version $OLD_VERSION"
+              exit 1
+            fi
+            sed -i "s/${OLD_VERSION}/${VERSION}/g" "$FILE"
+            echo "Bumped $FILE: ${OLD_VERSION} -> ${VERSION}"
+          done < <(echo "$VERSION_FILES" | jq -r '.[]')
 
       - name: Update README version header
         env:
@@ -151,12 +173,17 @@ jobs:
           VERSION: ${{ inputs.version }}
           BRANCH: ${{ steps.config.outputs.branch }}
           PACKAGE_JSON: ${{ steps.config.outputs.package_json }}
+          VERSION_FILES: ${{ steps.config.outputs.version_files }}
           CHANGELOG_FILE: ${{ steps.config.outputs.changelog }}
           README: ${{ steps.config.outputs.readme }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add "$PACKAGE_JSON" "$CHANGELOG_FILE" "$README"
+          while IFS= read -r FILE; do
+            [ -z "$FILE" ] && continue
+            git add "$FILE"
+          done < <(echo "$VERSION_FILES" | jq -r '.[]')
           git commit -m "release: prepare ${MODULE} ${VERSION}"
           git push origin "$BRANCH"
 
