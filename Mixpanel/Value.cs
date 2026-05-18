@@ -78,8 +78,6 @@ namespace mixpanel
 
         public void OnRecycle()
         {
-            _valueType = ValueTypes.OBJECT;
-            _dataType = DataTypes.UNDEFINED;
             _string = "";
             _bool = false;
             _number = 0;
@@ -88,6 +86,17 @@ namespace mixpanel
             _containerBacking = null;
             _containerKeys = null;
             _containerValues = null;
+        }
+
+        // Full reset used by the Controller's value pool. Differs from
+        // OnRecycle by also clearing _valueType/_dataType so a pooled Value
+        // can be reused as any type without tripping the type assertions in
+        // the indexer setters.
+        internal void ResetForPool()
+        {
+            _valueType = ValueTypes.OBJECT;
+            _dataType = DataTypes.UNDEFINED;
+            OnRecycle();
         }
 
         public Value this[int index]
@@ -933,32 +942,35 @@ namespace mixpanel
         private void DeserializeList()
         {
             if (_arrayData == null) return;
-            int count = _arrayData.Length;
+            // Capture and clear the shadow array before iterating so the
+            // cleanup also applies to empty arrays (count == 0).
+            string[] data = _arrayData;
+            _arrayData = null;
+            int count = data.Length;
             _array = new List<Value>(count);
-            if (count == 0) return;
-            foreach (string data in _arrayData)
+            for (int i = 0; i < count; i++)
             {
                 Value item = new Value();
-                JsonUtility.FromJsonOverwrite(data, item);
+                JsonUtility.FromJsonOverwrite(data[i], item);
                 _array.Add(item);
             }
-            _arrayData = null;
         }
 
         private void DeserializeDictionary()
         {
             if (_containerKeys == null) return;
-            int count = _containerKeys.Length;
+            string[] keys = _containerKeys;
+            string[] values = _containerValues;
+            _containerKeys = null;
+            _containerValues = null;
+            int count = keys.Length;
             _container = new Dictionary<string, Value>(count);
-            if (count == 0) return;
             for (int i = 0; i < count; i++)
             {
                 Value item = new Value();
-                JsonUtility.FromJsonOverwrite(_containerValues[i], item);
-                _container[_containerKeys[i]] = item;
+                JsonUtility.FromJsonOverwrite(values[i], item);
+                _container[keys[i]] = item;
             }
-            _containerKeys = null;
-            _containerValues = null;
         }
         #endregion
 
@@ -1102,6 +1114,27 @@ namespace mixpanel
             return new Value(array);
         }
         
+        // The includeTypeInfo Write() path emits {"JsonType":"<ValueTypes>","DataType":"<DataTypes>","Value":...}.
+        // ParseObject must round-trip that, but a user payload (super property,
+        // event property) may legitimately contain keys named "JsonType" or
+        // "DataType". To avoid misinterpreting user data as internal metadata,
+        // require all three exact keys AND that the type strings parse as
+        // valid enum values.
+        private static bool LooksLikeInternalSerialization(Dictionary<string, Value> data)
+        {
+            if (data.Count != 3) return false;
+            if (!data.ContainsKey("JsonType") || !data.ContainsKey("DataType") || !data.ContainsKey("Value"))
+                return false;
+
+            Value jsonTypeVal = data["JsonType"];
+            Value dataTypeVal = data["DataType"];
+            if (jsonTypeVal == null || jsonTypeVal._valueType != ValueTypes.STRING) return false;
+            if (dataTypeVal == null || dataTypeVal._valueType != ValueTypes.STRING) return false;
+
+            return Enum.IsDefined(typeof(ValueTypes), jsonTypeVal._string)
+                && Enum.IsDefined(typeof(DataTypes), dataTypeVal._string);
+        }
+
         private static Value ParseObject(StringReader reader)
         {
             Dictionary<string, Value> data = new Dictionary<string, Value>();
@@ -1113,7 +1146,7 @@ namespace mixpanel
                     case Token.COMMA:
                         continue;
                     case Token.CURLY_CLOSE:
-                        if (data.ContainsKey("JsonType") && data.ContainsKey("DataType"))
+                        if (LooksLikeInternalSerialization(data))
                         {
                             return FromSerialization(data["JsonType"], data["DataType"], data["Value"]);
                         }

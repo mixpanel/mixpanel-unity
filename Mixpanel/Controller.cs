@@ -37,7 +37,7 @@ namespace mixpanel
         internal static void ReturnValue(Value v)
         {
             if (v == null || _valuePool.Count >= PoolCapacity) return;
-            v.OnRecycle();
+            v.ResetForPool();
             _valuePool.Push(v);
         }
 
@@ -49,6 +49,7 @@ namespace mixpanel
         private static bool _fullyInitialized = false;
         private static bool _isFlushCoroutineRunning = false;
         private static bool _isInitializing = false;  // Guard against concurrent initialization
+        private static bool _isFlushing = false;       // Guard against overlapping flushes
 
         // When MIXPANEL_DISABLE_AUTO_INIT is defined, the BeforeSceneLoad hook is compiled out
         // entirely — zero boot-time cost. Use Mixpanel.Init() to initialize manually.
@@ -164,6 +165,7 @@ namespace mixpanel
             _fullyInitialized = false;  // Reset initialization state
             _isFlushCoroutineRunning = false;  // Reset coroutine flag
             _isInitializing = false;  // Reset initialization guard
+            _isFlushing = false;       // Reset flush guard
             _autoTrackProperties = null;  // Reset auto-properties cache
             _autoEngageProperties = null; // Reset auto-properties cache
             Metadata.ResetSession();  // Clear session state
@@ -262,15 +264,32 @@ namespace mixpanel
 
         internal void DoFlush(Action<bool> onFlushComplete = null)
         {
-            int coroutinesCount = 2; // Number of coroutines to wait for
-            bool overallSuccess = true;
+            // Reject re-entrant flushes. With the storage layer's drain-and-reset
+            // optimization, two overlapping flushes that both dequeue the same
+            // start index range could race: flush A drains + resets the counter,
+            // a new Track() reuses Event0, then flush B's delete-by-key wipes
+            // the freshly enqueued event. The flag is reset when both per-type
+            // coroutines (EVENTS + PEOPLE) finish.
+            if (_isFlushing)
+            {
+                Mixpanel.Log("Flush already in progress; ignoring re-entrant call");
+                onFlushComplete?.Invoke(false);
+                return;
+            }
+            _isFlushing = true;
 
-            Action<bool> onComplete = onFlushComplete != null ?
-                new Action<bool>(success => {
-                    overallSuccess &= success;
-                    CheckCompletion(onFlushComplete, ref coroutinesCount, overallSuccess);
-                })
-                : (Action<bool>)null;
+            int coroutinesRemaining = 2;
+            bool overallSuccess = true;
+            Action<bool> onComplete = success =>
+            {
+                overallSuccess &= success;
+                coroutinesRemaining--;
+                if (coroutinesRemaining == 0)
+                {
+                    _isFlushing = false;
+                    onFlushComplete?.Invoke(overallSuccess);
+                }
+            };
             StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS, onComplete));
             StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE, onComplete));
         }
@@ -319,18 +338,6 @@ namespace mixpanel
             }
 
             onComplete?.Invoke(true);
-        }
-
-        private void CheckCompletion(Action<bool> onFlushComplete, ref int coroutinesCount, bool overallSuccess)
-        {
-            // Decrease the counter
-            coroutinesCount--;
-
-            // If all coroutines are finished, invoke the onFlushComplete callback
-            if (coroutinesCount == 0)
-            {
-                onFlushComplete?.Invoke(overallSuccess);
-            }
         }
 
         private IEnumerator SendHttpEvent(string eventName, string apiToken, string distinctId, string properties, bool updatePeople)
