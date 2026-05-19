@@ -168,7 +168,7 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             Value properties = MixpanelStorage.OnceProperties;
-            if (properties[key].IsNull) {
+            if (!properties.ContainsKey(key)) {
                 properties[key] = value;
                 MixpanelStorage.OnceProperties = properties;
             }
