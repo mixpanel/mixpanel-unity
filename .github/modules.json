@@ -1,0 +1,10 @@
+{
+  "analytics": {
+    "tag_prefix": "v",
+    "package_json": "package.json",
+    "version_files": ["Mixpanel/MixpanelAPI.cs"],
+    "changelog": "CHANGELOG.md",
+    "readme": "README.md",
+    "package_name": "com.mixpanel.unity"
+  }
+}
