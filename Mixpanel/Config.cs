@@ -10,8 +10,5 @@ namespace mixpanel
         internal static float FlushInterval = 60f;
 
         internal static int BatchSize = 50;
-
-        internal const int PoolFillFrames = 50;
-        internal const int PoolFillEachFrame = 20;
     }
 }

@@ -76,17 +76,15 @@ props.Merge(otherValue);          // Merge operations
 
 ### Version Updates
 
-**Automated (recommended)**:
-```bash
-python scripts/release.py --old 3.5.3 --new 3.5.4
-```
-This handles version updates, commit, tag creation, and push in one command.
+The SDK version lives in two places (both auto-bumped — do not edit by hand):
+- `package.json` `version` field (UPM manifest)
+- `Mixpanel/MixpanelAPI.cs:21` `MixpanelUnityVersion` constant (`$lib_version` on every event)
 
-**Manual process**:
-1. Update `MixpanelUnityVersion` constant in `MixpanelAPI.cs:21`
-2. Update version in `package.json:4`
-3. Update `CHANGELOG.md`
-4. Tag release: `git tag -a v3.5.4 -m "version 3.5.4" && git push origin --tags`
+Releases follow the standardized two-step flow documented in the [Unity Release Runbook](https://www.notion.so/mxpnl/Unity-Release-Runbook-35ee0ba925628077baafff8a381cfe8b):
+
+1. Run the **Prepare Release** workflow (`.github/workflows/prepare-release.yml`) from the Actions tab with `module=analytics` and the new version. It opens a release PR with the version bumps, generated changelog section, and README header updated.
+2. Merge the PR, then push the tag from `master` (`git tag v3.5.6 && git push origin v3.5.6`). The tag push fires `release-upm.yml`, which gates on the `release` GitHub environment and creates a draft GitHub release with `Examples.unitypackage` and `Tests.unitypackage` attached.
+3. Review and publish the draft release. UPM consumers resolve the new tag from the git URL.
 
 ### Package Installation
 

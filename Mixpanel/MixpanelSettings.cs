@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -71,11 +70,19 @@ namespace mixpanel
 
         private static MixpanelSettings FindOrCreateInstance()
         {
-            MixpanelSettings instance = null;
-            instance = instance ? null : Resources.Load<MixpanelSettings>("Mixpanel");
-            instance = instance ? instance : Resources.LoadAll<MixpanelSettings>(string.Empty).FirstOrDefault();
-            instance = instance ? instance : CreateAndSave<MixpanelSettings>();
-            if (instance == null) throw new Exception("Could not find or create settings for Mixpanel");
+            MixpanelSettings instance = Resources.Load<MixpanelSettings>("Mixpanel");
+            if (instance == null)
+            {
+                // Preserve compatibility with existing projects that stored the asset
+                // elsewhere under Resources with a different name.
+                MixpanelSettings[] existingInstances = Resources.LoadAll<MixpanelSettings>(string.Empty);
+                if (existingInstances != null && existingInstances.Length > 0)
+                    instance = existingInstances[0];
+            }
+            if (instance == null)
+                instance = CreateAndSave<MixpanelSettings>();
+            if (instance == null)
+                throw new Exception("Could not find or create settings for Mixpanel");
             return instance;
         }
 

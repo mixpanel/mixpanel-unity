@@ -1,13 +1,5 @@
 using UnityEngine;
-using UnityEngine.Networking;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Net;
-using System.Net.Http;
-using System.Web;
 
 namespace mixpanel
 {

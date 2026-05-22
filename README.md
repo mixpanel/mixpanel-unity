@@ -2,6 +2,8 @@
   <img src="https://user-images.githubusercontent.com/71290498/231855731-2d3774c3-dc41-4595-abfb-9c49f5f84103.png" alt="Mixpanel Unity SDK" height="150"/>
 </div>
 
+##### _May 12, 2026_ - [v3.5.5](https://github.com/mixpanel/mixpanel-unity/releases/tag/v3.5.5)
+
 # Table of Contents
 
 <!-- MarkdownTOC -->
@@ -39,7 +41,11 @@ This library can be installed using the unity package manager system with git. W
 ## 2. Initialize Mixpanel
 
 You will need your project token for initializing your library. You can get your project token from [project settings](https://mixpanel.com/settings/project).
-To initialize the library, first open the unity project settings menu for Mixpanel. (Edit -> Project Settings -> Mixpanel) Then, enter your project token into the Token and Debug Token input fields within the inspector. Please note if you prefer to initialize Mixpanel manually, you can select the `Manual Initialization` in the settings and call `Mixpanel.Init()` to initialize.
+To initialize the library, first open the unity project settings menu for Mixpanel. (Edit -> Project Settings -> Mixpanel) Then, enter your project token into the Token and Debug Token input fields within the inspector.
+
+If you prefer to initialize Mixpanel manually, enable `Manual Initialization` in the settings and call `Mixpanel.Init()` during startup.
+
+If you define `MIXPANEL_DISABLE_AUTO_INIT`, the automatic `BeforeSceneLoad` initialization hook is compiled out entirely. In that configuration you must call `Mixpanel.Init()` yourself, even if `Manual Initialization` is not enabled in the settings. This is useful for projects that always initialize manually and want to avoid any automatic boot-time work.
 
 ![unity_screenshots](https://user-images.githubusercontent.com/36679208/152408022-62440f50-04c7-4ff3-b331-02d3d3122c9e.jpg)
 

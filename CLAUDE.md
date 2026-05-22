@@ -89,28 +89,27 @@ Or point to specific version:
 
 ### Version Management
 
-- Update version in `MixpanelAPI.cs:21` (`MixpanelUnityVersion` constant)
-- Update version in `package.json:4`
-- Update `CHANGELOG.md` (automated via GitHub Actions on tag push)
+The SDK version lives in two places that must stay in sync:
+- `package.json` `version` field (UPM manifest)
+- `Mixpanel/MixpanelAPI.cs:21` `MixpanelUnityVersion` constant (sent as `$lib_version` on every event)
+
+Both are bumped automatically by the prepare-release workflow — do not edit them by hand. They are listed in `.github/modules.json` (`package_json` and `version_files`), and the publish workflow refuses to release if the two files disagree.
 
 ### Release Process
 
-**Using the release script** (recommended):
-```bash
-python scripts/release.py --old 3.5.3 --new 3.5.4
-```
-This script:
-1. Updates version in `package.json` and `Mixpanel/MixpanelAPI.cs`
-2. Commits the changes with message "Version X.Y.Z"
-3. Pushes to remote
-4. Creates and pushes annotated tag `vX.Y.Z`
+Releases follow the standardized two-step ceremony documented in the [Unity Release Runbook](https://www.notion.so/mxpnl/Unity-Release-Runbook-35ee0ba925628077baafff8a381cfe8b):
 
-**Manual process**:
-- Update version in `MixpanelAPI.cs:21` (`MixpanelUnityVersion` constant)
-- Update version in `package.json:4`
-- Commit, then tag: `git tag -a v3.5.4 -m "version 3.5.4" && git push origin --tags`
+1. Run the **Prepare Release** workflow (`.github/workflows/prepare-release.yml`) from the Actions tab with `module=analytics` and the new version. It opens a release PR with version bumps, changelog, and README header updated.
+2. Merge the PR, then push the tag from `master`:
+   ```bash
+   git checkout master && git pull
+   git tag v3.5.6
+   git push origin v3.5.6
+   ```
+3. The tag push fires `.github/workflows/release-upm.yml`, which validates the tag, gates on the `release` GitHub environment, and creates a draft GitHub release with `Examples.unitypackage` and `Tests.unitypackage` attached as assets.
+4. Review the draft release on GitHub and click **Publish release**. UPM consumers install via git URL — the tag itself is the published artifact.
 
-GitHub Actions workflow (`.github/workflows/release.yml`) triggers on version tags to generate changelog and create GitHub release.
+> **`.unitypackage` rebuild caveat:** the `Examples.unitypackage` and `Tests.unitypackage` files committed to the repo ship as-is in the GitHub release. CI does not rebuild them (Unity license required). If a release includes Examples or Tests changes, re-export the affected `.unitypackage` from the Unity Editor (Assets → Export Package…) and commit it on the release prep branch before tagging.
 
 ## Code Conventions
 
