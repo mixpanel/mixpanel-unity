@@ -1,3 +1,11 @@
+# Changelog
+
+## [v3.6.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.6.0) (2026-06-12)
+
+### Features
+- Performance Improvements - reduce IL2CPP bloat, boot-time cost, and runtime memory ([#204](https://github.com/mixpanel/mixpanel-unity/pull/204))
+
+[Full Changelog](https://github.com/mixpanel/mixpanel-unity/compare/v3.5.5...v3.6.0)
 #
 
 ## [v3.5.5](https://github.com/mixpanel/mixpanel-unity/tree/v3.5.5) (2025-12-05)

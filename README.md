@@ -2,7 +2,7 @@
   <img src="https://user-images.githubusercontent.com/71290498/231855731-2d3774c3-dc41-4595-abfb-9c49f5f84103.png" alt="Mixpanel Unity SDK" height="150"/>
 </div>
 
-##### _May 12, 2026_ - [v3.5.5](https://github.com/mixpanel/mixpanel-unity/releases/tag/v3.5.5)
+##### _June 12, 2026_ - [v3.6.0](https://github.com/mixpanel/mixpanel-unity/releases/tag/v3.6.0)
 
 # Table of Contents
 
