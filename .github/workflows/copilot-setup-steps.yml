@@ -24,7 +24,7 @@ jobs:
       # for Unity-specific code will be limited. However, this still helps with
       # general C# syntax, patterns, and non-Unity code analysis.
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1  # v5.4.0
         with:
           dotnet-version: '6.0.x'
 
