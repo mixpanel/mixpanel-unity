@@ -374,7 +374,18 @@ namespace mixpanel
         private void MigrateFrom1To2() {
             if (!MixpanelStorage.HasMigratedFrom1To2)
             {
-                string stateFile = Application.persistentDataPath + "/mp_state.json";
+                // Empty persistentDataPath makes the path an invalid root ("/mp_state.json"), so
+                // file access throws DirectoryNotFoundException. It may be empty when read off the
+                // main thread, on tvOS, or with a malformed ProductName/CompanyName. Skip without
+                // marking migration done so a later init can still run it.
+                string persistentDataPath = Application.persistentDataPath;
+                if (string.IsNullOrEmpty(persistentDataPath))
+                {
+                    Mixpanel.Log("Skipping v1 to v2 migration: Application.persistentDataPath is empty");
+                    return;
+                }
+
+                string stateFile = persistentDataPath + "/mp_state.json";
                 try
                 {
                     if (System.IO.File.Exists(stateFile))
@@ -401,10 +412,10 @@ namespace mixpanel
                 }
                 finally
                 {
-                    System.IO.File.Delete(stateFile);
+                    DeleteLegacyFileBestEffort(stateFile);
                 }
 
-                string superPropertiesFile = Application.persistentDataPath + "/mp_super_properties.json";
+                string superPropertiesFile = persistentDataPath + "/mp_super_properties.json";
                 try
                 {
                     if (System.IO.File.Exists(superPropertiesFile))
@@ -426,10 +437,29 @@ namespace mixpanel
                 }
                 finally
                 {
-                    System.IO.File.Delete(superPropertiesFile);
+                    DeleteLegacyFileBestEffort(superPropertiesFile);
                 }
 
                 MixpanelStorage.HasMigratedFrom1To2 = true;
+            }
+        }
+
+        // Deleting a leftover v1 migration file is best-effort cleanup. It must never throw:
+        // File.Delete only tolerates a missing file when the parent directory exists, so an
+        // absent/unavailable persistentDataPath directory would otherwise throw
+        // DirectoryNotFoundException and abort SDK initialization.
+        private static void DeleteLegacyFileBestEffort(string path)
+        {
+            try
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    System.IO.File.Delete(path);
+                }
+            }
+            catch (Exception e)
+            {
+                Mixpanel.Log($"Could not delete legacy v1 file {path}: {e.Message}");
             }
         }
 
