@@ -6,7 +6,7 @@ This is the **Mixpanel Unity SDK** - an analytics library for Unity applications
 
 - Unity package distributed via Unity Package Manager (UPM)
 - Supports Unity 2018.3+ (requires .NET 4.x Equivalent for older versions)
-- No test suite in main package (separate `Tests.unitypackage` available)
+- PlayMode tests for the flush path in `Tests/Runtime/` (opt in via `testables`); not run by CI yet
 
 ## Core Architecture
 
