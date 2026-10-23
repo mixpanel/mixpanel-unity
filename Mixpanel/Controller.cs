@@ -299,8 +299,32 @@ namespace mixpanel
                     onFlushComplete?.Invoke(overallSuccess);
                 }
             };
-            StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS, generation, onComplete));
-            StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE, generation, onComplete));
+            StartCoroutine(FailOnException(SendData(MixpanelStorage.FlushType.EVENTS, generation, onComplete), onComplete));
+            StartCoroutine(FailOnException(SendData(MixpanelStorage.FlushType.PEOPLE, generation, onComplete), onComplete));
+        }
+
+        // Steps a SendData coroutine and reports failure if it throws (e.g. a storage
+        // exception), so the flush guard is released right away instead of waiting for
+        // the stall takeover. C# forbids yield inside a try with a catch, so MoveNext
+        // is guarded and the yield happens outside it.
+        private static IEnumerator FailOnException(IEnumerator routine, Action<bool> onComplete)
+        {
+            while (true)
+            {
+                bool hasNext;
+                try
+                {
+                    hasNext = routine.MoveNext();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("[Mixpanel] Flush failed: " + e);
+                    onComplete?.Invoke(false);
+                    hasNext = false;
+                }
+                if (!hasNext) yield break;
+                yield return routine.Current;
+            }
         }
 
         private IEnumerator SendData(MixpanelStorage.FlushType flushType, int generation, Action<bool> onComplete)
