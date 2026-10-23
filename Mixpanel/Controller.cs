@@ -50,6 +50,10 @@ namespace mixpanel
         private static bool _isFlushCoroutineRunning = false;
         private static bool _isInitializing = false;  // Guard against concurrent initialization
         private static bool _isFlushing = false;       // Guard against overlapping flushes
+        private static int _flushGeneration = 0;       // Lets a new flush disown a stalled one
+        private static float _flushLastProgress = 0f;  // realtimeSinceStartup of the last flush progress
+        private const int RequestTimeoutSeconds = 60;
+        private const float FlushStallSeconds = 110f;  // > request timeout; < 2x default FlushInterval
 
         // When MIXPANEL_DISABLE_AUTO_INIT is defined, the BeforeSceneLoad hook is compiled out
         // entirely — zero boot-time cost. Use Mixpanel.Init() to initialize manually.
@@ -269,14 +273,19 @@ namespace mixpanel
             // start index range could race: flush A drains + resets the counter,
             // a new Track() reuses Event0, then flush B's delete-by-key wipes
             // the freshly enqueued event. The flag is reset when both per-type
-            // coroutines (EVENTS + PEOPLE) finish.
-            if (_isFlushing)
+            // coroutines (EVENTS + PEOPLE) finish. A flush that makes no progress
+            // for FlushStallSeconds (exception, stopped coroutine) is taken over by
+            // a new generation; the stalled one never touches storage again.
+            if (_isFlushing && Time.realtimeSinceStartup - _flushLastProgress < FlushStallSeconds)
             {
                 Mixpanel.Log("Flush already in progress; ignoring re-entrant call");
                 onFlushComplete?.Invoke(false);
                 return;
             }
+            if (_isFlushing) Debug.LogError("[Mixpanel] Previous flush stalled; starting a new one");
+            int generation = ++_flushGeneration;
             _isFlushing = true;
+            _flushLastProgress = Time.realtimeSinceStartup;
 
             int coroutinesRemaining = 2;
             bool overallSuccess = true;
@@ -286,15 +295,15 @@ namespace mixpanel
                 coroutinesRemaining--;
                 if (coroutinesRemaining == 0)
                 {
-                    _isFlushing = false;
+                    if (generation == _flushGeneration) _isFlushing = false;
                     onFlushComplete?.Invoke(overallSuccess);
                 }
             };
-            StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS, onComplete));
-            StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE, onComplete));
+            StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS, generation, onComplete));
+            StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE, generation, onComplete));
         }
 
-        private IEnumerator SendData(MixpanelStorage.FlushType flushType, Action<bool> onComplete)
+        private IEnumerator SendData(MixpanelStorage.FlushType flushType, int generation, Action<bool> onComplete)
         {
             if (_retryTime > DateTime.Now && _retryCount > 0)
             {
@@ -310,7 +319,10 @@ namespace mixpanel
                 Mixpanel.Log("Sending batch of data: " + batch.Payload);
                 using (UnityWebRequest request = UnityWebRequest.Post(url, form))
                 {
+                    request.timeout = RequestTimeoutSeconds;
                     yield return request.SendWebRequest();
+                    // Superseded by a newer flush: its keys may have been reused, so leave storage alone.
+                    if (generation != _flushGeneration) { onComplete?.Invoke(false); yield break; }
                     #if UNITY_2020_1_OR_NEWER
                     if (request.result != UnityWebRequest.Result.Success)
                     #else
@@ -331,6 +343,7 @@ namespace mixpanel
                     {
                         _retryCount = 0;
                         MixpanelStorage.DeleteBatchTrackingData(flushType, batch);
+                        _flushLastProgress = Time.realtimeSinceStartup;
                         batch = MixpanelStorage.DequeueBatchTrackingDataRaw(flushType, Config.BatchSize);
                         Mixpanel.Log("Successfully posted to " + url);
                     }
