@@ -628,27 +628,29 @@ namespace mixpanel
         /// </summary>
         /// <description>
         /// <p>Only for projects that use hierarchical groups. On any other project, or before a company is
-        /// identified, the returned group drops every update with an error log, so it is never null.</p>
+        /// identified, this logs an error and returns null.</p>
         /// <p>The company is fixed when this is called, so a group kept across <c>Reset()</c> or a new identify
         /// still updates the earlier company.</p>
         /// </description>
         /// <code>
         ///        Mixpanel.Identify(new MixpanelIdentity("user_123", "acme"));<br/>
-        ///        Mixpanel.GetCompany().Set("tier", "enterprise");<br/>
+        ///        Mixpanel.GetCompany()?.Set("tier", "enterprise");<br/>
         /// </code>
-        /// <returns>the identified company's group, never null</returns>
+        /// <returns>the identified company's group, or null when there is no company</returns>
         public static Group GetCompany()
         {
             if (!Config.HierarchicalGroups)
             {
-                return Group.Unavailable("GetCompany() is only for hierarchical groups projects, enabled with " +
+                LogError("GetCompany() is only for hierarchical groups projects, enabled with " +
                     "HierarchicalGroups in the Mixpanel project settings.");
+                return null;
             }
             string companyId = MixpanelStorage.CompanyId;
             if (companyId == null)
             {
-                return Group.Unavailable("GetCompany() needs a company. Call Identify(new MixpanelIdentity(userId, " +
+                LogError("GetCompany() needs a company. Call Identify(new MixpanelIdentity(userId, " +
                     "companyId)) first.");
+                return null;
             }
             return GetGroup(CompanyIdGroupKey, companyId);
         }
