@@ -208,64 +208,7 @@ namespace mixpanel
             CollectionAssert.IsEmpty(_prefs.StoredPayloads, "storage drained");
         }
 
-        // 8 — after a long background stint, realtimeSinceStartup makes a pending request look old.
-        [UnityTest]
-        public IEnumerator FlushRightAfterResume_LeavesPendingRequestAlone()
-        {
-            SdkInternals.EnqueueEvent("E1");
-            _server.NextReply = FlushTestServer.Reply.Hold;
-            bool? firstResult = null;
-            SdkInternals.Flush(_controller, ok => firstResult = ok);
-            yield return WaitFor(() => _server.HeldCount == 1, WaitSeconds, "the request to reach the server");
-
-            SdkInternals.BackdateInFlight(0, sentSecondsAgo: 1000f);
-            Flush(); // first check only marks the request as possibly hung
-            Flush(); // second check comes too soon after the first to abort
-
-            CollectionAssert.AreEqual(new[] { false, false }, _results, "both flushes rejected");
-            Assert.AreEqual(1, _server.RequestCount, "nothing resent");
-
-            _server.ReleaseOldest(true);
-            yield return WaitFor(() => firstResult.HasValue, WaitSeconds, "the first flush to finish");
-
-            Assert.AreEqual(true, firstResult, "pending request completes normally");
-            Assert.AreEqual(1, _server.DeliveredCount("E1"), "E1 delivered exactly once");
-            Assert.IsFalse(SdkInternals.IsFlushing, "guard released");
-            LogAssert.NoUnexpectedReceived();
-        }
-
-        // 9 — simulates a platform that ignores request.timeout.
-        [UnityTest]
-        public IEnumerator RequestHungPastTimeout_IsAbortedAndEventsKeptForRetry()
-        {
-            SdkInternals.EnqueueEvent("E1");
-            _server.NextReply = FlushTestServer.Reply.Hold;
-            bool? firstResult = null;
-            SdkInternals.Flush(_controller, ok => firstResult = ok);
-            yield return WaitFor(() => _server.HeldCount == 1, WaitSeconds, "the request to reach the server");
-
-            SdkInternals.BackdateInFlight(0, sentSecondsAgo: 1000f);
-            Flush(); // marks the request as possibly hung
-            SdkInternals.BackdateInFlight(0, sentSecondsAgo: null, hungSecondsAgo: 1000f);
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Mixpanel\] Flush request did not complete; aborting it"));
-            Flush(); // still pending on the second check: aborted
-
-            yield return WaitFor(() => firstResult.HasValue, WaitSeconds, "the aborted flush to finish");
-
-            Assert.AreEqual(false, firstResult, "aborted flush reports failure");
-            Assert.IsFalse(SdkInternals.IsFlushing, "guard released");
-            Assert.IsTrue(_prefs.HasStored("E1"), "E1 kept for retry");
-            Assert.AreEqual(1, _server.RequestCount, "nothing resent while the request was pending");
-
-            SdkInternals.ResetRetryBackoff();
-            _server.NextReply = FlushTestServer.Reply.Ok;
-            yield return FlushAndWait();
-
-            Assert.IsTrue(_results.Last(), "retry succeeds");
-            Assert.IsTrue(_server.Delivered("E1"), "E1 delivered by the retry");
-        }
-
-        // 10
+        // 8
         [UnityTest]
         public IEnumerator ClearDuringFlush_DoesNotDeleteNewerEventThatReusedItsKey()
         {
@@ -290,9 +233,9 @@ namespace mixpanel
             Assert.IsTrue(_server.Delivered("NEW"), "NEW delivered by the next flush");
         }
 
-        // 11
+        // 9 — the dropped flush's late response must not touch storage or the newer flush's guard.
         [UnityTest]
-        public IEnumerator DisableMidFlush_ReleasesGuardAndNextSessionSendsEvents()
+        public IEnumerator DisableMidFlush_ReleasesGuardAndLateResponseIsIgnored()
         {
             SdkInternals.EnqueueEvent("E1");
             _server.NextReply = FlushTestServer.Reply.Hold;
@@ -303,39 +246,29 @@ namespace mixpanel
             GameObject oldHost = _controller.gameObject;
             SdkInternals.Disable();
             Object.Destroy(oldHost);
-
             Assert.IsFalse(SdkInternals.IsFlushing, "guard released by Disable");
-            yield return WaitFor(() => firstResult.HasValue, WaitSeconds, "the aborted flush to finish");
-            Assert.AreEqual(false, firstResult, "flush interrupted by Disable reports failure");
-            Assert.IsTrue(_prefs.HasStored("E1"), "E1 kept for the next session");
 
             _controller = SdkInternals.CreateControllerWithoutFlushLoop();
             yield return null;
-            _server.NextReply = FlushTestServer.Reply.Ok;
-            yield return FlushAndWait();
+            Flush(); // next session sends E1 again
+            yield return WaitFor(() => _server.HeldCount == 2, WaitSeconds, "the next session's request");
 
-            Assert.IsTrue(_results.Last(), "flush in the next session succeeds");
-            Assert.IsTrue(_server.Delivered("E1"), "E1 delivered");
-        }
+            _server.ReleaseOldest(true); // the dropped flush's request
+            yield return WaitFor(() => firstResult.HasValue, WaitSeconds, "the dropped flush to finish");
 
-        // 12 — last resort: Abort() never finishing the request is not something Unity has shown.
-        [UnityTest]
-        public IEnumerator AbortedRequestThatNeverCompletes_GuardIsReleased()
-        {
-            SdkInternals.EnqueueEvent("E1");
-            var neverSent = new UnityEngine.Networking.UnityWebRequest(_server.BaseUrl);
-            SdkInternals.InjectAbortedRequestThatNeverCompletes(0, neverSent);
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Mixpanel\] An aborted flush request never completed; releasing the flush guard"));
+            Assert.AreEqual(false, firstResult, "dropped flush reports failure");
+            Assert.IsTrue(SdkInternals.IsFlushing, "newer flush's guard still held");
+            Assert.IsTrue(_prefs.HasStored("E1"), "dropped flush left storage alone");
 
-            yield return FlushAndWait();
+            _server.ReleaseOldest(true);
+            yield return WaitFor(() => _results.Count == 1, WaitSeconds, "the next session's flush");
 
-            CollectionAssert.AreEqual(new[] { true }, _results, "new flush runs and succeeds");
-            Assert.IsTrue(_server.Delivered("E1"), "E1 delivered");
+            CollectionAssert.AreEqual(new[] { true }, _results);
             Assert.IsFalse(SdkInternals.IsFlushing, "guard released");
-            neverSent.Dispose();
+            CollectionAssert.IsEmpty(_prefs.StoredPayloads, "storage drained");
         }
 
-        // 13 — the exception is thrown synchronously, inside DoFlush itself.
+        // 10 — the exception is thrown synchronously, inside DoFlush itself.
         [UnityTest]
         public IEnumerator StorageThrowsOnFirstStepOfBothQueues_CallbackFiresOnceAndGuardReleased()
         {

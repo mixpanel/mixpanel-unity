@@ -64,43 +64,9 @@ namespace mixpanel
             SetStatic(ControllerType, "_retryTime", DateTime.MinValue);
         }
 
-        /// <summary>
-        /// Moves the timestamps of the in-flight request for a queue (0 = events, 1 = people)
-        /// into the past, as if it had been pending that long. Null leaves a timestamp alone.
-        /// </summary>
-        internal static void BackdateInFlight(int queue, float? sentSecondsAgo, float? hungSecondsAgo = null)
-        {
-            object inFlight = InFlightSlots.GetValue(queue);
-            if (inFlight == null) throw new InvalidOperationException("No request in flight for queue " + queue);
-            float now = Time.realtimeSinceStartup;
-            if (sentSecondsAgo.HasValue) InFlightField("SentAt").SetValue(inFlight, now - sentSecondsAgo.Value);
-            if (hungSecondsAgo.HasValue) InFlightField("HungSince").SetValue(inFlight, (float?)(now - hungSecondsAgo.Value));
-        }
-
-        /// <summary>
-        /// Puts the flush guard in the state left by a request that was aborted long ago and
-        /// never completed (a platform where Abort() does not finish the request).
-        /// </summary>
-        internal static void InjectAbortedRequestThatNeverCompletes(int queue, UnityEngine.Networking.UnityWebRequest neverSent)
-        {
-            object inFlight = Activator.CreateInstance(InFlightType, true);
-            float longAgo = Time.realtimeSinceStartup - 1000f;
-            InFlightField("Request").SetValue(inFlight, neverSent);
-            InFlightField("SentAt").SetValue(inFlight, longAgo);
-            InFlightField("AbortedAt").SetValue(inFlight, (float?)longAgo);
-            InFlightSlots.SetValue(inFlight, queue);
-            SetStatic(ControllerType, "_isFlushing", true);
-        }
-
         internal static void ClearQueues() => Invoke("DoClear");
 
         internal static void Disable() => Invoke("Disable");
-
-        private static Type InFlightType => ControllerType.GetNestedType("InFlightRequest", BindingFlags.NonPublic);
-
-        private static Array InFlightSlots => (Array)GetStatic(ControllerType, "_inFlight");
-
-        private static FieldInfo InFlightField(string name) => InFlightType.GetField(name, InstanceFlags);
 
         private static void Invoke(string staticMethod)
         {
