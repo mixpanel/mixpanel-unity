@@ -10,7 +10,7 @@ This is the **Mixpanel Unity SDK** - an analytics library for Unity applications
 - Unity package distributed via Unity Package Manager (UPM)
 - Supports Unity 2018.3+ (requires .NET 4.x Equivalent for older versions)
 - Current version: 3.5.3
-- No test suite included (test package available separately)
+- PlayMode tests for the flush path live in `Tests/Runtime/` (see Running Tests); not run by CI yet
 
 ## Architecture
 
@@ -86,6 +86,21 @@ Or point to specific version:
 ```json
 "com.mixpanel.unity": "file:/path/to/cloned/mixpanel-unity"
 ```
+
+### Running Tests
+
+PlayMode tests live in `Tests/Runtime/` (assembly `Mixpanel.Tests.Runtime`). They use a local HTTP server and an in-memory `IPreferences`, and reach SDK internals through reflection. They only compile in a project that opts in with `testables`:
+```json
+{
+  "dependencies": { "com.mixpanel.unity": "file:/path/to/cloned/mixpanel-unity" },
+  "testables": ["com.mixpanel.unity"]
+}
+```
+Run them from Window → General → Test Runner → PlayMode, or headless:
+```bash
+Unity -batchmode -nographics -projectPath /path/to/project -runTests -testPlatform PlayMode -testResults results.xml
+```
+The suite takes about a minute, because one test waits out the real 60s request timeout.
 
 ### Version Management
 
