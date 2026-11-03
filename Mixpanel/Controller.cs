@@ -62,8 +62,8 @@ namespace mixpanel
         {
             internal UnityWebRequest Request;
             internal float SentAt;        // realtimeSinceStartup
-            internal float? HungSince;
-            internal float? AbortedAt;
+            internal float? HungSince;    // First check that saw it pending past HungRequestSeconds
+            internal float? AbortedAt;    // When the backstop aborted it
         }
 
         // When MIXPANEL_DISABLE_AUTO_INIT is defined, the BeforeSceneLoad hook is compiled out
@@ -289,26 +289,32 @@ namespace mixpanel
             // even if the Controller's coroutines are stopped or it is destroyed.
             if (_isFlushing)
             {
+                // Usual case: the running flush is still healthy, so reject this one.
                 if (!CheckForHungRequests())
                 {
                     Mixpanel.Log("Flush already in progress; ignoring re-entrant call");
                     onFlushComplete?.Invoke(false);
                     return;
                 }
+                // Last resort: an aborted request never completed. Disown the old flush
+                // and start a new one; its batch is still in storage and is sent again.
                 Debug.LogError("[Mixpanel] An aborted flush request never completed; releasing the flush guard");
                 DetachInFlightFlush();
             }
             _isFlushing = true;
-            int flushId = ++_flushId;
-            int epoch = _storageEpoch;
+            int flushId = ++_flushId;   // Lets this flush check it still owns the guard
+            int epoch = _storageEpoch;  // Lets its responses check storage wasn't cleared
 
+            // Called once by each queue (EVENTS, PEOPLE); the flush ends when both have.
             int queuesRemaining = 2;
             bool overallSuccess = true;
             Action<bool> onComplete = success =>
             {
                 overallSuccess &= success;
                 if (--queuesRemaining > 0) return;
+                // A flush disowned by DetachInFlightFlush must not release a newer flush's guard.
                 if (flushId == _flushId) _isFlushing = false;
+                // Guard is already released, so a throwing user callback can't block flushes.
                 try
                 {
                     onFlushComplete?.Invoke(overallSuccess);
@@ -326,6 +332,8 @@ namespace mixpanel
         // exactly once per queue, after its last batch.
         private static void SendNextBatch(MixpanelStorage.FlushType flushType, int epoch, Action<bool> onComplete)
         {
+            // Stop this queue if Clear()/Disable ran since the flush started, or if a
+            // recent failure put us in retry backoff.
             if (epoch != _storageEpoch || (_retryTime > DateTime.Now && _retryCount > 0))
             {
                 onComplete(false);
@@ -349,12 +357,14 @@ namespace mixpanel
             }
             catch (Exception e)
             {
+                // Storage threw (e.g. WebGL quota or a custom IPreferences). The batch
+                // wasn't sent, so its events stay queued for the next flush.
                 Debug.LogError("[Mixpanel] Flush failed: " + e);
                 if (request != null) request.Dispose();
                 onComplete(false);
                 return;
             }
-            if (request == null)
+            if (request == null) // empty batch
             {
                 onComplete(true); // queue drained
                 return;
@@ -372,6 +382,7 @@ namespace mixpanel
                 onComplete(false);
                 return;
             }
+            // Recorded so CheckForHungRequests can find it if it never completes.
             _inFlight[(int)flushType] = new InFlightRequest { Request = request, SentAt = Time.realtimeSinceStartup };
             // `completed` fires even if the Controller's coroutines are stopped or it is
             // destroyed, and runs synchronously if the request has already finished.
@@ -381,6 +392,8 @@ namespace mixpanel
         private static void OnBatchSent(MixpanelStorage.FlushType flushType, UnityWebRequest request,
             MixpanelStorage.StoredBatch batch, int epoch, Action<bool> onComplete)
         {
+            // Free the slot only if it still holds this request; DetachInFlightFlush may
+            // have cleared it already and a newer flush may be using it.
             InFlightRequest inFlight = _inFlight[(int)flushType];
             if (inFlight != null && inFlight.Request == request) _inFlight[(int)flushType] = null;
 
@@ -397,6 +410,7 @@ namespace mixpanel
                     if (request.isHttpError || request.isNetworkError)
                     #endif
                     {
+                        // HTTP error, network error, timeout or abort: keep the batch and back off.
                         Mixpanel.Log("API request to " + request.url + "has failed with reason " + request.error);
                         _retryCount += 1;
                         double retryIn = Math.Pow(2, _retryCount - 1) * 60;
@@ -407,6 +421,7 @@ namespace mixpanel
                     }
                     else
                     {
+                        // Delivered: delete the batch and move on to the next one.
                         _retryCount = 0;
                         MixpanelStorage.DeleteBatchTrackingData(flushType, batch);
                         Mixpanel.Log("Successfully posted to " + request.url);
@@ -416,6 +431,7 @@ namespace mixpanel
             }
             catch (Exception e)
             {
+                // Storage threw while deleting; the batch may be sent again on a later flush.
                 Debug.LogError("[Mixpanel] Flush failed: " + e);
             }
             finally
@@ -423,6 +439,7 @@ namespace mixpanel
                 request.Dispose();
             }
 
+            // Outside the try so this queue always reports exactly once.
             if (sendNext) SendNextBatch(flushType, epoch, onComplete);
             else onComplete(false);
         }
@@ -438,18 +455,23 @@ namespace mixpanel
             float now = Time.realtimeSinceStartup;
             foreach (InFlightRequest inFlight in _inFlight)
             {
+                // Skip empty slots, requests whose response is waiting to be processed,
+                // and requests that haven't been pending long enough to count as hung.
                 if (inFlight == null || IsDone(inFlight.Request) || now - inFlight.SentAt < HungRequestSeconds) continue;
 
                 if (inFlight.AbortedAt.HasValue)
                 {
+                    // Aborted but never completed: this platform won't finish it.
                     if (now - inFlight.AbortedAt.Value >= AbortGraceSeconds) return true;
                 }
                 else if (!inFlight.HungSince.HasValue)
                 {
+                    // First sighting: the app may just have resumed, so only note the time.
                     inFlight.HungSince = now;
                 }
                 else if (now - inFlight.HungSince.Value >= HungConfirmSeconds)
                 {
+                    // Still pending on a later check: it really is hung.
                     Debug.LogError("[Mixpanel] Flush request did not complete; aborting it");
                     inFlight.AbortedAt = now;
                     Abort(inFlight.Request); // completes through OnBatchSent as a failure
