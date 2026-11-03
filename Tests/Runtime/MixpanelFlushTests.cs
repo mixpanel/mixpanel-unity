@@ -291,6 +291,52 @@ namespace mixpanel
             Assert.IsTrue(_server.Delivered("E1") && _server.Delivered("P1"), "both queues delivered");
         }
 
+        // 11 — every other test stays within one batch; this one makes each queue send three.
+        [UnityTest]
+        public IEnumerator SeveralBatchesPerQueue_EachRecordSentOnceAndCallbackFiresAfterLastBatch()
+        {
+            int batchSize = SdkInternals.BatchSize;
+            int perQueue = 2 * batchSize + 7; // two full batches and a partial one
+            for (int i = 0; i < perQueue; i++)
+            {
+                SdkInternals.EnqueueEvent("E" + i);
+                SdkInternals.EnqueuePeople("P" + i);
+            }
+
+            int calls = 0;
+            bool? result = null;
+            int requestsAtCallback = -1;
+            int storedAtCallback = -1;
+            SdkInternals.Flush(_controller, ok =>
+            {
+                calls++;
+                result = ok;
+                requestsAtCallback = _server.RequestCount;
+                storedAtCallback = _prefs.StoredPayloads.Count();
+            });
+            yield return WaitFor(() => calls > 0, WaitSeconds, "the flush to finish");
+            yield return new WaitForSecondsRealtime(0.5f); // give a stray second callback or request time to show up
+
+            Assert.AreEqual(1, calls, "callback invoked exactly once");
+            Assert.AreEqual(true, result, "flush succeeds");
+            Assert.AreEqual(6, requestsAtCallback, "callback fires only after all 3 batches of both queues");
+            Assert.AreEqual(0, storedAtCallback, "both queues drained before the callback");
+            Assert.AreEqual(6, _server.RequestCount, "no extra requests");
+            Assert.IsFalse(SdkInternals.IsFlushing, "guard released");
+            CollectionAssert.IsEmpty(_prefs.StoredPayloads, "storage drained");
+
+            for (int i = 0; i < perQueue; i++)
+            {
+                Assert.AreEqual(1, _server.DeliveredCount("E" + i), "E" + i + " delivered exactly once");
+                Assert.AreEqual(1, _server.DeliveredCount("P" + i), "P" + i + " delivered exactly once");
+            }
+            List<int> batchSizes = _server.DeliveredPayloads
+                .Select(p => Regex.Matches(p, "\"event\"").Count)
+                .OrderByDescending(n => n)
+                .ToList();
+            CollectionAssert.AreEqual(new[] { batchSize, batchSize, batchSize, batchSize, 7, 7 }, batchSizes, "batches respect BatchSize");
+        }
+
         private void Flush() => SdkInternals.Flush(_controller, ok => _results.Add(ok));
 
         private IEnumerator FlushAndWait()

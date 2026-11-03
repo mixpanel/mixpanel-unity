@@ -38,6 +38,8 @@ namespace mixpanel
 
         internal static bool IsFlushing => (bool)GetStatic(ControllerType, "_isFlushing");
 
+        internal static int BatchSize => (int)GetStatic(ConfigType, "BatchSize");
+
         internal static string TrackUrl
         {
             get => (string)GetStatic(ConfigType, "TrackUrl");
@@ -174,6 +176,9 @@ namespace mixpanel
         internal int RequestCount { get { lock (_gate) return _requestCount; } }
 
         internal int HeldCount { get { lock (_gate) return _held.Count; } }
+
+        /// <summary>Payloads of every batch answered with 200, in the order they were answered.</summary>
+        internal List<string> DeliveredPayloads { get { lock (_gate) return new List<string>(_delivered); } }
 
         /// <summary>True once a batch containing this event has been answered with 200.</summary>
         internal bool Delivered(string eventName) => DeliveredCount(eventName) > 0;
