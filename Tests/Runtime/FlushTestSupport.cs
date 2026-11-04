@@ -11,100 +11,58 @@ using UnityEngine;
 namespace mixpanel
 {
     /// <summary>
-    /// Reflection access to the SDK internals the flush tests drive. The SDK has no
-    /// InternalsVisibleTo, and these tests deliberately need no production changes.
+    /// Access to the SDK internals the flush tests drive. Internal members are reached directly
+    /// (InternalsVisibleTo); the few private fields still go through reflection.
     /// </summary>
     internal static class SdkInternals
     {
-        private const BindingFlags StaticFlags = BindingFlags.NonPublic | BindingFlags.Static;
-        private const BindingFlags InstanceFlags = BindingFlags.NonPublic | BindingFlags.Instance;
-
-        private static readonly Assembly Sdk = typeof(Mixpanel).Assembly;
-        private static readonly Type ControllerType = Sdk.GetType("mixpanel.Controller", true);
-        private static readonly Type ConfigType = Sdk.GetType("mixpanel.Config", true);
-        private static readonly Type FlushType = typeof(MixpanelStorage).GetNestedType("FlushType", BindingFlags.NonPublic);
-
-        private static object GetStatic(Type type, string name) => Field(type, name).GetValue(null);
-        private static void SetStatic(Type type, string name, object value) => Field(type, name).SetValue(null, value);
-
-        private static FieldInfo Field(Type type, string name)
+        private static FieldInfo Field(string name)
         {
-            FieldInfo field = type.GetField(name, StaticFlags);
-            if (field == null) throw new MissingFieldException(type.Name, name);
+            FieldInfo field = typeof(Controller).GetField(name, BindingFlags.NonPublic | BindingFlags.Static);
+            if (field == null) throw new MissingFieldException(nameof(Controller), name);
             return field;
         }
 
-        internal static MonoBehaviour Instance => (MonoBehaviour)GetStatic(ControllerType, "_instance");
+        internal static MonoBehaviour Instance => (MonoBehaviour)Field("_instance").GetValue(null);
 
-        internal static bool IsFlushing => (bool)GetStatic(ControllerType, "_isFlushing");
+        internal static bool IsFlushing => (bool)Field("_isFlushing").GetValue(null);
 
-        internal static int BatchSize => (int)GetStatic(ConfigType, "BatchSize");
+        internal static int BatchSize => Config.BatchSize;
 
-        internal static string TrackUrl
-        {
-            get => (string)GetStatic(ConfigType, "TrackUrl");
-            set => SetStatic(ConfigType, "TrackUrl", value);
-        }
+        internal static string TrackUrl { get => Config.TrackUrl; set => Config.TrackUrl = value; }
 
-        internal static string EngageUrl
-        {
-            get => (string)GetStatic(ConfigType, "EngageUrl");
-            set => SetStatic(ConfigType, "EngageUrl", value);
-        }
+        internal static string EngageUrl { get => Config.EngageUrl; set => Config.EngageUrl = value; }
 
         /// <summary>Creates the controller without letting Start() begin the 60s auto-flush loop.</summary>
         internal static MonoBehaviour CreateControllerWithoutFlushLoop()
         {
-            SetStatic(ControllerType, "_fullyInitialized", true);
-            SetStatic(ControllerType, "_isFlushCoroutineRunning", true);
-            return (MonoBehaviour)ControllerType.GetMethod("GetInstance", StaticFlags).Invoke(null, null);
+            Field("_fullyInitialized").SetValue(null, true);
+            Field("_isFlushCoroutineRunning").SetValue(null, true);
+            return Controller.GetInstance();
         }
 
         internal static void ResetRetryBackoff()
         {
-            SetStatic(ControllerType, "_retryCount", 0);
-            SetStatic(ControllerType, "_retryTime", DateTime.MinValue);
+            Field("_retryCount").SetValue(null, 0);
+            Field("_retryTime").SetValue(null, DateTime.MinValue);
         }
 
-        internal static void ClearQueues() => Invoke("DoClear");
+        internal static void ClearQueues() => Controller.DoClear();
 
-        internal static void Disable() => Invoke("Disable");
+        internal static void Disable() => Controller.Disable();
 
-        private static void Invoke(string staticMethod)
-        {
-            try
-            {
-                ControllerType.GetMethod(staticMethod, StaticFlags).Invoke(null, null);
-            }
-            catch (TargetInvocationException e)
-            {
-                throw e.InnerException;
-            }
-        }
+        internal static void Flush(MonoBehaviour controller, Action<bool> onFlushComplete) =>
+            ((Controller)controller).DoFlush(onFlushComplete);
 
-        internal static void Flush(MonoBehaviour controller, Action<bool> onFlushComplete)
-        {
-            try
-            {
-                ControllerType.GetMethod("DoFlush", InstanceFlags).Invoke(controller, new object[] { onFlushComplete });
-            }
-            catch (TargetInvocationException e)
-            {
-                throw e.InnerException;
-            }
-        }
+        internal static void EnqueueEvent(string name) => Enqueue(name, MixpanelStorage.FlushType.EVENTS);
 
-        internal static void EnqueueEvent(string name) => Enqueue(name, "EVENTS");
+        internal static void EnqueuePeople(string name) => Enqueue(name, MixpanelStorage.FlushType.PEOPLE);
 
-        internal static void EnqueuePeople(string name) => Enqueue(name, "PEOPLE");
-
-        private static void Enqueue(string name, string flushType)
+        private static void Enqueue(string name, MixpanelStorage.FlushType flushType)
         {
             Value data = new Value();
             data["event"] = name;
-            typeof(MixpanelStorage)
-                .GetMethod("EnqueueTrackingData", StaticFlags)
-                .Invoke(null, new[] { data, Enum.Parse(FlushType, flushType) });
+            MixpanelStorage.EnqueueTrackingData(data, flushType);
         }
     }
 

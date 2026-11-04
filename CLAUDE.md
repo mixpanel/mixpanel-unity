@@ -89,7 +89,7 @@ Or point to specific version:
 
 ### Running Tests
 
-PlayMode tests live in `Tests/Runtime/` (assembly `Mixpanel.Tests.Runtime`). They use a local HTTP server and an in-memory `IPreferences`, and reach SDK internals through reflection. They only compile in a project that opts in with `testables`:
+PlayMode tests live in `Tests/Runtime/` (assembly `Mixpanel.Tests.Runtime`). They use a local HTTP server and an in-memory `IPreferences`, and reach internal SDK members via `InternalsVisibleTo` (`Mixpanel/AssemblyInfo.cs`); the few private fields they need go through reflection. They only compile in a project that opts in with `testables`:
 ```json
 {
   "dependencies": { "com.mixpanel.unity": "file:/path/to/cloned/mixpanel-unity" },
