@@ -92,7 +92,7 @@ namespace mixpanel
         {
             SdkInternals.EnqueueEvent("E1");
             _prefs.Fault = (operation, key) => operation == "HasKey" && key.StartsWith("Event");
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Mixpanel\] Flush failed: .*Simulated storage failure: HasKey"));
+            LogAssert.Expect(LogType.Warning, new Regex(@"\[Mixpanel\] Flush failed: .*Simulated storage failure: HasKey"));
 
             yield return FlushAndWait();
 
@@ -112,7 +112,7 @@ namespace mixpanel
         {
             SdkInternals.EnqueueEvent("E1");
             _prefs.Fault = (operation, key) => operation == "DeleteKey" && key.StartsWith("Event");
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Mixpanel\] Flush failed: .*Simulated storage failure: DeleteKey"));
+            LogAssert.Expect(LogType.Warning, new Regex(@"\[Mixpanel\] Flush failed: .*Simulated storage failure: DeleteKey"));
 
             yield return FlushAndWait();
 
@@ -146,7 +146,7 @@ namespace mixpanel
         {
             SdkInternals.EnqueueEvent("E1");
             int calls = 0;
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Mixpanel\] onFlushComplete callback threw: .*callback failure"));
+            LogAssert.Expect(LogType.Warning, new Regex(@"\[Mixpanel\] onFlushComplete callback threw: .*callback failure"));
 
             SdkInternals.Flush(_controller, ok => { calls++; throw new InvalidOperationException("callback failure"); });
             yield return WaitFor(() => calls > 0, WaitSeconds, "the throwing callback");
@@ -275,8 +275,8 @@ namespace mixpanel
             SdkInternals.EnqueueEvent("E1");
             SdkInternals.EnqueuePeople("P1");
             _prefs.Fault = (operation, key) => operation == "HasKey" && FaultyPreferences.IsTrackingKey(key);
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Mixpanel\] Flush failed: .*HasKey\(Event"));
-            LogAssert.Expect(LogType.Error, new Regex(@"\[Mixpanel\] Flush failed: .*HasKey\(People"));
+            LogAssert.Expect(LogType.Warning, new Regex(@"\[Mixpanel\] Flush failed: .*HasKey\(Event"));
+            LogAssert.Expect(LogType.Warning, new Regex(@"\[Mixpanel\] Flush failed: .*HasKey\(People"));
 
             Flush();
             yield return null;

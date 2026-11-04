@@ -298,7 +298,7 @@ namespace mixpanel
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError("[Mixpanel] onFlushComplete callback threw: " + e);
+                    Debug.LogWarning("[Mixpanel] onFlushComplete callback threw: " + e);
                 }
             };
             SendNextBatch(MixpanelStorage.FlushType.EVENTS, generation, onComplete);
@@ -327,7 +327,8 @@ namespace mixpanel
                 {
                     Dictionary<string, string> form = new Dictionary<string, string>();
                     form.Add("data", batch.Payload);
-                    Mixpanel.Log("Sending batch of data: " + batch.Payload);
+                    // Guarded so the payload-sized string is only built when debug logging is on.
+                    if (Config.ShowDebug) Mixpanel.Log("Sending batch of data: " + batch.Payload);
                     request = UnityWebRequest.Post(url, form);
                     request.timeout = RequestTimeoutSeconds;
                     operation = request.SendWebRequest();
@@ -337,7 +338,9 @@ namespace mixpanel
             {
                 // Storage threw (e.g. WebGL quota or a custom IPreferences) or the request
                 // couldn't start. The batch wasn't sent, so it stays queued for the next flush.
-                Debug.LogError("[Mixpanel] Flush failed: " + e);
+                // A warning, not an error: this can repeat every flush, and crash reporters
+                // (Sentry, Cloud Diagnostics, Backtrace) send each LogError as an error event.
+                Debug.LogWarning("[Mixpanel] Flush failed: " + e);
                 if (request != null) request.Dispose();
                 onComplete(false);
                 return;
@@ -368,7 +371,7 @@ namespace mixpanel
                     #endif
                     {
                         // HTTP error, network error or timeout: keep the batch and back off.
-                        Mixpanel.Log("API request to " + request.url + "has failed with reason " + request.error);
+                        Mixpanel.Log("API request to " + request.url + " has failed with reason " + request.error);
                         _retryCount += 1;
                         double retryIn = Math.Pow(2, _retryCount - 1) * 60;
                         retryIn = Math.Min(retryIn, 10 * 60); // limit 10 min
@@ -389,7 +392,7 @@ namespace mixpanel
             catch (Exception e)
             {
                 // Storage threw while deleting; the batch may be sent again on a later flush.
-                Debug.LogError("[Mixpanel] Flush failed: " + e);
+                Debug.LogWarning("[Mixpanel] Flush failed: " + e);
             }
             finally
             {
