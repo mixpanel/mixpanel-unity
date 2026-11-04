@@ -7,7 +7,8 @@ namespace mixpanel
         /// </summary>
         /// <description>
         /// Updates are sent to <c>/groups</c>. On a hierarchical groups project each one carries the current
-        /// <c>$company_id</c>, and is dropped with an error log until a company is identified.
+        /// <c>$company_id</c>, and is dropped with an error log until a company is identified. A
+        /// <c>$company_id</c> group carries its own id instead.
         /// </description>
         /// <code>
         ///        Mixpanel.GetGroup("team_id", "finance").Set("size", 12);<br/>
@@ -118,7 +119,12 @@ namespace mixpanel
                     LogError(_unavailableReason + " The update was dropped.");
                     return;
                 }
-                string companyId = Config.HierarchicalGroups ? MixpanelStorage.CompanyId : null;
+                string companyId = null;
+                if (Config.HierarchicalGroups)
+                {
+                    // A company's own profile belongs to that company, not to the one identified now
+                    companyId = _groupKey == CompanyIdGroupKey ? _groupId.ToString() : MixpanelStorage.CompanyId;
+                }
                 Controller.DoGroup(_groupKey, _groupId, companyId, actionType, properties);
             }
         }

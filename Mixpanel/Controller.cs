@@ -580,6 +580,13 @@ namespace mixpanel
         {
             if (!MixpanelStorage.IsTracking) return;
             if (properties == null) properties = new Value();
+            else if (Config.HierarchicalGroups && properties.IsObject)
+            {
+                // Copied so the identity added below never becomes an override when the caller reuses the Value
+                Value copy = new Value();
+                copy.Merge(properties);
+                properties = copy;
+            }
             // Captured before the merges below, which overwrite event properties
             Value eventIdentityProperties = Config.HierarchicalGroups ? TakeEventIdentityProperties(properties) : null;
             properties.Merge(GetEventsDefaultProperties());

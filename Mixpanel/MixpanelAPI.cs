@@ -124,7 +124,12 @@ namespace mixpanel
 
         private static void IdentifyDistinctId(string uniqueId)
         {
-            if (MixpanelStorage.DistinctId == uniqueId) return;
+            if (MixpanelStorage.DistinctId == uniqueId)
+            {
+                // An install from before GetIdentity() knows the user only by the distinct id
+                MixpanelStorage.UserId = uniqueId;
+                return;
+            }
             string oldDistinctId = MixpanelStorage.DistinctId;
             // Remember the anonymous id and the user for GetIdentity(); events are unchanged
             if (MixpanelStorage.DeviceId == null) MixpanelStorage.DeviceId = oldDistinctId;
@@ -585,6 +590,7 @@ namespace mixpanel
             }
             if (existing == null || !existing.IsArray || existing.Count <= 1)
             {
+                if (existing == null || !SameGroup(SingleGroup(existing), groupId)) return;
                 properties.Remove(groupKey);
                 MixpanelStorage.SuperProperties = properties;
                 // This is a best effort--we can't guarantee people and super properties match
