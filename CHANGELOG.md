@@ -1,5 +1,13 @@
 # Changelog
 
+## [v3.6.1](https://github.com/mixpanel/mixpanel-unity/tree/v3.6.1) (2026-11-05)
+
+### Fixes
+- handle flush responses in request callbacks so the flush guard can't get stuck ([#220](https://github.com/mixpanel/mixpanel-unity/pull/220))
+- guard MigrateFrom1To2 against DirectoryNotFoundException on init ([#216](https://github.com/mixpanel/mixpanel-unity/pull/216))
+
+[Full Changelog](https://github.com/mixpanel/mixpanel-unity/compare/v3.6.0...v3.6.1)
+
 ## [v3.6.0](https://github.com/mixpanel/mixpanel-unity/tree/v3.6.0) (2026-06-12)
 
 ### Features
