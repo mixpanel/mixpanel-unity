@@ -241,7 +241,7 @@ namespace mixpanel
             return new MixpanelIdentity(userId, null, deviceId);
         }
 
-        [Obsolete("Please use 'GetIdentity()' instead!")]
+        [Obsolete("Please use 'DistinctId' instead!")]
         public static string DistinctID {
             get => DistinctId;
         }
@@ -253,8 +253,9 @@ namespace mixpanel
         /// On a hierarchical groups project %Mixpanel builds the distinct id from the company and the user, so
         /// once both are known this is <c>$company:{companyId}|$user:{userId}</c>, and before that it is
         /// <c>$device:</c> followed by the device id. Events still send the user id as their distinct_id.
+        /// Don't use this on a hierarchical groups project; prefer <see cref="GetIdentity"/>, whose user,
+        /// company and device ids every %Mixpanel SDK accepts directly.
         /// </description>
-        [Obsolete("Please use 'GetIdentity()' instead! Its user, company and device ids are what every Mixpanel SDK accepts directly.")]
         public static string DistinctId {
             get
             {
