@@ -50,6 +50,8 @@ namespace mixpanel
         private static bool _isFlushCoroutineRunning = false;
         private static bool _isInitializing = false;  // Guard against concurrent initialization
         private static bool _isFlushing = false;       // Guard against overlapping flushes
+        private static int _flushGeneration = 0;       // Bumped by Clear/Disable to drop the in-flight flush
+        private const int RequestTimeoutSeconds = 60;
 
         // When MIXPANEL_DISABLE_AUTO_INIT is defined, the BeforeSceneLoad hook is compiled out
         // entirely — zero boot-time cost. Use Mixpanel.Init() to initialize manually.
@@ -165,7 +167,7 @@ namespace mixpanel
             _fullyInitialized = false;  // Reset initialization state
             _isFlushCoroutineRunning = false;  // Reset coroutine flag
             _isInitializing = false;  // Reset initialization guard
-            _isFlushing = false;       // Reset flush guard
+            DropInFlightFlush();       // Reset flush guard; an in-flight flush must not touch storage again
             _autoTrackProperties = null;  // Reset auto-properties cache
             _autoEngageProperties = null; // Reset auto-properties cache
             Metadata.ResetSession();  // Clear session state
@@ -264,12 +266,13 @@ namespace mixpanel
 
         internal void DoFlush(Action<bool> onFlushComplete = null)
         {
-            // Reject re-entrant flushes. With the storage layer's drain-and-reset
+            // Only one flush runs at a time. With the storage layer's drain-and-reset
             // optimization, two overlapping flushes that both dequeue the same
             // start index range could race: flush A drains + resets the counter,
             // a new Track() reuses Event0, then flush B's delete-by-key wipes
-            // the freshly enqueued event. The flag is reset when both per-type
-            // coroutines (EVENTS + PEOPLE) finish.
+            // the freshly enqueued event. Responses are handled in each request's
+            // `completed` callback rather than in a coroutine, and every request has a
+            // timeout, so the guard is always released once the requests finish.
             if (_isFlushing)
             {
                 Mixpanel.Log("Flush already in progress; ignoring re-entrant call");
@@ -277,67 +280,136 @@ namespace mixpanel
                 return;
             }
             _isFlushing = true;
+            int generation = _flushGeneration;
 
-            int coroutinesRemaining = 2;
+            // Called once by each queue (EVENTS, PEOPLE); the flush ends when both have.
+            int queuesRemaining = 2;
             bool overallSuccess = true;
             Action<bool> onComplete = success =>
             {
                 overallSuccess &= success;
-                coroutinesRemaining--;
-                if (coroutinesRemaining == 0)
+                if (--queuesRemaining > 0) return;
+                // A flush dropped by Clear()/Disable must not release a newer flush's guard.
+                if (generation == _flushGeneration) _isFlushing = false;
+                // The guard is already released, so a throwing user callback can't block flushes.
+                try
                 {
-                    _isFlushing = false;
                     onFlushComplete?.Invoke(overallSuccess);
                 }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[Mixpanel] onFlushComplete callback threw: " + e);
+                }
             };
-            StartCoroutine(SendData(MixpanelStorage.FlushType.EVENTS, onComplete));
-            StartCoroutine(SendData(MixpanelStorage.FlushType.PEOPLE, onComplete));
+            SendNextBatch(MixpanelStorage.FlushType.EVENTS, generation, onComplete);
+            SendNextBatch(MixpanelStorage.FlushType.PEOPLE, generation, onComplete);
         }
 
-        private IEnumerator SendData(MixpanelStorage.FlushType flushType, Action<bool> onComplete)
+        // Sends the next batch of one queue, or reports the queue done. Calls onComplete
+        // exactly once per queue, after its last batch.
+        private static void SendNextBatch(MixpanelStorage.FlushType flushType, int generation, Action<bool> onComplete)
         {
-            if (_retryTime > DateTime.Now && _retryCount > 0)
+            // Stop if this flush was dropped, or if a recent failure put us in retry backoff.
+            if (generation != _flushGeneration || (_retryTime > DateTime.Now && _retryCount > 0))
             {
-                onComplete?.Invoke(false);
-                yield break;
+                onComplete(false);
+                return;
             }
 
             string url = (flushType == MixpanelStorage.FlushType.EVENTS) ? Config.TrackUrl : Config.EngageUrl;
-            MixpanelStorage.StoredBatch batch = MixpanelStorage.DequeueBatchTrackingDataRaw(flushType, Config.BatchSize);
-            while (batch.Count > 0) {
-                Dictionary<string, string> form = new Dictionary<string, string>();
-                form.Add("data", batch.Payload);
-                Mixpanel.Log("Sending batch of data: " + batch.Payload);
-                using (UnityWebRequest request = UnityWebRequest.Post(url, form))
+            MixpanelStorage.StoredBatch batch;
+            UnityWebRequest request = null;
+            UnityWebRequestAsyncOperation operation = null;
+            try
+            {
+                batch = MixpanelStorage.DequeueBatchTrackingDataRaw(flushType, Config.BatchSize);
+                if (batch.Count > 0)
                 {
-                    yield return request.SendWebRequest();
+                    Dictionary<string, string> form = new Dictionary<string, string>();
+                    form.Add("data", batch.Payload);
+                    // Guarded so the payload-sized string is only built when debug logging is on.
+                    if (Config.ShowDebug) Mixpanel.Log("Sending batch of data: " + batch.Payload);
+                    request = UnityWebRequest.Post(url, form);
+                    request.timeout = RequestTimeoutSeconds;
+                    operation = request.SendWebRequest();
+                }
+            }
+            catch (Exception e)
+            {
+                // Storage threw (e.g. WebGL quota or a custom IPreferences) or the request
+                // couldn't start. The batch wasn't sent, so it stays queued for the next flush.
+                // A warning, not an error: this can repeat every flush, and crash reporters
+                // (Sentry, Cloud Diagnostics, Backtrace) send each LogError as an error event.
+                Debug.LogWarning("[Mixpanel] Flush failed: " + e);
+                if (request != null) request.Dispose();
+                onComplete(false);
+                return;
+            }
+            if (operation == null)
+            {
+                onComplete(true); // queue drained
+                return;
+            }
+            // `completed` fires even if the Controller's coroutines are stopped or it is destroyed.
+            operation.completed += _ => OnBatchSent(flushType, request, batch, generation, onComplete);
+        }
+
+        private static void OnBatchSent(MixpanelStorage.FlushType flushType, UnityWebRequest request,
+            MixpanelStorage.StoredBatch batch, int generation, Action<bool> onComplete)
+        {
+            bool sendNext = false;
+            try
+            {
+                // Clear() or Disable dropped this flush while the request was out: storage
+                // keys may have been reused, so leave storage and the retry state alone.
+                if (generation == _flushGeneration)
+                {
                     #if UNITY_2020_1_OR_NEWER
                     if (request.result != UnityWebRequest.Result.Success)
                     #else
                     if (request.isHttpError || request.isNetworkError)
                     #endif
                     {
-                        Mixpanel.Log("API request to " + url + "has failed with reason " + request.error);
+                        // HTTP error, network error or timeout: keep the batch and back off.
+                        Mixpanel.Log("API request to " + request.url + " has failed with reason " + request.error);
                         _retryCount += 1;
                         double retryIn = Math.Pow(2, _retryCount - 1) * 60;
                         retryIn = Math.Min(retryIn, 10 * 60); // limit 10 min
                         _retryTime = DateTime.Now;
                         _retryTime = _retryTime.AddSeconds(retryIn);
                         Mixpanel.Log("Retrying request in " + retryIn + " seconds (retryCount=" + _retryCount + ")");
-                        onComplete?.Invoke(false);
-                        yield break;
                     }
                     else
                     {
+                        // Delivered: delete the batch and move on to the next one.
                         _retryCount = 0;
                         MixpanelStorage.DeleteBatchTrackingData(flushType, batch);
-                        batch = MixpanelStorage.DequeueBatchTrackingDataRaw(flushType, Config.BatchSize);
-                        Mixpanel.Log("Successfully posted to " + url);
+                        Mixpanel.Log("Successfully posted to " + request.url);
+                        sendNext = true;
                     }
                 }
             }
+            catch (Exception e)
+            {
+                // Storage threw while deleting; the batch may be sent again on a later flush.
+                Debug.LogWarning("[Mixpanel] Flush failed: " + e);
+            }
+            finally
+            {
+                request.Dispose();
+            }
 
-            onComplete?.Invoke(true);
+            // Outside the try so this queue always reports exactly once.
+            if (sendNext) SendNextBatch(flushType, generation, onComplete);
+            else onComplete(false);
+        }
+
+        // Drops the in-flight flush, if any: its requests still finish, but their results
+        // no longer touch storage, the retry state or the guard. Releases the guard.
+        private static void DropInFlightFlush()
+        {
+            _flushGeneration++;
+            _isFlushing = false;
         }
 
         private IEnumerator SendHttpEvent(string eventName, string apiToken, string distinctId, string properties, bool updatePeople)
@@ -576,6 +648,7 @@ namespace mixpanel
 
         internal static void DoClear()
         {
+            DropInFlightFlush(); // an in-flight flush must not delete keys reused after the clear
             MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.EVENTS);
             MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.PEOPLE);
         }
