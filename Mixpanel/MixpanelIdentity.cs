@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Mixpanel.Tests.Editor")]
 
 namespace mixpanel
 {
@@ -37,13 +40,16 @@ namespace mixpanel
         public string DeviceId { get; }
 
         /// <summary>
-        /// Creates an identity.
+        /// Creates an identity for a user and, on a hierarchical groups project, their company.
         /// </summary>
         /// <param name="userId">the user's id</param>
         /// <param name="companyId">the id of the user's company, on a hierarchical groups project</param>
-        /// <param name="deviceId">the device id. Ignored by <c>Mixpanel.Identify(MixpanelIdentity)</c>,
-        /// since %Mixpanel owns the device id.</param>
-        public MixpanelIdentity(string userId, string companyId = null, string deviceId = null)
+        public MixpanelIdentity(string userId, string companyId = null) : this(userId, companyId, null)
+        {
+        }
+
+        // Only Mixpanel creates an identity with a device id, since it owns the device id
+        internal MixpanelIdentity(string userId, string companyId, string deviceId)
         {
             UserId = userId;
             CompanyId = companyId;
