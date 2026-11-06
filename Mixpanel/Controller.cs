@@ -536,9 +536,9 @@ namespace mixpanel
         }
         #endif
 
-        // The distinct id events are sent with. On a hierarchical groups project this is the stored id:
-        // the user id once identified, else the device form. Never the combined form that
-        // Mixpanel.DistinctId reports, since ingestion resolves the user from $user_id and $company_id.
+        // The stored distinct id. On a hierarchical groups project this is the user id once identified, else
+        // the device form. Never the combined form that Mixpanel.DistinctId reports, since ingestion resolves
+        // the user from $user_id and $company_id.
         internal static string EventsDistinctId()
         {
             if (!Config.HierarchicalGroups) return MixpanelStorage.DistinctId;
@@ -605,7 +605,11 @@ namespace mixpanel
             }
             if (Config.HierarchicalGroups) ApplyHierarchicalIdentity(properties, eventIdentityProperties);
             properties["token"] = MixpanelSettings.Instance.Token;
-            properties["distinct_id"] = EventsDistinctId();
+            // On a hierarchical groups project an identified user is $user_id and $company_id, so no distinct_id
+            if (!Config.HierarchicalGroups || MixpanelStorage.UserId == null || MixpanelStorage.CompanyId == null)
+            {
+                properties["distinct_id"] = EventsDistinctId();
+            }
             properties["time"] = Util.CurrentTimeInMilliseconds();
 
             Value data = RentValue();
