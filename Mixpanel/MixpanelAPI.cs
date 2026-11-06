@@ -148,9 +148,10 @@ namespace mixpanel
         /// user id in two companies is two users. Every later event carries <c>$company_id</c> beside
         /// <c>$user_id</c> and <c>$device_id</c>, and %People updates go to that company's <c>$user_id</c> group
         /// profile. Both ids persist across restarts until the next identify or <c>Reset()</c>.</p>
-        /// <p>Calling this with the current user and a different company is an identity change and tracks
-        /// <c>$identify</c>, as switching users does. An identity without both a user id and a company id is
-        /// logged and ignored.</p>
+        /// <p>Calling this with the current user and a different company is an identity change, as switching users
+        /// is. No <c>$identify</c> event is tracked: %Mixpanel ties the device to the user from the <c>$device_id</c>,
+        /// <c>$user_id</c> and <c>$company_id</c> on later events. An identity without both a user id and a company
+        /// id is logged and ignored.</p>
         /// <p>On any other project %Mixpanel ignores <c>$company_id</c>, so an identity that names a company is
         /// logged and ignored rather than attributed without it. An identity with a null or empty user id is
         /// also logged and ignored.</p>
@@ -208,7 +209,6 @@ namespace mixpanel
                 IdentifyDistinctId(userId);
                 return;
             }
-            string oldDistinctId = Controller.EventsDistinctId();
             // A user in another company is another user, so a new company is an identity change
             bool userChanged = userId != MixpanelStorage.UserId;
             bool companyChanged = companyId != MixpanelStorage.CompanyId;
@@ -217,7 +217,8 @@ namespace mixpanel
             MixpanelStorage.CompanyId = companyId;
             MixpanelStorage.UserId = userId;
             MixpanelStorage.DistinctId = userId;
-            Track("$identify", "$anon_distinct_id", oldDistinctId);
+            // A hierarchical groups project ties the device to the user from the identity keys on later events,
+            // so it has no $identify
         }
 
         /// <summary>
