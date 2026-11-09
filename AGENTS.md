@@ -5,7 +5,7 @@ Guidance for OpenAI Codex coding agents working on the Mixpanel Unity SDK. Keep 
 ## Mission & Constraints
 - Maintain and extend the Unity SDK under `Mixpanel/` (plus assets). Package ships via Unity Package Manager; treat `.meta` files as required artifacts.
 - Target Unity 2018.3+ with .NET 4.x Equivalent. Guard any newer API usage.
-- No test suite lives here (tests are in `Tests.unitypackage`). Expect manual validation or targeted scripts.
+- PlayMode tests for the flush path live in `Tests/Runtime/`; run them from a project that lists `com.mixpanel.unity` in `testables` (see `CLAUDE.md` → Running Tests). CI does not run them yet, so also expect manual validation.
 - Unity threading model only—work through coroutines, not raw threads.
 
 ## Core Architecture (pair with `.github/copilot-instructions.md`)
