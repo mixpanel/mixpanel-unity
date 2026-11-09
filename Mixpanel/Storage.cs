@@ -598,6 +598,13 @@ namespace mixpanel
             }
         }
 
+        // True while queued user profile updates are waiting, including those a transfer that didn't complete
+        // left behind
+        internal static bool HasPendingUserProfileUpdates()
+        {
+            return PreferencesSource.HasKey(PendingUserProfileUpdatesName);
+        }
+
         internal static void ClearPendingUserProfileUpdates()
         {
             if (PreferencesSource.HasKey(PendingUserProfileUpdatesName))

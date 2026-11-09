@@ -1052,6 +1052,21 @@ namespace mixpanel
                         actionType + " update is queued until Identify(new MixpanelIdentity(userId, companyId)).");
                     return;
                 }
+                if (MixpanelStorage.HasPendingUserProfileUpdates())
+                {
+                    // Earlier updates from a transfer that didn't complete go first, so this one waits behind them
+                    try
+                    {
+                        MixpanelStorage.AddPendingUserProfileUpdate(actionType, properties);
+                        SendPendingUpdates(userId, companyId);
+                    }
+                    catch (Exception e)
+                    {
+                        LogError("Error sending the queued user profile updates. Updates already queued stay " +
+                            "queued for the next attempt: " + e);
+                    }
+                    return;
+                }
                 Controller.DoGroup(UserIdGroupKey, userId, companyId, actionType, properties);
             }
 
