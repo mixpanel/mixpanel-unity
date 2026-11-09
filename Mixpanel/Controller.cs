@@ -100,6 +100,8 @@ namespace mixpanel
                 PreloadPersistedProperties();
                 #endif
 
+                if (Config.HierarchicalGroups) ResumePendingUserProfileUpdates();
+
                 // Note: Flush coroutine will be started in Start() to follow Unity lifecycle best practices
                 // and prevent duplicate coroutines if initialization partially fails
 
@@ -115,6 +117,16 @@ namespace mixpanel
             }
             finally {
                 _isInitializing = false; // Always clear the initialization flag
+            }
+        }
+
+        // A storage failure here leaves the updates queued for the next attempt and never fails initialization
+        private static void ResumePendingUserProfileUpdates() {
+            try {
+                Mixpanel.People.ResumePendingUpdates();
+            }
+            catch (Exception e) {
+                Mixpanel.LogError($"Error sending the queued user profile updates: {e}");
             }
         }
 
@@ -228,6 +240,8 @@ namespace mixpanel
                     GetEngageDefaultProperties();
                     PreloadPersistedProperties();
                     #endif
+
+                    if (Config.HierarchicalGroups) ResumePendingUserProfileUpdates();
 
                     // Mark as initialized
                     _fullyInitialized = true;
@@ -635,6 +649,11 @@ namespace mixpanel
             if (!Config.HierarchicalGroups || MixpanelStorage.UserId == null || MixpanelStorage.CompanyId == null)
             {
                 properties["distinct_id"] = EventsDistinctId();
+            }
+            else if (properties.IsObject)
+            {
+                // A distinct_id from the caller or a super property would be a stale identity
+                properties.Remove("distinct_id");
             }
             properties["time"] = Util.CurrentTimeInMilliseconds();
 

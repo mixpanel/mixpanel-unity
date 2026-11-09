@@ -566,25 +566,36 @@ namespace mixpanel
             PreferencesSource.SetString(PendingUserProfileUpdatesName, SerializeStored(pending));
         }
 
-        // The queued user profile updates as (actionType, properties) in order, or null when there are none.
-        // Taking them clears the queue.
-        internal static List<KeyValuePair<string, Value>> TakePendingUserProfileUpdates()
+        // Hands each queued user profile update to send as (actionType, properties), in the order they were made.
+        // An update leaves the queue only after send returns, so if storing fails partway the rest stay queued
+        // for the next transfer.
+        internal static void TransferPendingUserProfileUpdates(Action<string, Value> send)
         {
-            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName)) return null;
-            Value pending = ReadPendingUserProfileUpdates();
-            PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
-            List<KeyValuePair<string, Value>> updates = new List<KeyValuePair<string, Value>>(pending.Count);
-            foreach (Value update in pending.Values)
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName)) return;
+            List<Value> pending = new List<Value>(ReadPendingUserProfileUpdates().Values);
+            if (pending.Count == 0)
             {
-                Value action, properties;
-                if (update == null || !update.IsObject || !update.TryGetValue(PendingActionName, out action) ||
-                    !update.TryGetValue(PendingPropertiesName, out properties))
-                {
-                    continue;
-                }
-                updates.Add(new KeyValuePair<string, Value>(action.ToString(), properties));
+                PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
+                return;
             }
-            return updates;
+            for (int i = 0; i < pending.Count; i++)
+            {
+                Value update = pending[i];
+                Value action, properties;
+                if (update != null && update.IsObject && update.TryGetValue(PendingActionName, out action) &&
+                    update.TryGetValue(PendingPropertiesName, out properties))
+                {
+                    send(action.ToString(), properties);
+                }
+                if (i == pending.Count - 1)
+                {
+                    PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
+                    return;
+                }
+                Value remaining = Value.Array;
+                for (int j = i + 1; j < pending.Count; j++) remaining.Add(pending[j]);
+                PreferencesSource.SetString(PendingUserProfileUpdatesName, SerializeStored(remaining));
+            }
         }
 
         internal static void ClearPendingUserProfileUpdates()

@@ -228,7 +228,12 @@ namespace mixpanel
             // A user in another company is another user, so a new company is an identity change
             bool userChanged = userId != MixpanelStorage.UserId;
             bool companyChanged = companyId != MixpanelStorage.CompanyId;
-            if (!userChanged && !companyChanged) return;
+            if (!userChanged && !companyChanged)
+            {
+                // Finishes a transfer of queued updates that didn't complete
+                People.SendPendingUpdates(userId, companyId);
+                return;
+            }
             MixpanelStorage.EnsureDeviceId();
             MixpanelStorage.CompanyId = companyId;
             MixpanelStorage.UserId = userId;
@@ -1053,12 +1058,19 @@ namespace mixpanel
             // Sends the user profile updates queued before identify to the identified user, in order
             internal static void SendPendingUpdates(string userId, string companyId)
             {
-                List<KeyValuePair<string, Value>> pending = MixpanelStorage.TakePendingUserProfileUpdates();
-                if (pending == null) return;
-                foreach (KeyValuePair<string, Value> update in pending)
-                {
-                    Controller.DoGroup(UserIdGroupKey, userId, companyId, update.Key, update.Value);
-                }
+                MixpanelStorage.TransferPendingUserProfileUpdates((actionType, properties) =>
+                    Controller.DoGroup(UserIdGroupKey, userId, companyId, actionType, properties));
+            }
+
+            // At init, sends the user profile updates still queued for an identified user on a hierarchical
+            // groups project, which a transfer that didn't complete leaves behind
+            internal static void ResumePendingUpdates()
+            {
+                if (!Config.HierarchicalGroups || !MixpanelStorage.IsTracking) return;
+                string userId = MixpanelStorage.UserId;
+                string companyId = MixpanelStorage.CompanyId;
+                if (userId == null || companyId == null) return;
+                SendPendingUpdates(userId, companyId);
             }
 
             private const string UserIdGroupKey = "$user_id";
