@@ -162,6 +162,34 @@ namespace mixpanel
         ///        Mixpanel.Identify(new MixpanelIdentity("user_123", "acme"));<br/>
         /// </code>
         /// <param name="identity">the user, and on a hierarchical groups project their company</param>
+        // Why an identity can't be used on this project, or null when it can. Callers add what was dropped.
+        private static string IdentityError(MixpanelIdentity identity)
+        {
+            string userId = identity.UserId;
+            string companyId = identity.CompanyId;
+            if (Config.HierarchicalGroups)
+            {
+                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(companyId))
+                {
+                    return "Can't identify " + identity + ": hierarchical groups projects identify a user by " +
+                        "company and user id, so both are required.";
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return "Can't identify " + identity + " without a user id.";
+                }
+                if (companyId != null)
+                {
+                    return "Can't identify " + identity + ": a company requires HierarchicalGroups in the " +
+                        "Mixpanel project settings. Mixpanel ignores $company_id on other projects.";
+                }
+            }
+            return null;
+        }
+
         public static void Identify(MixpanelIdentity identity)
         {
             if (!IsInitialized()) return;
@@ -171,32 +199,14 @@ namespace mixpanel
                 LogError("Can't identify with a null MixpanelIdentity.");
                 return;
             }
+            string identityError = IdentityError(identity);
+            if (identityError != null)
+            {
+                LogError(identityError + " Nothing was identified.");
+                return;
+            }
             string userId = identity.UserId;
             string companyId = identity.CompanyId;
-            if (Config.HierarchicalGroups)
-            {
-                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(companyId))
-                {
-                    LogError("Can't identify " + identity + ": hierarchical groups projects identify a user by " +
-                        "company and user id, so both are required. Nothing was identified.");
-                    return;
-                }
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(userId))
-                {
-                    LogError("Can't identify " + identity + " without a user id. Nothing was identified.");
-                    return;
-                }
-                if (companyId != null)
-                {
-                    LogError("Can't identify " + identity + ": a company requires HierarchicalGroups in the " +
-                        "Mixpanel project settings. Mixpanel ignores $company_id on other projects, so nothing " +
-                        "was identified.");
-                    return;
-                }
-            }
             string deviceId = identity.DeviceId;
             string currentDeviceId = GetIdentity().DeviceId;
             if (deviceId != null && deviceId != currentDeviceId)
@@ -330,11 +340,18 @@ namespace mixpanel
         /// company, which <c>OptInTracking(string)</c> can't express.
         /// </description>
         /// <param name="identity">the user, and on a hierarchical groups project their company. When not null,
-        /// <c>Identify(MixpanelIdentity)</c> is called with it.</param>
+        /// <c>Identify(MixpanelIdentity)</c> is called with it. An identity it would refuse is logged, and the user
+        /// stays opted out.</param>
         /// <param name="properties">optional properties to add to the <c>$opt_in</c> event</param>
         public static void OptInTrackingWithIdentity(MixpanelIdentity identity, Value properties = null)
         {
             if (!IsInitialized()) return;
+            string identityError = identity == null ? null : IdentityError(identity);
+            if (identityError != null)
+            {
+                LogError(identityError + " The user is still opted out.");
+                return;
+            }
             MixpanelStorage.IsTracking = true;
             if (identity != null) Identify(identity);
             Controller.DoTrack("$opt_in", properties);
