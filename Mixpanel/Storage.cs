@@ -146,7 +146,14 @@ namespace mixpanel
                 }
                 // Generate a Unique ID for this client if still null or empty
                 // https://devblogs.microsoft.com/oldnewthing/?p=21823
-                if (string.IsNullOrEmpty(_distinctId)) DistinctId = Guid.NewGuid().ToString();
+                if (string.IsNullOrEmpty(_distinctId))
+                {
+                    string generatedId = Guid.NewGuid().ToString();
+                    DistinctId = generatedId;
+                    // Off hierarchical groups the generated anonymous id is the device id, which lets GetIdentity()
+                    // tell an anonymous user from an identified one. Hierarchical groups assign their own device id.
+                    if (!Config.HierarchicalGroups) DeviceId = generatedId;
+                }
                 return _distinctId;
             }
             set
@@ -517,6 +524,13 @@ namespace mixpanel
         internal static void DeleteAllTrackingData(FlushType flushType)
         {
             DeleteBatchTrackingData(flushType, int.MaxValue);
+        }
+
+        // Whether anything was ever queued for /groups. Clearing a queue that was never used would write its
+        // id keys, which an install that never sends group profile updates doesn't have.
+        internal static bool HasUsedGroupQueue()
+        {
+            return PreferencesSource.HasKey(GroupAutoIncrementingIdName);
         }
 
         #endregion

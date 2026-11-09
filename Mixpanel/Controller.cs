@@ -663,7 +663,10 @@ namespace mixpanel
         {
             MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.EVENTS);
             MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.PEOPLE);
-            MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.GROUPS);
+            if (MixpanelStorage.HasUsedGroupQueue())
+            {
+                MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.GROUPS);
+            }
         }
 
         #endregion

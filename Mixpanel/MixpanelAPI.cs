@@ -124,15 +124,11 @@ namespace mixpanel
 
         private static void IdentifyDistinctId(string uniqueId)
         {
-            if (MixpanelStorage.DistinctId == uniqueId)
-            {
-                // An install from before GetIdentity() knows the user only by the distinct id
-                MixpanelStorage.UserId = uniqueId;
-                return;
-            }
+            if (MixpanelStorage.DistinctId == uniqueId) return;
             string oldDistinctId = MixpanelStorage.DistinctId;
-            // Remember the anonymous id and the user for GetIdentity(); events are unchanged
-            if (MixpanelStorage.DeviceId == null) MixpanelStorage.DeviceId = oldDistinctId;
+            // Remember the user for GetIdentity(); events are unchanged. The device id was recorded when the
+            // anonymous id was generated, and stays unset on an install from before GetIdentity(), whose old
+            // distinct id may already be a user id.
             MixpanelStorage.UserId = uniqueId;
             MixpanelStorage.DistinctId = uniqueId;
             Track("$identify", "$anon_distinct_id", oldDistinctId);
@@ -247,9 +243,15 @@ namespace mixpanel
             {
                 return new MixpanelIdentity(userId, MixpanelStorage.CompanyId, MixpanelStorage.EnsureDeviceId());
             }
-            // Before the first identify the anonymous distinct id is the device id
-            string deviceId = MixpanelStorage.DeviceId ?? (userId == null ? MixpanelStorage.DistinctId : null);
-            return new MixpanelIdentity(userId, null, deviceId);
+            if (userId == null && MixpanelStorage.DeviceId == null)
+            {
+                // Reading the distinct id generates the anonymous one when there is none, which records it as the
+                // device id. A distinct id stored without a user or device id is from an install from before
+                // GetIdentity(), which may be identified, so it is reported as the user.
+                string distinctId = MixpanelStorage.DistinctId;
+                if (MixpanelStorage.DeviceId == null) return new MixpanelIdentity(distinctId, null, null);
+            }
+            return new MixpanelIdentity(userId, null, MixpanelStorage.DeviceId);
         }
 
         [Obsolete("Please use 'DistinctId' instead!")]
@@ -396,7 +398,10 @@ namespace mixpanel
             MixpanelStorage.ResetSuperProperties();
             MixpanelStorage.ResetOnceProperties();
             MixpanelStorage.ResetTimedEvents();
-            MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.GROUPS);
+            if (MixpanelStorage.HasUsedGroupQueue())
+            {
+                MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.GROUPS);
+            }
             Flush();
             MixpanelStorage.ResetIdentity();
             // A hierarchical groups project starts again under a new device id
