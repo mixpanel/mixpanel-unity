@@ -432,6 +432,8 @@ namespace mixpanel
             MixpanelStorage.ResetTimedEvents();
             if (MixpanelStorage.HasUsedGroupQueue())
             {
+                // An in-flight flush must not delete group updates that reuse its keys after the clear
+                Controller.DropInFlightFlush();
                 MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.GROUPS);
             }
             if (Config.HierarchicalGroups) MixpanelStorage.ClearPendingUserProfileUpdates();
@@ -1052,7 +1054,7 @@ namespace mixpanel
                         actionType + " update is queued until Identify(new MixpanelIdentity(userId, companyId)).");
                     return;
                 }
-                if (MixpanelStorage.HasPendingUserProfileUpdates())
+                if (MixpanelStorage.HasPendingUserProfileUpdates() && !PendingUpdatesGoToAnotherUser(userId, companyId))
                 {
                     // Earlier updates from a transfer that didn't complete go first, so this one waits behind them
                     try
@@ -1070,22 +1072,30 @@ namespace mixpanel
                 Controller.DoGroup(UserIdGroupKey, userId, companyId, actionType, properties);
             }
 
-            // Sends the user profile updates queued before identify to the identified user, in order
-            internal static void SendPendingUpdates(string userId, string companyId)
+            // Whether the queued updates belong to another user: a transfer to that user and company started and
+            // didn't complete. They keep going to that user, so this user's updates don't join them.
+            private static bool PendingUpdatesGoToAnotherUser(string userId, string companyId)
             {
-                MixpanelStorage.TransferPendingUserProfileUpdates((actionType, properties) =>
-                    Controller.DoGroup(UserIdGroupKey, userId, companyId, actionType, properties));
+                string pendingUserId, pendingCompanyId;
+                return MixpanelStorage.TryGetPendingUserProfileUpdatesTarget(out pendingUserId, out pendingCompanyId) &&
+                    (pendingUserId != userId || pendingCompanyId != companyId);
             }
 
-            // At init, sends the user profile updates still queued for an identified user on a hierarchical
-            // groups project, which a transfer that didn't complete leaves behind
+            // Sends the user profile updates queued before identify to the identified user, in order. Updates a
+            // transfer that didn't complete left behind go to the user and company that transfer started for.
+            internal static void SendPendingUpdates(string userId, string companyId)
+            {
+                MixpanelStorage.TransferPendingUserProfileUpdates(userId, companyId,
+                    (targetUserId, targetCompanyId, actionType, properties) =>
+                        Controller.DoGroup(UserIdGroupKey, targetUserId, targetCompanyId, actionType, properties));
+            }
+
+            // At init, sends the user profile updates still queued on a hierarchical groups project, which a
+            // transfer that didn't complete leaves behind, to the user and company that transfer started for
             internal static void ResumePendingUpdates()
             {
                 if (!Config.HierarchicalGroups || !MixpanelStorage.IsTracking) return;
-                string userId = MixpanelStorage.UserId;
-                string companyId = MixpanelStorage.CompanyId;
-                if (userId == null || companyId == null) return;
-                SendPendingUpdates(userId, companyId);
+                SendPendingUpdates(MixpanelStorage.UserId, MixpanelStorage.CompanyId);
             }
 
             private const string UserIdGroupKey = "$user_id";

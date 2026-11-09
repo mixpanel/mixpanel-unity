@@ -427,7 +427,7 @@ namespace mixpanel
 
         // Drops the in-flight flush, if any: its requests still finish, but their results
         // no longer touch storage, the retry state or the guard. Releases the guard.
-        private static void DropInFlightFlush()
+        internal static void DropInFlightFlush()
         {
             _flushGeneration++;
             _isFlushing = false;

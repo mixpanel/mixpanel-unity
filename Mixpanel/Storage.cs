@@ -543,6 +543,12 @@ namespace mixpanel
         private const string PendingUserProfileUpdatesName = "Mixpanel.PendingUserProfileUpdates";
         private const string PendingActionName = "action";
         private const string PendingPropertiesName = "properties";
+        // The user and company a transfer of the queued updates started for, as {"user_id": userId,
+        // "company_id": companyId}. Set when a transfer starts and removed with the queue, so updates a transfer
+        // that didn't complete leaves behind still go to that user after another identify.
+        private const string PendingUserProfileUpdatesTargetName = "Mixpanel.PendingUserProfileUpdatesTarget";
+        private const string PendingTargetUserIdName = "user_id";
+        private const string PendingTargetCompanyIdName = "company_id";
 
         private static Value ReadPendingUserProfileUpdates()
         {
@@ -561,22 +567,46 @@ namespace mixpanel
 
         internal static void AddPendingUserProfileUpdate(string actionType, Value properties)
         {
+            // A new queue never inherits the destination of one that was already sent
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName)) DeletePendingUserProfileUpdatesTarget();
             Value pending = ReadPendingUserProfileUpdates();
             pending.Add(new Value {{PendingActionName, actionType}, {PendingPropertiesName, properties}});
             PreferencesSource.SetString(PendingUserProfileUpdatesName, SerializeStored(pending));
         }
 
-        // Hands each queued user profile update to send as (actionType, properties), in the order they were made.
-        // An update leaves the queue only after send returns, so if storing fails partway the rest stay queued
-        // for the next transfer.
-        internal static void TransferPendingUserProfileUpdates(Action<string, Value> send)
+        // Hands each queued user profile update to send as (userId, companyId, actionType, properties), in the
+        // order they were made. The updates go to the user and company the first transfer started for, whatever
+        // the current identity; when no transfer has started they go to userId and companyId, which are then
+        // stored as their destination, and nothing is sent without one. An update leaves the queue only after
+        // send returns, so if storing fails partway the rest stay queued for the next transfer.
+        internal static void TransferPendingUserProfileUpdates(string userId, string companyId,
+            Action<string, string, string, Value> send)
         {
-            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName)) return;
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName))
+            {
+                DeletePendingUserProfileUpdatesTarget();
+                return;
+            }
             List<Value> pending = new List<Value>(ReadPendingUserProfileUpdates().Values);
             if (pending.Count == 0)
             {
-                PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
+                ClearPendingUserProfileUpdates();
                 return;
+            }
+            string targetUserId, targetCompanyId;
+            if (TryGetPendingUserProfileUpdatesTarget(out targetUserId, out targetCompanyId))
+            {
+                userId = targetUserId;
+                companyId = targetCompanyId;
+            }
+            else
+            {
+                if (userId == null || companyId == null) return;
+                PreferencesSource.SetString(PendingUserProfileUpdatesTargetName, SerializeStored(new Value
+                {
+                    {PendingTargetUserIdName, userId},
+                    {PendingTargetCompanyIdName, companyId}
+                }));
             }
             for (int i = 0; i < pending.Count; i++)
             {
@@ -585,16 +615,49 @@ namespace mixpanel
                 if (update != null && update.IsObject && update.TryGetValue(PendingActionName, out action) &&
                     update.TryGetValue(PendingPropertiesName, out properties))
                 {
-                    send(action.ToString(), properties);
+                    send(userId, companyId, action.ToString(), properties);
                 }
                 if (i == pending.Count - 1)
                 {
-                    PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
+                    ClearPendingUserProfileUpdates();
                     return;
                 }
                 Value remaining = Value.Array;
                 for (int j = i + 1; j < pending.Count; j++) remaining.Add(pending[j]);
                 PreferencesSource.SetString(PendingUserProfileUpdatesName, SerializeStored(remaining));
+            }
+        }
+
+        // The user and company the queued updates go to, once a transfer of them has started
+        internal static bool TryGetPendingUserProfileUpdatesTarget(out string userId, out string companyId)
+        {
+            userId = null;
+            companyId = null;
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesTargetName)) return false;
+            try
+            {
+                Value target = Value.Deserialize(PreferencesSource.GetString(PendingUserProfileUpdatesTargetName));
+                Value user, company;
+                if (target != null && target.IsObject && target.TryGetValue(PendingTargetUserIdName, out user) &&
+                    target.TryGetValue(PendingTargetCompanyIdName, out company) && !user.IsNull && !company.IsNull)
+                {
+                    userId = user.ToString();
+                    companyId = company.ToString();
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Mixpanel.LogError("There was an error reading the user the queued user profile updates go to: " + e);
+            }
+            return false;
+        }
+
+        private static void DeletePendingUserProfileUpdatesTarget()
+        {
+            if (PreferencesSource.HasKey(PendingUserProfileUpdatesTargetName))
+            {
+                PreferencesSource.DeleteKey(PendingUserProfileUpdatesTargetName);
             }
         }
 
@@ -611,6 +674,7 @@ namespace mixpanel
             {
                 PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
             }
+            DeletePendingUserProfileUpdatesTarget();
         }
 
         #endregion

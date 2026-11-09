@@ -25,6 +25,7 @@ namespace mixpanel
         private MonoBehaviour _controller;
         private string _savedTrackUrl;
         private string _savedEngageUrl;
+        private string _savedGroupsUrl;
         private readonly List<bool> _results = new List<bool>();
 
         [UnitySetUp]
@@ -48,6 +49,8 @@ namespace mixpanel
             _savedEngageUrl = SdkInternals.EngageUrl;
             SdkInternals.TrackUrl = _server.BaseUrl + "track/?ip=1";
             SdkInternals.EngageUrl = _server.BaseUrl + "engage/?ip=1";
+            _savedGroupsUrl = SdkInternals.GroupsUrl;
+            SdkInternals.GroupsUrl = _server.BaseUrl + "groups/?ip=1";
 
             _controller = SdkInternals.CreateControllerWithoutFlushLoop();
             _results.Clear();
@@ -66,6 +69,7 @@ namespace mixpanel
             _server.Dispose();
             SdkInternals.TrackUrl = _savedTrackUrl;
             SdkInternals.EngageUrl = _savedEngageUrl;
+            SdkInternals.GroupsUrl = _savedGroupsUrl;
             SdkInternals.ResetRetryBackoff();
             MixpanelStorage.SetPreferencesSource(new PlayerPreferences());
         }
@@ -335,6 +339,31 @@ namespace mixpanel
                 .OrderByDescending(n => n)
                 .ToList();
             CollectionAssert.AreEqual(new[] { batchSize, batchSize, batchSize, batchSize, 7, 7 }, batchSizes, "batches respect BatchSize");
+        }
+
+        // 12 — Reset clears the group queue, so like Clear it must drop the in-flight flush.
+        [UnityTest]
+        public IEnumerator ResetDuringFlush_DoesNotDeleteNewerGroupUpdateThatReusedItsKey()
+        {
+            SdkInternals.EnqueueGroup("OLD"); // stored as Group0
+            _server.NextReply = FlushTestServer.Reply.Hold;
+            bool? firstResult = null;
+            SdkInternals.Flush(_controller, ok => firstResult = ok);
+            yield return WaitFor(() => _server.HeldCount == 1, WaitSeconds, "the request to reach the server");
+
+            Mixpanel.Reset();                 // drains the group queue and resets its ids
+            SdkInternals.EnqueueGroup("NEW"); // reuses key Group0
+            _server.ReleaseOldest(true);
+            yield return WaitFor(() => firstResult.HasValue, WaitSeconds, "the first flush to finish");
+
+            Assert.AreEqual(false, firstResult, "flush interrupted by Reset reports failure");
+            Assert.IsFalse(SdkInternals.IsFlushing, "guard released");
+            Assert.IsTrue(_prefs.HasStored("NEW"), "NEW not deleted by the earlier flush");
+
+            _server.NextReply = FlushTestServer.Reply.Ok;
+            yield return FlushAndWait();
+
+            Assert.IsTrue(_server.Delivered("NEW"), "NEW delivered by the next flush");
         }
 
         private void Flush() => SdkInternals.Flush(_controller, ok => _results.Add(ok));
