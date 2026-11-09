@@ -565,6 +565,27 @@ namespace mixpanel
             return taken;
         }
 
+        // The company is part of the user's identity, set only by identify, so a $company_id the caller put on
+        // an event never overrides it: the identified company replaces it, and before one is identified it is
+        // removed. Both properties values are the event's own copies.
+        private static void DropEventCompanyId(string eventName, Value properties, Value eventIdentityProperties)
+        {
+            if (eventIdentityProperties == null || !eventIdentityProperties.ContainsKey("$company_id")) return;
+            eventIdentityProperties.Remove("$company_id");
+            properties.Remove("$company_id");
+            string companyId = MixpanelStorage.CompanyId;
+            if (companyId != null)
+            {
+                Mixpanel.Log("Replaced $company_id on " + eventName + " with the identified company " + companyId +
+                    ". The company is set with Identify(new MixpanelIdentity(userId, companyId)).");
+            }
+            else
+            {
+                Mixpanel.Log("Removed $company_id from " + eventName + " because no company is identified. The " +
+                    "company is set with Identify(new MixpanelIdentity(userId, companyId)).");
+            }
+        }
+
         // Identity fields overwrite super properties, and event properties override everything
         private static void ApplyHierarchicalIdentity(Value properties, Value eventIdentityProperties)
         {
@@ -588,7 +609,12 @@ namespace mixpanel
                 properties = copy;
             }
             // Captured before the merges below, which overwrite event properties
-            Value eventIdentityProperties = Config.HierarchicalGroups ? TakeEventIdentityProperties(properties) : null;
+            Value eventIdentityProperties = null;
+            if (Config.HierarchicalGroups)
+            {
+                eventIdentityProperties = TakeEventIdentityProperties(properties);
+                DropEventCompanyId(eventName, properties, eventIdentityProperties);
+            }
             properties.Merge(GetEventsDefaultProperties());
             // These auto properties can change in runtime so we don't bake them into AutoProperties
             properties["$screen_width"] = Screen.width;
@@ -667,6 +693,7 @@ namespace mixpanel
             {
                 MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.GROUPS);
             }
+            if (Config.HierarchicalGroups) MixpanelStorage.ClearPendingUserProfileUpdates();
         }
 
         #endregion

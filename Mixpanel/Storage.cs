@@ -535,6 +535,68 @@ namespace mixpanel
 
         #endregion
 
+        #region PendingUserProfileUpdates
+
+        // On a hierarchical groups project, the user profile updates made before a user and company are
+        // identified, as a JSON list of {"action": actionType, "properties": properties} in the order they were
+        // made. The key is absent until an update is queued, so other projects never write it.
+        private const string PendingUserProfileUpdatesName = "Mixpanel.PendingUserProfileUpdates";
+        private const string PendingActionName = "action";
+        private const string PendingPropertiesName = "properties";
+
+        private static Value ReadPendingUserProfileUpdates()
+        {
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName)) return Value.Array;
+            try
+            {
+                Value pending = Value.Deserialize(PreferencesSource.GetString(PendingUserProfileUpdatesName));
+                if (pending != null && pending.IsArray) return pending;
+            }
+            catch (Exception e)
+            {
+                Mixpanel.LogError("There was an error reading the queued user profile updates: " + e);
+            }
+            return Value.Array;
+        }
+
+        internal static void AddPendingUserProfileUpdate(string actionType, Value properties)
+        {
+            Value pending = ReadPendingUserProfileUpdates();
+            pending.Add(new Value {{PendingActionName, actionType}, {PendingPropertiesName, properties}});
+            PreferencesSource.SetString(PendingUserProfileUpdatesName, SerializeStored(pending));
+        }
+
+        // The queued user profile updates as (actionType, properties) in order, or null when there are none.
+        // Taking them clears the queue.
+        internal static List<KeyValuePair<string, Value>> TakePendingUserProfileUpdates()
+        {
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName)) return null;
+            Value pending = ReadPendingUserProfileUpdates();
+            PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
+            List<KeyValuePair<string, Value>> updates = new List<KeyValuePair<string, Value>>(pending.Count);
+            foreach (Value update in pending.Values)
+            {
+                Value action, properties;
+                if (update == null || !update.IsObject || !update.TryGetValue(PendingActionName, out action) ||
+                    !update.TryGetValue(PendingPropertiesName, out properties))
+                {
+                    continue;
+                }
+                updates.Add(new KeyValuePair<string, Value>(action.ToString(), properties));
+            }
+            return updates;
+        }
+
+        internal static void ClearPendingUserProfileUpdates()
+        {
+            if (PreferencesSource.HasKey(PendingUserProfileUpdatesName))
+            {
+                PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
+            }
+        }
+
+        #endregion
+
         #region IsTracking
 
         private const string IsTrackingName = "Mixpanel.IsTracking";

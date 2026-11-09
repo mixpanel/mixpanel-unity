@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace mixpanel
 {
@@ -151,6 +152,8 @@ namespace mixpanel
         /// <p>On any other project %Mixpanel ignores <c>$company_id</c>, so an identity that names a company is
         /// logged and ignored rather than attributed without it. An identity with a null or empty user id is
         /// also logged and ignored.</p>
+        /// <p>On every project a whitespace-only id counts as empty, and a user id starting with
+        /// <c>$device:</c>, which marks an anonymous device, is logged and ignored.</p>
         /// <p>The SDK owns the device id, so a <c>DeviceId</c> on the identity is ignored, with a warning when
         /// it differs from the current one.</p>
         /// </description>
@@ -163,9 +166,10 @@ namespace mixpanel
         {
             string userId = identity.UserId;
             string companyId = identity.CompanyId;
+            // A whitespace-only id is as empty as an empty one
             if (Config.HierarchicalGroups)
             {
-                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(companyId))
+                if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(companyId))
                 {
                     return "Can't identify " + identity + ": hierarchical groups projects identify a user by " +
                         "company and user id, so both are required.";
@@ -173,7 +177,7 @@ namespace mixpanel
             }
             else
             {
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrWhiteSpace(userId))
                 {
                     return "Can't identify " + identity + " without a user id.";
                 }
@@ -182,6 +186,12 @@ namespace mixpanel
                     return "Can't identify " + identity + ": a company requires HierarchicalGroups in the " +
                         "Mixpanel project settings. Mixpanel ignores $company_id on other projects.";
                 }
+            }
+            // The SDK marks an anonymous distinct id with this prefix, so a user id can't carry it
+            if (userId.StartsWith(DevicePrefix, StringComparison.Ordinal))
+            {
+                return "Can't identify " + identity + ": a user id can't start with \"" + DevicePrefix +
+                    "\", which marks an anonymous device.";
             }
             return null;
         }
@@ -225,6 +235,7 @@ namespace mixpanel
             MixpanelStorage.DistinctId = userId;
             // A hierarchical groups project ties the device to the user from the identity keys on later events,
             // so it has no $identify
+            People.SendPendingUpdates(userId, companyId);
         }
 
         /// <summary>
@@ -314,8 +325,9 @@ namespace mixpanel
         /// Opt in tracking.
         /// </summary>
         /// <description>
-        /// Not supported on a hierarchical groups project, where it is logged and ignored and the user stays
-        /// opted out. Use <c>OptInTrackingWithIdentity(MixpanelIdentity)</c> instead.
+        /// A distinct id is not supported on a hierarchical groups project, where it is logged and ignored and
+        /// the user stays opted out. Use <c>OptInTrackingWithIdentity(MixpanelIdentity)</c> instead. A null
+        /// distinct id there opts in without identifying, as <c>OptInTracking()</c> does.
         /// </description>
         /// <param name="distinctId">the distinct id for events. Behind the scenes,
         /// <code>Identify</code> will be called by using this distinct id.</param>
@@ -324,6 +336,11 @@ namespace mixpanel
             if (!IsInitialized()) return;
             if (Config.HierarchicalGroups)
             {
+                if (distinctId == null)
+                {
+                    OptInTracking();
+                    return;
+                }
                 LogError("OptInTracking(string) is not supported for hierarchical groups projects, which identify " +
                     "a user by company and user id. Use OptInTrackingWithIdentity(new MixpanelIdentity(userId, " +
                     "companyId)). The user is still opted out.");
@@ -362,11 +379,16 @@ namespace mixpanel
         /// <summary>
         /// Registers super properties, overwriting ones that have already been set.
         /// </summary>
+        /// <description>
+        /// On a hierarchical groups project <c>$company_id</c> is the identified company, so registering it is
+        /// logged and ignored. Use <c>Identify(MixpanelIdentity)</c> instead.
+        /// </description>
         /// <param name="key">name of the property to register</param>
         /// <param name="value">value of the property to register</param>
         public static void Register(string key, Value value)
         {
             if (!IsInitialized()) return;
+            if (RefuseCompanyIdKey("Register", key)) return;
             Value properties = MixpanelStorage.SuperProperties;
             properties[key] = value;
             MixpanelStorage.SuperProperties = properties;
@@ -375,11 +397,16 @@ namespace mixpanel
         /// <summary>
         /// Registers super properties without overwriting ones that have already been set.
         /// </summary>
+        /// <description>
+        /// On a hierarchical groups project <c>$company_id</c> is the identified company, so registering it is
+        /// logged and ignored. Use <c>Identify(MixpanelIdentity)</c> instead.
+        /// </description>
         /// <param name="key">name of the property to register</param>
         /// <param name="value">value of the property to register</param>
         public static void RegisterOnce(string key, Value value)
         {
             if (!IsInitialized()) return;
+            if (RefuseCompanyIdKey("RegisterOnce", key)) return;
             Value properties = MixpanelStorage.OnceProperties;
             if (!properties.ContainsKey(key)) {
                 properties[key] = value;
@@ -402,6 +429,7 @@ namespace mixpanel
             {
                 MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.GROUPS);
             }
+            if (Config.HierarchicalGroups) MixpanelStorage.ClearPendingUserProfileUpdates();
             Flush();
             MixpanelStorage.ResetIdentity();
             // A hierarchical groups project starts again under a new device id
@@ -495,10 +523,15 @@ namespace mixpanel
         /// <summary>
         /// Removes a single superProperty.
         /// </summary>
+        /// <description>
+        /// On a hierarchical groups project <c>$company_id</c> is the identified company, so unregistering it
+        /// is logged and ignored. <c>Reset()</c> clears the company.
+        /// </description>
         /// <param name="key">name of the property to unregister</param>
         public static void Unregister(string key)
         {
             if (!IsInitialized()) return;
+            if (RefuseCompanyIdKey("Unregister", key)) return;
             Value properties = MixpanelStorage.SuperProperties;
             properties.Remove(key);
             MixpanelStorage.SuperProperties = properties;
@@ -510,7 +543,9 @@ namespace mixpanel
         /// <description>
         /// <p>The group is registered as a super property and set on the user's profile.</p>
         /// <p>On a hierarchical groups project a user belongs to one group per group key, so the group is stored
-        /// as a single value rather than a list, and an array <c>groupId</c> is dropped with an error log.</p>
+        /// as a single value rather than a list, and an array <c>groupId</c> is dropped with an error log. A null
+        /// <c>groupId</c> sets the group key to null. <c>$company_id</c> is the identified company, so it can't be
+        /// set here; use <c>Identify(MixpanelIdentity)</c>.</p>
         /// </description>
         /// <param name="groupKey">the property name associated with this group type (must already have been set up)</param>
         /// <param name="groupId">the group the user belongs to. Outside hierarchical groups, an array sets
@@ -519,13 +554,16 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             if (!MixpanelStorage.IsTracking) return;
-            if (groupKey == null || groupId == null)
-            {
-                LogError("groupKey and groupId must be non-null");
-                return;
-            }
             if (Config.HierarchicalGroups)
             {
+                if (groupKey == null)
+                {
+                    LogError("groupKey must be non-null");
+                    return;
+                }
+                if (RefuseCompanyIdKey("SetGroup", groupKey)) return;
+                // A null group sets the key to null
+                if (groupId == null) groupId = Value.Null;
                 // Hierarchical groups read a list as the name of one group, not as membership in each
                 if (groupId.IsArray)
                 {
@@ -534,6 +572,11 @@ namespace mixpanel
                 }
                 Register(groupKey, groupId);
                 People.Set(groupKey, groupId);
+                return;
+            }
+            if (groupKey == null || groupId == null)
+            {
+                LogError("groupKey and groupId must be non-null");
                 return;
             }
             Value groupIds = groupId.IsArray ? groupId : ArrayOf(groupId);
@@ -588,7 +631,8 @@ namespace mixpanel
         /// </summary>
         /// <description>
         /// On a hierarchical groups project this clears the group key when the user belongs to <c>groupId</c>,
-        /// and does nothing otherwise.
+        /// and does nothing otherwise. A null <c>groupId</c> matches a group key set to null.
+        /// <c>$company_id</c> is the identified company, so it can't be removed here.
         /// </description>
         /// <param name="groupKey">the property name associated with this group type (must already have been set up)</param>
         /// <param name="groupId">the group to remove</param>
@@ -596,7 +640,18 @@ namespace mixpanel
         {
             if (!IsInitialized()) return;
             if (!MixpanelStorage.IsTracking) return;
-            if (groupKey == null || groupId == null)
+            if (Config.HierarchicalGroups)
+            {
+                if (groupKey == null)
+                {
+                    LogError("groupKey must be non-null");
+                    return;
+                }
+                if (RefuseCompanyIdKey("RemoveGroup", groupKey)) return;
+                // A null group matches a key set to null
+                if (groupId == null) groupId = Value.Null;
+            }
+            else if (groupKey == null || groupId == null)
             {
                 LogError("groupKey and groupId must be non-null");
                 return;
@@ -687,6 +742,19 @@ namespace mixpanel
 
         private const string CompanyIdGroupKey = "$company_id";
 
+        private const string DevicePrefix = "$device:";
+
+        // On a hierarchical groups project $company_id is the identified company, set only by identify, so a
+        // super property or group call that names it is refused
+        private static bool RefuseCompanyIdKey(string operation, string key)
+        {
+            if (!Config.HierarchicalGroups || key != CompanyIdGroupKey) return false;
+            LogError(operation + " can't use " + CompanyIdGroupKey + " on hierarchical groups projects, where it " +
+                "is the identified company. Use Identify(new MixpanelIdentity(userId, companyId)). The update was " +
+                "dropped.");
+            return true;
+        }
+
         private static void LogSingleGroupOnly(string operation, string groupKey)
         {
             LogError(operation + " is not supported for hierarchical groups projects, which allow one " + groupKey +
@@ -716,10 +784,12 @@ namespace mixpanel
             return false;
         }
 
-        // Compares as JSON, so the string "1" and the number 1 are different groups
+        // Compares as JSON, so the string "1" and the number 1 are different groups. Every number is stored as a
+        // double, so an int, a long and a double, or a number read back from storage, compare by value. A
+        // missing value compares as JSON null.
         private static bool SameGroup(Value a, Value b)
         {
-            return ArrayOf(a).ToString() == ArrayOf(b).ToString();
+            return ArrayOf(a ?? Value.Null).ToString() == ArrayOf(b ?? Value.Null).ToString();
         }
 
         /// <summary>
@@ -971,12 +1041,24 @@ namespace mixpanel
                 string companyId = MixpanelStorage.CompanyId;
                 if (userId == null || companyId == null)
                 {
-                    LogError("User profile updates for hierarchical groups projects need a user and a company. " +
-                        "Call Identify(new MixpanelIdentity(userId, companyId)) first. The " + actionType +
-                        " update was dropped.");
+                    // The profile is keyed by user and company, so the update waits for identify
+                    MixpanelStorage.AddPendingUserProfileUpdate(actionType, properties);
+                    Log("User profile updates for hierarchical groups projects need a user and a company. The " +
+                        actionType + " update is queued until Identify(new MixpanelIdentity(userId, companyId)).");
                     return;
                 }
                 Controller.DoGroup(UserIdGroupKey, userId, companyId, actionType, properties);
+            }
+
+            // Sends the user profile updates queued before identify to the identified user, in order
+            internal static void SendPendingUpdates(string userId, string companyId)
+            {
+                List<KeyValuePair<string, Value>> pending = MixpanelStorage.TakePendingUserProfileUpdates();
+                if (pending == null) return;
+                foreach (KeyValuePair<string, Value> update in pending)
+                {
+                    Controller.DoGroup(UserIdGroupKey, userId, companyId, update.Key, update.Value);
+                }
             }
 
             private const string UserIdGroupKey = "$user_id";
