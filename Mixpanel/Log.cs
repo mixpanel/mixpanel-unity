@@ -12,6 +12,14 @@ namespace mixpanel
             }
         }
 
+        internal static void LogWarning(string s)
+        {
+            if (Config.ShowDebug)
+            {
+                Debug.LogWarning("[Mixpanel] " + s);
+            }
+        }
+
         public static void LogError(string s)
         {
             if (Config.ShowDebug)

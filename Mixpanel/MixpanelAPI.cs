@@ -279,16 +279,16 @@ namespace mixpanel
         /// The distinct id %Mixpanel resolves the current user to.
         /// </summary>
         /// <description>
-        /// On a hierarchical groups project %Mixpanel builds the distinct id from the company and the user, so
-        /// once both are known this is <c>$company:{companyId}|$user:{userId}</c>, and before that it is
-        /// <c>$device:</c> followed by the device id. Events still send the user id as their distinct_id.
-        /// Don't use this on a hierarchical groups project; prefer <see cref="GetIdentity"/>, whose user,
-        /// company and device ids every %Mixpanel SDK accepts directly.
+        /// This should not be used on a hierarchical groups project, where a user is identified by their
+        /// company and user id: use <see cref="GetIdentity"/> instead. Reading it logs a warning there and
+        /// returns %Mixpanel's best match for the current user.
         /// </description>
         public static string DistinctId {
             get
             {
                 if (!Config.HierarchicalGroups) return MixpanelStorage.DistinctId;
+                LogWarning("DistinctId should not be used on a hierarchical groups project, which identifies a " +
+                    "user by company and user id. Use GetIdentity() instead.");
                 string userId = MixpanelStorage.UserId;
                 string companyId = MixpanelStorage.CompanyId;
                 if (userId != null && companyId != null) return "$company:" + companyId + "|$user:" + userId;
