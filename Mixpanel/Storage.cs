@@ -112,6 +112,7 @@ namespace mixpanel
         public static void SetPreferencesSource(IPreferences preferences)
         {
             PreferencesSource = preferences;
+            ClearIdentityCache();
         }
 
         #endregion
@@ -145,7 +146,14 @@ namespace mixpanel
                 }
                 // Generate a Unique ID for this client if still null or empty
                 // https://devblogs.microsoft.com/oldnewthing/?p=21823
-                if (string.IsNullOrEmpty(_distinctId)) DistinctId = Guid.NewGuid().ToString();
+                if (string.IsNullOrEmpty(_distinctId))
+                {
+                    string generatedId = Guid.NewGuid().ToString();
+                    DistinctId = generatedId;
+                    // Off hierarchical groups the generated anonymous id is the device id, which lets GetIdentity()
+                    // tell an anonymous user from an identified one. Hierarchical groups assign their own device id.
+                    if (!Config.HierarchicalGroups) DeviceId = generatedId;
+                }
                 return _distinctId;
             }
             set
@@ -157,45 +165,186 @@ namespace mixpanel
 
         #endregion
 
+        #region Identity
+
+        // The identified user, their company on a hierarchical groups project, and the device id.
+        // Each key is absent until set, and reset() deletes all three. Values are cached once read.
+        private const string UserIdName = "Mixpanel.UserId";
+        private const string CompanyIdName = "Mixpanel.CompanyId";
+        private const string DeviceIdName = "Mixpanel.DeviceId";
+
+        private static string _userId, _companyId, _deviceId;
+        private static bool _userIdLoaded, _companyIdLoaded, _deviceIdLoaded;
+
+        private static string ReadOptionalString(string key)
+        {
+            if (!PreferencesSource.HasKey(key)) return null;
+            string value = PreferencesSource.GetString(key);
+            return string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private static void WriteOptionalString(string key, string value)
+        {
+            if (string.IsNullOrEmpty(value)) PreferencesSource.DeleteKey(key);
+            else PreferencesSource.SetString(key, value);
+        }
+
+        // The user id from the last identify, or null when anonymous
+        internal static string UserId
+        {
+            get
+            {
+                if (!_userIdLoaded)
+                {
+                    _userId = ReadOptionalString(UserIdName);
+                    _userIdLoaded = true;
+                }
+                return _userId;
+            }
+            set
+            {
+                _userId = string.IsNullOrEmpty(value) ? null : value;
+                _userIdLoaded = true;
+                WriteOptionalString(UserIdName, _userId);
+            }
+        }
+
+        // The company from the last identify on a hierarchical groups project, or null
+        internal static string CompanyId
+        {
+            get
+            {
+                if (!_companyIdLoaded)
+                {
+                    _companyId = ReadOptionalString(CompanyIdName);
+                    _companyIdLoaded = true;
+                }
+                return _companyId;
+            }
+            set
+            {
+                _companyId = string.IsNullOrEmpty(value) ? null : value;
+                _companyIdLoaded = true;
+                WriteOptionalString(CompanyIdName, _companyId);
+            }
+        }
+
+        // The anonymous device id, or null until one is assigned
+        internal static string DeviceId
+        {
+            get
+            {
+                if (!_deviceIdLoaded)
+                {
+                    _deviceId = ReadOptionalString(DeviceIdName);
+                    _deviceIdLoaded = true;
+                }
+                return _deviceId;
+            }
+            set
+            {
+                _deviceId = string.IsNullOrEmpty(value) ? null : value;
+                _deviceIdLoaded = true;
+                WriteOptionalString(DeviceIdName, _deviceId);
+            }
+        }
+
+        // The device id, assigning a new one if there is none yet
+        internal static string EnsureDeviceId()
+        {
+            string deviceId = DeviceId;
+            if (deviceId == null)
+            {
+                deviceId = Guid.NewGuid().ToString();
+                DeviceId = deviceId;
+            }
+            return deviceId;
+        }
+
+        internal static void ResetIdentity()
+        {
+            UserId = null;
+            CompanyId = null;
+            DeviceId = null;
+        }
+
+        private static void ClearIdentityCache()
+        {
+            _userId = _companyId = _deviceId = null;
+            _userIdLoaded = _companyIdLoaded = _deviceIdLoaded = false;
+        }
+
+        #endregion
+
         #region Track
 
         private const string EventAutoIncrementingIdName = "EventAutoIncrementingID";
         private const string PeopleAutoIncrementingIdName = "PeopleAutoIncrementingID";
+        private const string GroupAutoIncrementingIdName = "GroupAutoIncrementingID";
 
         // For performance, we can store the lowest unsent event ID to prevent searching from 0.
         // This search process can be slow if the auto-increment ID gets large enough.
         private const string EventStartIndexName = "EventStartIndex";
         private const string PeopleStartIndexName = "PeopleStartIndex";
+        private const string GroupStartIndexName = "GroupStartIndex";
 
         internal enum FlushType
         {
             EVENTS,
             PEOPLE,
+            // Group profile updates, sent to /groups. On a hierarchical groups project user profile
+            // updates are group profile updates too.
+            GROUPS,
         }
 
         private static string TrackingKey(FlushType flushType, int dataIndex)
         {
-            return (flushType == FlushType.EVENTS) ? "Event" + dataIndex.ToString() : "People" + dataIndex.ToString();
+            switch (flushType)
+            {
+                case FlushType.EVENTS: return "Event" + dataIndex.ToString();
+                case FlushType.PEOPLE: return "People" + dataIndex.ToString();
+                default: return "Group" + dataIndex.ToString();
+            }
         }
 
         private static string TrackingIdKey(FlushType flushType)
         {
-            return (flushType == FlushType.EVENTS) ? EventAutoIncrementingIdName : PeopleAutoIncrementingIdName;
+            switch (flushType)
+            {
+                case FlushType.EVENTS: return EventAutoIncrementingIdName;
+                case FlushType.PEOPLE: return PeopleAutoIncrementingIdName;
+                default: return GroupAutoIncrementingIdName;
+            }
         }
 
         private static string StartIndexKey(FlushType flushType)
         {
-            return (flushType == FlushType.EVENTS) ? EventStartIndexName : PeopleStartIndexName;
+            switch (flushType)
+            {
+                case FlushType.EVENTS: return EventStartIndexName;
+                case FlushType.PEOPLE: return PeopleStartIndexName;
+                default: return GroupStartIndexName;
+            }
         }
 
         private static int NextTrackingId(FlushType flushType)
         {
-            return (flushType == FlushType.EVENTS) ? EventAutoIncrementingID() : PeopleAutoIncrementingID();
+            switch (flushType)
+            {
+                case FlushType.EVENTS: return EventAutoIncrementingID();
+                case FlushType.PEOPLE: return PeopleAutoIncrementingID();
+                default: return GroupAutoIncrementingID();
+            }
         }
 
         private static int CurrentStartIndex(FlushType flushType)
         {
-            return (flushType == FlushType.EVENTS) ? EventStartIndex() : PeopleStartIndex();
+            switch (flushType)
+            {
+                case FlushType.EVENTS: return EventStartIndex();
+                case FlushType.PEOPLE: return PeopleStartIndex();
+                default: return GroupStartIndex();
+            }
         }
 
         private static int AdvanceStartIndex(FlushType flushType, int startIndex, int maxIndex)
@@ -239,6 +388,11 @@ namespace mixpanel
             return PreferencesSource.GetInt(PeopleAutoIncrementingIdName, 0);
         }
 
+        internal static int GroupAutoIncrementingID()
+        {
+            return PreferencesSource.GetInt(GroupAutoIncrementingIdName, 0);
+        }
+
         internal static int EventStartIndex()
         {
             return PreferencesSource.GetInt(EventStartIndexName, 0);
@@ -247,6 +401,11 @@ namespace mixpanel
         internal static int PeopleStartIndex()
         {
             return PreferencesSource.GetInt(PeopleStartIndexName, 0);
+        }
+
+        internal static int GroupStartIndex()
+        {
+            return PreferencesSource.GetInt(GroupStartIndexName, 0);
         }
 
         private static void IncreaseTrackingDataID(FlushType flushType)
@@ -365,6 +524,157 @@ namespace mixpanel
         internal static void DeleteAllTrackingData(FlushType flushType)
         {
             DeleteBatchTrackingData(flushType, int.MaxValue);
+        }
+
+        // Whether anything was ever queued for /groups. Clearing a queue that was never used would write its
+        // id keys, which an install that never sends group profile updates doesn't have.
+        internal static bool HasUsedGroupQueue()
+        {
+            return PreferencesSource.HasKey(GroupAutoIncrementingIdName);
+        }
+
+        #endregion
+
+        #region PendingUserProfileUpdates
+
+        // On a hierarchical groups project, the user profile updates made before a user and company are
+        // identified, as a JSON list of {"action": actionType, "properties": properties} in the order they were
+        // made. The key is absent until an update is queued, so other projects never write it.
+        private const string PendingUserProfileUpdatesName = "Mixpanel.PendingUserProfileUpdates";
+        private const string PendingActionName = "action";
+        private const string PendingPropertiesName = "properties";
+        // The user and company a transfer of the queued updates started for, as {"user_id": userId,
+        // "company_id": companyId}. Set when a transfer starts and removed with the queue, so updates a transfer
+        // that didn't complete leaves behind still go to that user after another identify.
+        private const string PendingUserProfileUpdatesTargetName = "Mixpanel.PendingUserProfileUpdatesTarget";
+        private const string PendingTargetUserIdName = "user_id";
+        private const string PendingTargetCompanyIdName = "company_id";
+
+        private static Value ReadPendingUserProfileUpdates()
+        {
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName)) return Value.Array;
+            try
+            {
+                Value pending = Value.Deserialize(PreferencesSource.GetString(PendingUserProfileUpdatesName));
+                if (pending != null && pending.IsArray) return pending;
+            }
+            catch (Exception e)
+            {
+                Mixpanel.LogError("There was an error reading the queued user profile updates: " + e);
+            }
+            return Value.Array;
+        }
+
+        internal static void AddPendingUserProfileUpdate(string actionType, Value properties)
+        {
+            // A new queue never inherits the destination of one that was already sent
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName)) DeletePendingUserProfileUpdatesTarget();
+            Value pending = ReadPendingUserProfileUpdates();
+            pending.Add(new Value {{PendingActionName, actionType}, {PendingPropertiesName, properties}});
+            PreferencesSource.SetString(PendingUserProfileUpdatesName, SerializeStored(pending));
+        }
+
+        // Hands each queued user profile update to send as (userId, companyId, actionType, properties), in the
+        // order they were made. The updates go to the user and company the first transfer started for, whatever
+        // the current identity; when no transfer has started they go to userId and companyId, which are then
+        // stored as their destination, and nothing is sent without one. An update leaves the queue only after
+        // send returns, so if storing fails partway the rest stay queued for the next transfer.
+        internal static void TransferPendingUserProfileUpdates(string userId, string companyId,
+            Action<string, string, string, Value> send)
+        {
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesName))
+            {
+                DeletePendingUserProfileUpdatesTarget();
+                return;
+            }
+            List<Value> pending = new List<Value>(ReadPendingUserProfileUpdates().Values);
+            if (pending.Count == 0)
+            {
+                ClearPendingUserProfileUpdates();
+                return;
+            }
+            string targetUserId, targetCompanyId;
+            if (TryGetPendingUserProfileUpdatesTarget(out targetUserId, out targetCompanyId))
+            {
+                userId = targetUserId;
+                companyId = targetCompanyId;
+            }
+            else
+            {
+                if (userId == null || companyId == null) return;
+                PreferencesSource.SetString(PendingUserProfileUpdatesTargetName, SerializeStored(new Value
+                {
+                    {PendingTargetUserIdName, userId},
+                    {PendingTargetCompanyIdName, companyId}
+                }));
+            }
+            for (int i = 0; i < pending.Count; i++)
+            {
+                Value update = pending[i];
+                Value action, properties;
+                if (update != null && update.IsObject && update.TryGetValue(PendingActionName, out action) &&
+                    update.TryGetValue(PendingPropertiesName, out properties))
+                {
+                    send(userId, companyId, action.ToString(), properties);
+                }
+                if (i == pending.Count - 1)
+                {
+                    ClearPendingUserProfileUpdates();
+                    return;
+                }
+                Value remaining = Value.Array;
+                for (int j = i + 1; j < pending.Count; j++) remaining.Add(pending[j]);
+                PreferencesSource.SetString(PendingUserProfileUpdatesName, SerializeStored(remaining));
+            }
+        }
+
+        // The user and company the queued updates go to, once a transfer of them has started
+        internal static bool TryGetPendingUserProfileUpdatesTarget(out string userId, out string companyId)
+        {
+            userId = null;
+            companyId = null;
+            if (!PreferencesSource.HasKey(PendingUserProfileUpdatesTargetName)) return false;
+            try
+            {
+                Value target = Value.Deserialize(PreferencesSource.GetString(PendingUserProfileUpdatesTargetName));
+                Value user, company;
+                if (target != null && target.IsObject && target.TryGetValue(PendingTargetUserIdName, out user) &&
+                    target.TryGetValue(PendingTargetCompanyIdName, out company) && !user.IsNull && !company.IsNull)
+                {
+                    userId = user.ToString();
+                    companyId = company.ToString();
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Mixpanel.LogError("There was an error reading the user the queued user profile updates go to: " + e);
+            }
+            return false;
+        }
+
+        private static void DeletePendingUserProfileUpdatesTarget()
+        {
+            if (PreferencesSource.HasKey(PendingUserProfileUpdatesTargetName))
+            {
+                PreferencesSource.DeleteKey(PendingUserProfileUpdatesTargetName);
+            }
+        }
+
+        // True while queued user profile updates are waiting, including those a transfer that didn't complete
+        // left behind
+        internal static bool HasPendingUserProfileUpdates()
+        {
+            return PreferencesSource.HasKey(PendingUserProfileUpdatesName);
+        }
+
+        internal static void ClearPendingUserProfileUpdates()
+        {
+            if (PreferencesSource.HasKey(PendingUserProfileUpdatesName))
+            {
+                PreferencesSource.DeleteKey(PendingUserProfileUpdatesName);
+            }
+            DeletePendingUserProfileUpdatesTarget();
         }
 
         #endregion

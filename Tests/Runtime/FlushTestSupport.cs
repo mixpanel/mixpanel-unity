@@ -33,6 +33,8 @@ namespace mixpanel
 
         internal static string EngageUrl { get => Config.EngageUrl; set => Config.EngageUrl = value; }
 
+        internal static string GroupsUrl { get => Config.GroupsUrl; set => Config.GroupsUrl = value; }
+
         /// <summary>Creates the controller without letting Start() begin the 60s auto-flush loop.</summary>
         internal static MonoBehaviour CreateControllerWithoutFlushLoop()
         {
@@ -58,6 +60,8 @@ namespace mixpanel
 
         internal static void EnqueuePeople(string name) => Enqueue(name, MixpanelStorage.FlushType.PEOPLE);
 
+        internal static void EnqueueGroup(string name) => Enqueue(name, MixpanelStorage.FlushType.GROUPS);
+
         private static void Enqueue(string name, MixpanelStorage.FlushType flushType)
         {
             Value data = new Value();
@@ -72,7 +76,7 @@ namespace mixpanel
     /// </summary>
     internal sealed class FaultyPreferences : IPreferences
     {
-        private static readonly Regex TrackingKey = new Regex(@"^(Event|People)\d+$");
+        private static readonly Regex TrackingKey = new Regex(@"^(Event|People|Group)\d+$");
         private readonly Dictionary<string, object> _values = new Dictionary<string, object>();
 
         /// <summary>Return true from (operation, key) to make that call throw.</summary>

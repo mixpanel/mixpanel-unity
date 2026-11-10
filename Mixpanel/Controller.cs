@@ -102,6 +102,8 @@ namespace mixpanel
                 PreloadPersistedProperties();
                 #endif
 
+                if (Config.HierarchicalGroups) ResumePendingUserProfileUpdates();
+
                 // Note: Flush coroutine will be started in Start() to follow Unity lifecycle best practices
                 // and prevent duplicate coroutines if initialization partially fails
 
@@ -117,6 +119,16 @@ namespace mixpanel
             }
             finally {
                 _isInitializing = false; // Always clear the initialization flag
+            }
+        }
+
+        // A storage failure here leaves the updates queued for the next attempt and never fails initialization
+        private static void ResumePendingUserProfileUpdates() {
+            try {
+                Mixpanel.People.ResumePendingUpdates();
+            }
+            catch (Exception e) {
+                Mixpanel.LogError($"Error sending the queued user profile updates: {e}");
             }
         }
 
@@ -231,6 +243,8 @@ namespace mixpanel
                     PreloadPersistedProperties();
                     #endif
 
+                    if (Config.HierarchicalGroups) ResumePendingUserProfileUpdates();
+
                     // Mark as initialized
                     _fullyInitialized = true;
 
@@ -282,8 +296,8 @@ namespace mixpanel
             _isFlushing = true;
             int generation = _flushGeneration;
 
-            // Called once by each queue (EVENTS, PEOPLE); the flush ends when both have.
-            int queuesRemaining = 2;
+            // Called once by each queue (EVENTS, PEOPLE, GROUPS); the flush ends when all have.
+            int queuesRemaining = 3;
             bool overallSuccess = true;
             Action<bool> onComplete = success =>
             {
@@ -303,6 +317,7 @@ namespace mixpanel
             };
             SendNextBatch(MixpanelStorage.FlushType.EVENTS, generation, onComplete);
             SendNextBatch(MixpanelStorage.FlushType.PEOPLE, generation, onComplete);
+            SendNextBatch(MixpanelStorage.FlushType.GROUPS, generation, onComplete);
         }
 
         // Sends the next batch of one queue, or reports the queue done. Calls onComplete
@@ -316,7 +331,13 @@ namespace mixpanel
                 return;
             }
 
-            string url = (flushType == MixpanelStorage.FlushType.EVENTS) ? Config.TrackUrl : Config.EngageUrl;
+            string url;
+            switch (flushType)
+            {
+                case MixpanelStorage.FlushType.EVENTS: url = Config.TrackUrl; break;
+                case MixpanelStorage.FlushType.PEOPLE: url = Config.EngageUrl; break;
+                default: url = Config.GroupsUrl; break;
+            }
             MixpanelStorage.StoredBatch batch;
             UnityWebRequest request = null;
             UnityWebRequestAsyncOperation operation = null;
@@ -406,7 +427,7 @@ namespace mixpanel
 
         // Drops the in-flight flush, if any: its requests still finish, but their results
         // no longer touch storage, the retry state or the guard. Releases the guard.
-        private static void DropInFlightFlush()
+        internal static void DropInFlightFlush()
         {
             _flushGeneration++;
             _isFlushing = false;
@@ -601,10 +622,85 @@ namespace mixpanel
         }
         #endif
 
+        // The stored distinct id. On a hierarchical groups project this is the user id once identified, else
+        // the device form. Never the combined form that Mixpanel.DistinctId reports, since ingestion resolves
+        // the user from $user_id and $company_id.
+        internal static string EventsDistinctId()
+        {
+            if (!Config.HierarchicalGroups) return MixpanelStorage.DistinctId;
+            string userId = MixpanelStorage.UserId;
+            return userId ?? "$device:" + MixpanelStorage.EnsureDeviceId();
+        }
+
+        private static readonly string[] HierarchicalIdentityKeys = {"$device_id", "$user_id", "$company_id"};
+
+        // The identity keys the caller set on an event, which override the SDK's own
+        private static Value TakeEventIdentityProperties(Value properties)
+        {
+            Value taken = null;
+            if (!properties.IsObject) return null;
+            foreach (string key in HierarchicalIdentityKeys)
+            {
+                Value value;
+                if (properties.TryGetValue(key, out value))
+                {
+                    if (taken == null) taken = new Value();
+                    taken[key] = value;
+                }
+            }
+            return taken;
+        }
+
+        // The company is part of the user's identity, set only by identify, so a $company_id the caller put on
+        // an event never overrides it: the identified company replaces it, and before one is identified it is
+        // removed. Both properties values are the event's own copies.
+        private static void DropEventCompanyId(string eventName, Value properties, Value eventIdentityProperties)
+        {
+            if (eventIdentityProperties == null || !eventIdentityProperties.ContainsKey("$company_id")) return;
+            eventIdentityProperties.Remove("$company_id");
+            properties.Remove("$company_id");
+            string companyId = MixpanelStorage.CompanyId;
+            if (companyId != null)
+            {
+                Mixpanel.Log("Replaced $company_id on " + eventName + " with the identified company " + companyId +
+                    ". The company is set with Identify(new MixpanelIdentity(userId, companyId)).");
+            }
+            else
+            {
+                Mixpanel.Log("Removed $company_id from " + eventName + " because no company is identified. The " +
+                    "company is set with Identify(new MixpanelIdentity(userId, companyId)).");
+            }
+        }
+
+        // Identity fields overwrite super properties, and event properties override everything
+        private static void ApplyHierarchicalIdentity(Value properties, Value eventIdentityProperties)
+        {
+            properties["$device_id"] = MixpanelStorage.EnsureDeviceId();
+            string userId = MixpanelStorage.UserId;
+            if (userId != null) properties["$user_id"] = userId;
+            string companyId = MixpanelStorage.CompanyId;
+            if (companyId != null) properties["$company_id"] = companyId;
+            if (eventIdentityProperties != null) properties.Merge(eventIdentityProperties);
+        }
+
         internal static void DoTrack(string eventName, Value properties)
         {
             if (!MixpanelStorage.IsTracking) return;
             if (properties == null) properties = new Value();
+            else if (Config.HierarchicalGroups && properties.IsObject)
+            {
+                // Copied so the identity added below never becomes an override when the caller reuses the Value
+                Value copy = new Value();
+                copy.Merge(properties);
+                properties = copy;
+            }
+            // Captured before the merges below, which overwrite event properties
+            Value eventIdentityProperties = null;
+            if (Config.HierarchicalGroups)
+            {
+                eventIdentityProperties = TakeEventIdentityProperties(properties);
+                DropEventCompanyId(eventName, properties, eventIdentityProperties);
+            }
             properties.Merge(GetEventsDefaultProperties());
             // These auto properties can change in runtime so we don't bake them into AutoProperties
             properties["$screen_width"] = Screen.width;
@@ -619,8 +715,18 @@ namespace mixpanel
                 timedEvents.Remove(eventName);
                 MixpanelStorage.TimedEvents = timedEvents;
             }
+            if (Config.HierarchicalGroups) ApplyHierarchicalIdentity(properties, eventIdentityProperties);
             properties["token"] = MixpanelSettings.Instance.Token;
-            properties["distinct_id"] = MixpanelStorage.DistinctId;
+            // On a hierarchical groups project an identified user is $user_id and $company_id, so no distinct_id
+            if (!Config.HierarchicalGroups || MixpanelStorage.UserId == null || MixpanelStorage.CompanyId == null)
+            {
+                properties["distinct_id"] = EventsDistinctId();
+            }
+            else if (properties.IsObject)
+            {
+                // A distinct_id from the caller or a super property would be a stale identity
+                properties.Remove("distinct_id");
+            }
             properties["time"] = Util.CurrentTimeInMilliseconds();
 
             Value data = RentValue();
@@ -646,11 +752,40 @@ namespace mixpanel
             MixpanelStorage.EnqueueTrackingData(properties, MixpanelStorage.FlushType.PEOPLE);
         }
 
+        // A /groups update. On a hierarchical groups project every one carries the company at the top
+        // level, and is dropped without one.
+        internal static void DoGroup(string groupKey, Value groupId, string companyId, string actionType, Value properties)
+        {
+            if (!MixpanelStorage.IsTracking) return;
+            if (Config.HierarchicalGroups && companyId == null)
+            {
+                Mixpanel.LogError("Group profile updates for hierarchical groups projects require a company. Call " +
+                    "Identify(new MixpanelIdentity(userId, companyId)) first. The update to " + groupKey + "=" +
+                    groupId + " was dropped.");
+                return;
+            }
+            Value data = new Value();
+            data[actionType] = properties;
+            data["$token"] = MixpanelSettings.Instance.Token;
+            data["$time"] = Util.CurrentTimeInMilliseconds();
+            data["$group_key"] = groupKey;
+            data["$group_id"] = groupId;
+            if (companyId != null) data["$company_id"] = companyId;
+            data["$mp_metadata"] = Metadata.GetPeopleMetadata();
+
+            MixpanelStorage.EnqueueTrackingData(data, MixpanelStorage.FlushType.GROUPS);
+        }
+
         internal static void DoClear()
         {
             DropInFlightFlush(); // an in-flight flush must not delete keys reused after the clear
             MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.EVENTS);
             MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.PEOPLE);
+            if (MixpanelStorage.HasUsedGroupQueue())
+            {
+                MixpanelStorage.DeleteAllTrackingData(MixpanelStorage.FlushType.GROUPS);
+            }
+            if (Config.HierarchicalGroups) MixpanelStorage.ClearPendingUserProfileUpdates();
         }
 
         #endregion

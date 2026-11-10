@@ -11,6 +11,7 @@ namespace mixpanel
     {
         private const string TrackUrlTemplate = "{0}track/?ip={1}";
         private const string EngageUrlTemplate = "{0}engage/?ip={1}";
+        private const string GroupsUrlTemplate = "{0}groups/?ip={1}";
         
         //TODO: Convert to log level
         [Tooltip("If true will print helpful debugging messages")] 
@@ -27,6 +28,27 @@ namespace mixpanel
         public float FlushInterval = 60f;
         [Tooltip("If true, the library will use the IP address of the client for geolocation. If false, the library will use the IP address of the Mixpanel server for geolocation.")]
         public bool UseIpAddressForGeolocation = true;
+        /// <summary>
+        /// Tracks for a project that uses hierarchical groups. Set this to match the project from the first
+        /// launch; it is not meant to be changed for an existing install, and it can't change while
+        /// %Mixpanel is initialized.
+        /// </summary>
+        /// <description>
+        /// <p>On a hierarchical groups project %Mixpanel builds the user's distinct id from <c>$company_id</c>
+        /// and <c>$user_id</c>, so the company is part of the user's identity. When enabled:</p>
+        /// <ul>
+        ///   <li>Identify with <c>Mixpanel.Identify(new MixpanelIdentity(userId, companyId))</c>. Every event then
+        ///       carries <c>$company_id</c> beside <c>$user_id</c> and <c>$device_id</c>.</li>
+        ///   <li><c>Mixpanel.People</c> updates are sent to <c>/groups</c> as the <c>$user_id</c> group profile
+        ///       within the company. <c>/groups</c> has no <c>$add</c>, <c>$append</c> or <c>$merge</c>, so
+        ///       Increment, Append and TrackCharge are dropped with an error log.</li>
+        ///   <li><c>Mixpanel.Group</c> updates carry the current <c>$company_id</c>, and are dropped until a
+        ///       company is known.</li>
+        /// </ul>
+        /// <p>Defaults to false, which behaves exactly as before.</p>
+        /// </description>
+        [Tooltip("If true, tracks for a project that uses hierarchical groups: identify users with Mixpanel.Identify(new MixpanelIdentity(userId, companyId)), and user profile updates are sent to /groups. Set it from the first launch; it can't change while Mixpanel is initialized.")]
+        public bool HierarchicalGroups = false;
 
         internal string Token {
             get {
@@ -44,9 +66,16 @@ namespace mixpanel
             string useIpAddressForGeolocation = UseIpAddressForGeolocation ? "1" : "0";
             Config.TrackUrl = string.Format(TrackUrlTemplate, host, useIpAddressForGeolocation);
             Config.EngageUrl = string.Format(EngageUrlTemplate, host, useIpAddressForGeolocation);
+            Config.GroupsUrl = string.Format(GroupsUrlTemplate, host, useIpAddressForGeolocation);
             Config.ShowDebug = ShowDebug;
             Config.ManualInitialization = ManualInitialization;
             Config.FlushInterval = FlushInterval;
+            // Hierarchical groups is fixed for the life of an initialized instance, since it changes how
+            // identity is stored and where profile updates are sent.
+            if (!Controller.IsInitialized())
+            {
+                Config.HierarchicalGroups = HierarchicalGroups;
+            }
         }
 
         #region static
