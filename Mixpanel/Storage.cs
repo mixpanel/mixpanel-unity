@@ -114,6 +114,39 @@ namespace mixpanel
             PreferencesSource = preferences;
         }
 
+        // Storage writes can throw: on WebGL, PlayerPrefs throws PlayerPrefsException once its
+        // ~1 MB quota is full, and a custom IPreferences may throw anything. These helpers log a
+        // warning and return false instead of throwing into the game's Track/Register/Identify
+        // call (SDK-347). A warning, not an error, for the same reason as the flush path: it can
+        // repeat on every call, and crash reporters send each LogError as an error event.
+        private static bool TrySetString(string key, string value)
+        {
+            try
+            {
+                PreferencesSource.SetString(key, value);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Mixpanel] Couldn't save " + key + ": " + e);
+                return false;
+            }
+        }
+
+        private static bool TrySetInt(string key, int value)
+        {
+            try
+            {
+                PreferencesSource.SetInt(key, value);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Mixpanel] Couldn't save " + key + ": " + e);
+                return false;
+            }
+        }
+
         #endregion
 
         #region HasMigratedFrom1To2
@@ -123,7 +156,9 @@ namespace mixpanel
         internal static bool HasMigratedFrom1To2
         {
             get => Convert.ToBoolean(PreferencesSource.GetInt(HasMigratedFrom1To2Name, 0));
-            set => PreferencesSource.SetInt(HasMigratedFrom1To2Name, Convert.ToInt32(value));
+            // If this write fails the migration simply runs again on the next init; the v1 files
+            // are already deleted by then, so that is a no-op.
+            set => TrySetInt(HasMigratedFrom1To2Name, Convert.ToInt32(value));
         }
 
         #endregion
@@ -134,12 +169,17 @@ namespace mixpanel
 
         private static string _distinctId;
 
+        // True when the last write of _distinctId failed, so storage still holds an older value.
+        // Memory is then the source of truth for this session; otherwise Reset() (which sets "")
+        // would fall back to the old stored ID instead of generating a new one.
+        private static bool _distinctIdUnsaved;
+
         public static string DistinctId
         {
             get
             {
                 if (!string.IsNullOrEmpty(_distinctId)) return _distinctId;
-                if (PreferencesSource.HasKey(DistinctIdName))
+                if (!_distinctIdUnsaved && PreferencesSource.HasKey(DistinctIdName))
                 {
                     _distinctId = PreferencesSource.GetString(DistinctIdName);
                 }
@@ -151,7 +191,7 @@ namespace mixpanel
             set
             {
                 _distinctId = value;
-                PreferencesSource.SetString(DistinctIdName, _distinctId);
+                _distinctIdUnsaved = !TrySetString(DistinctIdName, _distinctId);
             }
         }
 
@@ -225,8 +265,21 @@ namespace mixpanel
             int trackingDataId = NextTrackingId(flushType);
             String trackingKey = TrackingKey(flushType, trackingDataId);
             data["id"] = trackingKey;
-            PreferencesSource.SetString(trackingKey, SerializeStored(data));
-            IncreaseTrackingDataID(flushType);
+            string payload = SerializeStored(data);
+            if (TrySetString(trackingKey, payload) && IncreaseTrackingDataID(flushType)) return;
+
+            // A write failed, so the item is dropped (the warning is already logged). Clear the
+            // slot: if the payload was stored but the ID did not advance, the next enqueue would
+            // reuse this key and silently overwrite it. If even the delete fails we are no worse
+            // off than before SDK-347: the slot is past the ID, so flushes skip it until then.
+            try
+            {
+                PreferencesSource.DeleteKey(trackingKey);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Mixpanel] Couldn't remove " + trackingKey + ": " + e);
+            }
         }
 
         internal static int EventAutoIncrementingID()
@@ -249,11 +302,11 @@ namespace mixpanel
             return PreferencesSource.GetInt(PeopleStartIndexName, 0);
         }
 
-        private static void IncreaseTrackingDataID(FlushType flushType)
+        private static bool IncreaseTrackingDataID(FlushType flushType)
         {
             int id = NextTrackingId(flushType);
             id += 1;
-            PreferencesSource.SetInt(TrackingIdKey(flushType), id);
+            return TrySetInt(TrackingIdKey(flushType), id);
         }
 
         internal static StoredBatch DequeueBatchTrackingDataRaw(FlushType flushType, int batchSize)
@@ -375,10 +428,15 @@ namespace mixpanel
 
         private static bool _isTracking;
 
+        // True when the last write of _isTracking failed. The getter normally re-reads storage,
+        // so without this a failed OptOutTracking() would read back the stale stored "true".
+        private static bool _isTrackingUnsaved;
+
         public static bool IsTracking
         {
             get
             {
+                if (_isTrackingUnsaved) return _isTracking;
                 if (!PreferencesSource.HasKey(IsTrackingName)) IsTracking = true;
                 else _isTracking = PreferencesSource.GetInt(IsTrackingName) == 1;
                 return _isTracking;
@@ -386,7 +444,7 @@ namespace mixpanel
             set
             {
                 _isTracking = value;
-                PreferencesSource.SetInt(IsTrackingName, _isTracking ? 1 : 0);
+                _isTrackingUnsaved = !TrySetInt(IsTrackingName, _isTracking ? 1 : 0);
             }
         }
 
@@ -412,8 +470,8 @@ namespace mixpanel
             }
             set
             {
-                _onceProperties = value;
-                PreferencesSource.SetString(OncePropertiesName, SerializeStored(_onceProperties));
+                _onceProperties = value; // memory first, so it stays right even if the write fails
+                TrySetString(OncePropertiesName, SerializeStored(_onceProperties));
             }
         }
 
@@ -446,8 +504,8 @@ namespace mixpanel
             }
             set
             {
-                _superProperties = value;
-                PreferencesSource.SetString(SuperPropertiesName, SerializeStored(_superProperties));
+                _superProperties = value; // memory first, so it stays right even if the write fails
+                TrySetString(SuperPropertiesName, SerializeStored(_superProperties));
             }
         }
 
@@ -480,8 +538,8 @@ namespace mixpanel
             }
             set
             {
-                _timedEvents = value;
-                PreferencesSource.SetString(TimedEventsName, SerializeStored(_timedEvents));
+                _timedEvents = value; // memory first, so it stays right even if the write fails
+                TrySetString(TimedEventsName, SerializeStored(_timedEvents));
             }
         }
 
