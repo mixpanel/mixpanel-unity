@@ -174,6 +174,11 @@ namespace mixpanel
                     return "Can't identify " + identity + ": hierarchical groups projects identify a user by " +
                         "company and user id, so both are required.";
                 }
+                if (userId.Contains("|") || companyId.Contains("|"))
+                {
+                    return "Can't identify " + identity + ": hierarchical groups projects reserve \"|\", so a " +
+                        "user or company id can't contain it.";
+                }
             }
             else
             {
