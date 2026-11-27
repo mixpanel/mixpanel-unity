@@ -86,7 +86,7 @@ Mixpanel’s client-side tracking library contains the OptOutTracking() method, 
 
 **Is it safe to call `Mixpanel.Flush()` in `OnApplicationPause` or `OnApplicationQuit`?**
 
-You can call it, but delivery is not guaranteed. `Mixpanel.Track()` saves the event to local storage straight away. `Mixpanel.Flush()` only starts the upload, and the upload finishes on later frames. When the app is paused or quits, the operating system can suspend or end the process before the upload finishes. The SDK deletes events only after the server accepts them, so an unsent event stays queued and goes out on the next flush after the app resumes or starts again. It keeps the `time` from when you tracked it.
+You can call it, but delivery is not guaranteed. `Mixpanel.Track()` saves the event to local storage straight away. `Mixpanel.Flush()` only starts the upload, and the upload finishes on later frames. When the app is paused or quits, the operating system can suspend or end the process before the upload finishes. The SDK deletes events only after the server accepts them, so an unsent event stays queued and is sent by a later flush once the app is running again. If an upload failed recently, the SDK waits before retrying (from 60 seconds up to 10 minutes), so the event can take a little longer to arrive. It keeps the `time` from when you tracked it.
 
 The SDK stores the queue in `PlayerPrefs` by default. Unity writes `PlayerPrefs` to disk on a normal quit, but it may not if the app crashes or the OS kills it. To keep an event you track in `OnApplicationPause(true)` safe, call `PlayerPrefs.Save()` right after `Mixpanel.Track()`.
 
