@@ -84,6 +84,29 @@ Yes, in Lexicon, you can intercept and drop incoming events or properties. Mixpa
 
 Mixpanel’s client-side tracking library contains the OptOutTracking() method, which will set the user’s local opt-out state to “true” and will prevent data from being sent from a user’s device. More detailed instructions can be found in the section.
 
+**How do I send events reliably when the app is paused or closed?**
+
+Track and flush end-of-session events in `OnApplicationPause(true)` (or `OnApplicationFocus(false)`), not in `OnApplicationQuit`. On mobile and WebGL, `OnApplicationQuit` usually never runs, so an event tracked there is never recorded at all:
+
+- **iOS:** apps are suspended, not quit, so `OnApplicationQuit` isn't called. Use `OnApplicationPause(true)`.
+- **Android:** `OnApplicationQuit` is skipped when the OS kills an app in the background. Use `OnApplicationPause(true)`.
+- **Desktop:** `OnApplicationQuit` runs on a normal quit. With *Run In Background* on, `OnApplicationPause` may not fire when the user switches windows.
+- **WebGL:** there is no quit callback. Use `OnApplicationFocus(false)`, or a `.jslib` hook on the page's `visibilitychange` or `pagehide` event.
+
+`Mixpanel.Track()` saves the event to local storage straight away, with the `time` from when you tracked it. `Mixpanel.Flush()` only starts the upload, which finishes on later frames, so the OS can suspend or end the app before it finishes. The SDK deletes events only after the server accepts them, so an unsent event stays queued and is sent by a later flush once the app is running again. If the upload was interrupted or failed, the SDK waits before retrying (from 60 seconds up to 10 minutes), so the event can take a little longer to arrive. In rare cases, an event sent just before the app is suspended may arrive twice.
+
+The queue is stored in `PlayerPrefs` by default. Unity saves `PlayerPrefs` to disk automatically during `OnApplicationQuit`, which mobile apps usually never reach. So on mobile, call `PlayerPrefs.Save()` once in `OnApplicationPause(true)`, after your last `Mixpanel.Track()`. This saves everything still queued, not just that event. `PlayerPrefs.Save()` can cause a short hitch, so call it on pause, not after every event.
+
+```csharp
+void OnApplicationPause(bool paused)
+{
+    if (!paused) return;
+    Mixpanel.Track("Session End");
+    PlayerPrefs.Save();  // save the queue to disk now
+    Mixpanel.Flush();    // best effort; anything unsent goes out later
+}
+```
+
 **Starting with iOS 14.5, do I need to request the user’s permission through the AppTrackingTransparency framework to use Mixpanel?**
 
 No, Mixpanel does not use IDFA so it does not require user permission through the AppTrackingTransparency(ATT) framework.
