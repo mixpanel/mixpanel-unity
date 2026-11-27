@@ -288,6 +288,12 @@ namespace mixpanel
         /// <summary>
         /// Flushes the queued data to Mixpanel
         /// </summary>
+        /// <remarks>
+        /// The upload is asynchronous and finishes on later frames, so it may not complete
+        /// if the app is paused or quits first (for example, when called from
+        /// <c>OnApplicationPause</c> or <c>OnApplicationQuit</c>). Data stays queued until the
+        /// server accepts it and is sent on a later flush.
+        /// </remarks>
         /// <param name="onFlushComplete">callback to be called when the flush is complete. Returns true if overall success</param>
         public static void Flush(Action<bool> onFlushComplete = null)
         {
